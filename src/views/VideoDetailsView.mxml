@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of OsnabrÃ¼ck; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Video-Description"
+		xmlns:views="views.*"
+		viewActivate="init()"
+		backKeyPressed="loadNewView()" 
+		xmlns:business="business.*">
+	
+	<fx:Script>
+		<![CDATA[
+			
+			//import com.adobe.nativeExtensions.Networkinfo.InterfaceAddress;
+			//import com.adobe.nativeExtensions.Networkinfo.NetworkInfo;
+			//import com.adobe.nativeExtensions.Networkinfo.NetworkInterface; 
+			
+			import business.datahandler.DataHandler;
+			import business.datahandler.SegmentDataHandler;
+			import business.datahandler.XMLHandler;
+			
+			import events.SegmentLoadedEvent;
+			import events.VideosLoadedEvent;
+			import events.NotConnectedEvent;
+			
+			import mx.collections.XMLListCollection;
+			import mx.core.UIComponent;
+			import mx.events.ResizeEvent;
+			
+			private var xpathValue:XMLHandler;
+			
+			[Bindable]
+			protected var height_num:Number = 0;
+			
+			[Bindable]
+			protected var width_num:Number = 0;
+			
+			private var xmlData:DataHandler;
+			private var dataHandler:SegmentDataHandler;
+			
+			private var detailTitle:TextField;
+			
+			private var author:TextField;
+			
+			private var description:TextField;
+			
+			private var series:TextField;
+			
+			private var fontFamily:String = "_sans";
+			
+			private var fontSize:Number = 18;
+			
+			private var titleComp:UIComponent;
+			
+			private var authorComp:UIComponent;
+			
+			private var seriesComp:UIComponent;
+			
+			private var descriptionComp:UIComponent;
+			
+			private var xmlList:XMLListCollection;
+			
+			[Bindable]
+			private var epsilon:Number;
+			
+			[Bindable]
+			private var epsilonD:Number;
+			
+			[Bindable]
+			private var epsilonS:Number;
+			
+			//private var interfaces:Vector.<com.adobe.nativeExtensions.Networkinfo.NetworkInterface> = com.adobe.nativeExtensions.Networkinfo.NetworkInfo.networkInfo.findInterfaces();
+			
+			// The initialisation function
+			protected function init():void
+			{	
+				connection.visible = false;
+				
+				/*
+				// only for iOS loop	
+				for each (var interfaceObj:com.adobe.nativeExtensions.Networkinfo.NetworkInterface in interfaces)
+				{
+				if(interfaceObj.name == "en0" && interfaceObj.active == false)
+				{
+				startvideo.visible = false;
+				menu.visible = true;
+				}	
+				}	*/			
+				
+				xpathValue = new XMLHandler();
+				dataHandler = SegmentDataHandler.getInstance(xpathValue.getResult("mediapackage/@id", data));
+				dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
+				dataHandler.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				initText();
+				
+				height_num = navigator.height - 70;
+				width_num = navigator.width - 10;
+				
+				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
+			}
+			
+			public function initText():void
+			{
+				detailTitle = new TextField();
+				detailTitle.multiline = true;
+				detailTitle.wordWrap = true;
+				detailTitle.defaultTextFormat = new TextFormat(fontFamily, fontSize, null, "bold");
+				detailTitle.autoSize = "left";
+				detailTitle.width = this.navigator.width - 30;
+				
+				author = new TextField();
+				author.multiline = true;
+				author.wordWrap = true;
+				author.defaultTextFormat = new TextFormat(fontFamily, 16);
+				author.autoSize = "left";
+				author.width = this.navigator.width - 30;
+				
+				series = new TextField();
+				series.multiline = true;
+				series.wordWrap = true;
+				series.defaultTextFormat = new TextFormat(fontFamily, 16);
+				series.autoSize = "left";
+				series.width = this.navigator.width - 30;
+				
+				description = new TextField();
+				description.multiline = true;
+				description.wordWrap = true;
+				description.defaultTextFormat = new TextFormat(fontFamily, 16);
+				description.autoSize = "left";
+				description.width = this.navigator.width - 30;
+			}
+			
+			public function setDescription(event:SegmentLoadedEvent):void
+			{
+				xmlList = dataHandler.getMediapackageListCollection();
+				
+				setValues();
+			}
+			
+			public function setValues():void
+			{
+				detailTitle.text = xmlList.getItemAt(0).title;
+				
+				author.text = xmlList.getItemAt(0).creators.creator;
+
+				descriptionComp = new UIComponent();
+				descriptionComp.addChild(description);
+				
+				detailGroup.addElement(descriptionComp);
+				
+				epsilon = detailTitle.textHeight;
+				
+				titleComp = new UIComponent();
+				titleComp.y=30;
+				titleComp.addChild(detailTitle);
+				
+				detailGroup.addElement(titleComp);
+				
+				//detailCreator.y = epsilon + 45;
+				
+				authorComp = new UIComponent();
+				authorComp.y = epsilon + 45;
+				authorComp.addChild(author);
+				
+				detailGroup.addElement(authorComp);
+				
+				epsilon = epsilon + author.textHeight;
+				
+				series.text = xmlList.getItemAt(0).seriestitle;
+				
+				epsilonS = epsilon + 105 + series.textHeight;
+				
+				seriesComp = new UIComponent();
+				seriesComp.y = epsilon + 115;
+				seriesComp.addChild(series);
+				
+				detailGroup.addElement(seriesComp);
+				
+				//detailCreator.text = xmlList.getItemAt(0).creators.creator;
+				
+				var str:String = xmlList.getItemAt(0).@start;
+				var pattern:RegExp = /(\d+)-(\d+)-(\d+)/g;
+				var re:RegExp = /(T)/;
+				str = str.split(re)[0];
+				detailDate.text = str.replace(pattern, "$3.$2.$1");
+				
+				var imagePath:String = "mediapackage/attachments/attachment[1]/url";
+				detailImage.source = xpathValue.getResult(imagePath, xmlList.getItemAt(0));
+				
+				description.text = dataHandler.getDescriptionListCollection();
+				
+				descriptionComp.y = epsilonS + 252;
+				
+				epsilonD = epsilonS + 360 + description.textHeight;
+				
+				vgroup.visible = true;
+			}
+			
+			public function setSize(event:ResizeEvent):void
+			{	
+				if(titleComp != null)
+				{
+					detailGroup.removeElement(titleComp);
+					detailGroup.removeElement(authorComp);
+					detailGroup.removeElement(seriesComp);
+					detailGroup.removeElement(descriptionComp);
+					
+					titleComp.removeChild(detailTitle);
+					authorComp.removeChild(author);
+					seriesComp.removeChild(series);
+					descriptionComp.removeChild(description);
+					
+					height_num = this.navigator.height - 70;
+					width_num = this.navigator.width - 10;
+					
+					initText();
+					
+					setValues();
+				}
+			}
+			
+			protected function loadVideoView():void
+			{
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
+				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				this.navigator.pushView(PlayerView, xmlList.getItemAt(0));
+				connection.visible = false;
+			}
+			
+			protected function popThisView():void
+			{
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
+				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				navigator.popView();
+				connection.visible = false;
+			}
+			
+			protected function loadNewView():void
+			{
+				popThisView();
+				navigator.pushView(MobileMatterhornHomeView);					
+			}
+			
+			public function notConnected(event:NotConnectedEvent):void 
+			{
+				vgroup.visible = false;
+				connection.visible = true;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		<s:VGroup>
+			<s:Group width="60" height="60">
+				<business:ImageButton id="back_button"
+									  click="popThisView();"
+									  buttonMode="true"
+									  x="5" y="5"
+									  skinClass="views.skins.BackButtonSkin"/>
+			</s:Group>
+		</s:VGroup>
+	</s:actionContent>
+	
+	<s:Group>	
+		<s:View id = "connection" visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+			<s:Group width="250" height="80">
+				<s:Label text="It seems like that youÂ´ve lost " 
+						 x="10" y = "14" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="your Internet connection. Sorry" 
+						 x="10" y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="Information cannot be displayed." 
+						 x="10" y = "50" 
+						 fontFamily="_sans" 
+						 color="white"/>
+			</s:Group>
+		</s:View>
+	</s:Group>
+	
+	<s:VGroup id="vgroup" paddingLeft="10" paddingTop="0" visible="false">
+		<s:Scroller width="{width_num}" height="{height_num}">
+			<s:Group>
+				<s:HGroup x="10" y="0">
+					<s:VGroup>
+						<s:Group id="detailGroup">
+							
+							<s:Label id="detailDate"
+									 y="{epsilon + 65}"
+									 fontFamily="_sans"
+									 fontStyle="italic"/>
+							<s:Label text="Series: "
+									 y="{epsilon + 92}" x = "2" 
+									 fontFamily="_sans"/>
+						</s:Group>
+					</s:VGroup>
+				</s:HGroup>
+				
+				<s:View id = "menu" visible="false"
+						backgroundColor="black" 
+						fontFamily="_sans" 
+						alpha="0.7" 
+						x="{navigator.width / 2 - 133.5}" y="{epsilonS + 100}">
+					<s:Group width="250" height="80">
+						<s:Label text="You've lost your WiFi connection." 
+								 x="10" y = "14" 
+								 fontFamily="_sans" 
+								 color="white"/>
+						<s:Label text="Streaming of video content is not" 
+								 x="10" y = "32" 
+								 fontFamily="_sans" 
+								 color="white"/>
+						<s:Label text="available for cellular networks." 
+								 x="10" y = "50" 
+								 fontFamily="_sans" 
+								 color="white"/>
+					</s:Group>
+				</s:View>
+				
+				<s:View id = "startvideo" visible="true"
+						backgroundColor="gray" 
+						fontFamily="_sans" 
+						x="10" y="{epsilonS + 35}">
+					<s:Group width="{navigator.width - 40}" height="{detailImage.height + 20}">
+						<s:Image id="detailImage"
+								 x="{navigator.width / 2 - 120}" y="10" 
+								 height="150" width="200"
+								 click="loadVideoView();"/>
+						
+						<business:ImageButton id="play_button" x="{navigator.width / 2 - 45}" y="60"
+											  click="loadVideoView();"
+											  buttonMode="true" 
+											  skinClass="views.skins.PlayButtonSkin"/>
+					</s:Group>
+				</s:View>
+				
+				<s:Label id="textAreaLabel" 
+						 text ="Description:"
+						 x="12" y="{epsilonS + 230}"
+						 fontFamily="_sans"/>
+				<s:Label y="{epsilonD - 80}"/>
+				
+			</s:Group>
+		</s:Scroller>
+	</s:VGroup> 
+</s:View>

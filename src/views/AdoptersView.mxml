@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Matterhorn Endpoints"
+		xmlns:views="views.*" 
+		xmlns:business="business.*"
+		creationComplete="init()"
+		backKeyPressed="popThisView()">
+
+	<fx:Script>
+		<![CDATA[
+			import business.ConfigurationReader;
+			import business.Paging;
+			import business.datahandler.AdoptersDataHandler;
+			import business.datahandler.DataHandler;
+			import business.datahandler.XMLHandler;
+			
+			import events.AdoptersLoadedEvent;
+			import events.VideosLoadedEvent;
+			import events.NotConnectedEvent;
+			
+			import flash.events.Event;
+			
+			import mx.collections.XMLListCollection;
+			import mx.core.UIComponent;
+			
+			[Bindable]
+			public var adoptersList:XMLListCollection;
+			
+			private var height_window:int;
+			
+			private var adopters:AdoptersDataHandler;
+			
+			private var dH:DataHandler;
+			
+			private var paging:Paging;
+			
+			public function init():void
+			{
+				list.visible = true;
+				connection.visible = false;
+
+				var	xpathValue:XMLHandler = new XMLHandler();
+				
+				adopters = AdoptersDataHandler.getInstance();
+				adopters.init();
+				adopters.addEventListener(AdoptersLoadedEvent.ADOPTERSLOADED, getAdopters);
+				adopters.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+			}
+			
+			public function getAdopters(event:AdoptersLoadedEvent):void
+			{
+				adoptersList = adopters.getXMLListAdopters();
+			}
+			
+			public function notConnected(event:NotConnectedEvent):void 
+			{
+				list.visible = false;
+				connection.visible = true;
+			}
+			
+			protected function popThisView():void
+			{
+				adopters.removeEventListener(AdoptersLoadedEvent.ADOPTERSLOADED, getAdopters);
+				adopters.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				navigator.popView();
+				list.visible = true;
+				connection.visible = false;
+			}
+			
+			public function loadAdopter():void
+			{
+				var selectedItem:Object = list.selectedItem
+				
+				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+				
+				fileReader.setURL(selectedItem.AdopterURL);
+				
+				dH = DataHandler.getInstance();
+				dH.setOValue();
+				
+				navigator.popView();
+				navigator.pushView(MobileMatterhornHomeView, data);	
+			}
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		<s:VGroup>
+			<s:Group width="60" height="60">
+				<business:ImageButton id="back_button"
+									  click="popThisView();"
+									  buttonMode="true"
+									  x="5" y="5"
+									  skinClass="views.skins.BackButtonSkin"/>
+			</s:Group>
+		</s:VGroup>
+	</s:actionContent>
+	
+	<s:Group>	
+		<s:View id = "connection" visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+			<s:Group width="250" height="80">
+				<s:Label text="It seems like that you´ve lost " 
+						 x="10" y = "14" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="your Internet connection. Sorry" 
+						 x="10" y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="Information cannot be displayed." 
+						 x="10" y = "50" 
+						 fontFamily="_sans" 
+						 color="white"/>
+			</s:Group>
+		</s:View>
+	</s:Group>
+	
+	<s:List id="list" width="100%" height="100%"
+			dataProvider="{adoptersList}"
+			labelField="fontName"
+			itemRenderer="business.renderers.AdoptersRenderer" 
+			change="loadAdopter()"/>
+	
+</s:View>

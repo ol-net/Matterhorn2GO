@@ -1,0 +1,13 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+
+s|ViewMenuItem
+{
+	color:#ffffff;
+	skinClass: ClassReference("views.skins.menustyle.CustomViewMenuItemSkin");
+}
+
+s|ViewMenu
+{
+	skinClass: ClassReference("views.skins.menustyle.CustomViewMenuSkin");
+}

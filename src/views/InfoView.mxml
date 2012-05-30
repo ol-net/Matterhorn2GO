@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Information" 
+		xmlns:views="views.*"
+		xmlns:business="business.*"
+		creationComplete="init()">
+	<fx:Declarations>
+
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			
+			import mx.core.UIComponent;
+			import mx.events.ResizeEvent;
+			
+			[Bindable]
+			protected var height_num:Number = 0;
+			
+			[Bindable]
+			protected var width_num:Number = 0;
+			
+			[Bindable]
+			private var detail:TextField;
+			private var detailComp:UIComponent;
+			
+			[Bindable]
+			private var announce:TextField;
+			private var announceComp:UIComponent;
+			
+			private var fontFamily:String = "_sans";
+			
+			private var fontSize:Number = 14;
+			
+			// The initialisation function
+			protected function init():void
+			{	
+				//import flash.system.Capabilities;
+				
+				initText();
+				
+				detailComp = new UIComponent();
+				detailComp.addChild(detail);
+				detailGroup.addElement(detailComp);
+				
+				announceComp = new UIComponent();
+				announceComp.addChild(announce);
+				announceGroup.addElement(announceComp);
+				
+				//trace(Capabilities.manufacturer)
+				//trace(Capabilities.cpuArchitecture)
+				//trace(Capabilities.maxLevelIDC)
+				//trace(Capabilities.os)
+				
+				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
+				
+				view.visible=true;	
+				
+				height_num = navigator.height - 70;
+				width_num = navigator.width - 10;
+			}
+			
+			public function initText():void
+			{
+				detail = new TextField();
+				detail.multiline = true;
+				detail.wordWrap = true;
+				detail.defaultTextFormat = new TextFormat(fontFamily, fontSize, null, null);
+				detail.autoSize = "left";
+				detail.width = this.navigator.width - 30;
+				
+				detail.text = "Copyright (C) 2012  University of Osnabrück, " +
+							  "Part of the Opencast Matterhorn Project, " +
+							  "GNU Lesser General Public License v2.1 (LGPL)";
+				
+				announce = new TextField();
+				announce.multiline = true;
+				announce.wordWrap = true;
+				announce.defaultTextFormat = new TextFormat(fontFamily, fontSize, null, null);
+				announce.autoSize = "left";
+				announce.width = this.navigator.width - 30;
+				
+				announce.text = "To announce your installation, simply " +
+								"write an email to Rüdiger Rolf (rrolf@uos.de), " + 
+								"include your url and your recordings will " +
+								"be also available in the application.";
+			}
+			
+			public function setSize(event:ResizeEvent):void
+			{	
+				view.visible=true;
+				
+				detailComp.removeChild(detail);
+				announceComp.removeChild(announce);
+				
+				initText();
+				
+				detail.width = this.navigator.width - 30;
+				detailComp.addChild(detail);
+				detailGroup.addElement(detailComp);
+				
+				announce.width = this.navigator.width - 30;
+				announceComp.addChild(announce);
+				announceGroup.addElement(announceComp);
+				
+				if(this.navigator.width < this.navigator.height)
+				{
+					license.y = 245;
+					detailGroup.y = 260;
+				}
+				else
+				{
+					license.y = 235;
+					detailGroup.y = 250;
+				}
+
+				height_num = this.navigator.height - 70;
+				width_num = this.navigator.width -10;
+			}
+
+			protected function popThisView():void
+			{
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				navigator.popView();
+				//navigator.pushView(MobileMatterhornHomeView, data);	
+			}
+		]]>
+	</fx:Script>
+
+	<s:actionContent>
+		<s:VGroup>
+			<s:Group width="60" height="60">
+				<business:ImageButton id="back_button"
+									  click="popThisView();"
+									  buttonMode="true"
+									  x="5" y="5"
+									  skinClass="views.skins.BackButtonSkin"/>
+			</s:Group>
+		</s:VGroup>
+	</s:actionContent>
+	
+	<s:VGroup id="view" paddingTop="0" paddingLeft="10" visible="false">
+		<s:Scroller width="{width_num}" height="{height_num}">
+			<s:Group>
+				<s:VGroup x="10" y="15">
+					<s:VGroup x="10" y="15">
+						<s:HGroup verticalAlign="middle">
+							<s:Image width="200" height="50" scaleMode="letterbox" smooth="true"
+									 smoothingQuality="default" source="assets/virtuos.png"  x="10"/>
+						</s:HGroup>
+					</s:VGroup>
+					
+					<s:VGroup verticalAlign="bottom">
+						<s:Group >
+							<s:Label text="Version: 1.0.4"
+									 fontFamily="_sans"  
+									 y="5"/>
+							<s:Label text="Markus Ketterl (mketterl@uos.de)"
+									 y="30" 
+									 fontSize="14"
+									 fontFamily="_sans"/>
+							<s:Label text="Rüdiger Rolf (rrolf@uos.de)"
+									 y="50"
+									 fontSize="14"
+									 fontFamily="_sans"/>
+							<s:Label text="Leonid Oldenburger (loldenbu@uos.de)"
+									 y="70"
+									 fontSize="14"
+									 fontFamily="_sans"/>
+							<s:Label text="Lucas Köhler (lkoehler@uos.de)"
+									 y="90"
+									 fontSize="14"
+									 fontFamily="_sans"/>
+							<s:Label text="Philipp Bauer (phbauer@uos.de)"
+									 y="110"
+									 fontSize="14"
+									 fontFamily="_sans"/>
+							<s:Label text="Karina Meyer (karimeye@uos.de)"
+									 y="130"
+									 fontSize="14"
+									 fontFamily="_sans"/>
+							<s:Label text="Matterhorn Endpoints:"
+									 y="155"
+									 fontFamily="_sans"/>
+							<s:Group id="announceGroup"
+									 x ="-3" y="170"/>
+							<s:Label id = "license" 
+									 text="License: " 
+									 fontFamily="_sans" 
+									 y="245"/>	
+							<s:Group id="detailGroup" 
+									 x="-3" y="260"/>
+							<s:Label y="290"/>	
+						</s:Group>
+					</s:VGroup>
+				</s:VGroup>
+			</s:Group>
+		</s:Scroller>
+	</s:VGroup> 
+</s:View>

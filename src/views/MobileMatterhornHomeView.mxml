@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		xmlns:views="views.*"
+		xmlns:events="events.*" 
+		creationComplete="init()"
+		xmlns:business="business.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import business.Paging;
+			import business.SeekPosition;
+			import business.ToolTipReader;
+			import business.datahandler.AdoptersDataHandler;
+			import business.datahandler.DataHandler;
+			import business.datahandler.URLClass;
+			
+			import events.BusyIndicatorEvent;
+			import events.NotConnectedEvent;
+			import events.VideoNotFoundEvent;
+			import events.VideosLoadedEvent;
+			
+			import flash.events.Event;
+			
+			import mx.collections.XMLListCollection;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			[Bindable]
+			public var videos:XMLListCollection;
+			private var xmlData:DataHandler;
+			private var paging:Paging;
+			private var text_result:String = "Results: ";
+			
+			[Bindable]
+			private var search_result:String;
+			
+			[Bindable]
+			private var footer_text:String;
+			
+			private var adoptersInit:AdoptersDataHandler = AdoptersDataHandler.getInstance();
+			
+			private var tTip:ToolTipReader = ToolTipReader.getInstance();
+			
+			[Bindable]
+			private var xTooltip:int;
+			
+			[Bindable]
+			private var yTooltip:int;
+			
+			private var widthUpR:int = 0;
+			private var widthUpL:int = 0;
+			private var widthDownC:int = 0;
+			
+			private var heightUpR:int = 0;
+			private var heightUpL:int = 0;
+			private var heightDownC:int = 0;
+			
+			public function init():void
+			{					
+				setPosition();
+
+				tTip.readFile();
+				
+				if(connection.visible)
+					xmlData.setXMLListCollection(new XMLListCollection());
+				
+				if(tTip.getStatus() == true)
+				{
+					tooltip.visible = false;
+				}
+				else
+				{
+					tooltip.visible = true;	
+				}
+				
+				this.addEventListener("keyDown", handleButtons, false, 1);
+				this.addEventListener("keyUp", handleButtons, false, 1);
+				
+				xmlData = DataHandler.getInstance();
+				
+				videos = xmlData.getXMLListCollection();
+				
+				if(videos.length == 0 || xmlData.getURL() != URLClass.getInstance().getURL())
+				{	
+					adoptersInit.initGetFilter();
+				
+					indicatormenu.visible = true;
+					bi.visible = true;
+					xmlData.init();
+				}
+				else
+				{
+					indicatormenu.visible = false;
+					bi.visible = false;
+				}
+				
+				xmlData.getTotal();
+				
+				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(VideoNotFoundEvent.VIDEOSNOTFOUND, videoNotFound);
+
+				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				textinput_search.addEventListener(FlexEvent.ENTER, getVideo);
+				
+				this.addEventListener(BusyIndicatorEvent.INDICATORLOADED, loadIndicator);
+				this.addEventListener(ResizeEvent.RESIZE, resize);
+			}
+			
+			public function notConnected(event:NotConnectedEvent):void 
+			{
+				xmlData.setXMLListCollection(new XMLListCollection());
+				list.visible = false;
+				connection.visible = true;
+			}
+			
+			public function videoNotFound(event:VideoNotFoundEvent):void 
+			{
+				vNotFound.visible = true;
+			}
+			
+			public function setPosition():void 
+			{
+				if(widthUpL == 0) 
+				{
+					widthUpL = up_left.width;
+					heightUpL = up_left.height;
+					
+					widthUpR = up_right.width;
+					heightUpR = up_right.height;
+					
+					widthDownC = down_center.width;
+					heightDownC = down_center.height;
+				}
+				
+				up_left.x = 10;
+				up_left.y = 5;
+				
+				up_left.width =	widthUpL / 2; 
+				up_left.height = heightUpL / 2;
+				
+				up_right.x = this.navigator.width - 180;
+				up_right.y = 5;
+				
+				up_right.width = widthUpR / 2; 
+				up_right.height = heightUpR / 2;
+				
+				down_center.width = widthDownC / 2.3; 
+				down_center.height = heightDownC / 2.3;
+				
+				if(this.navigator.height < this.navigator.width)
+				{
+					down_center.x = navigator.width / 2 - 90;
+					down_center.y = navigator.height - 230;
+				}
+				else
+				{
+					down_center.x = navigator.width / 2 - 90;
+					down_center.y = navigator.height - 240;
+				}
+			}
+			
+			public function resize(event:ResizeEvent): void 
+			{
+				setPosition();
+			}
+			
+			public function loadIndicator(event:BusyIndicatorEvent):void
+			{
+				indicatormenu.visible = true;
+				bi.visible = true;
+			}
+			
+			public function getXMLListCollection(event:VideosLoadedEvent):void
+			{	
+				videos = xmlData.getXMLListCollection();
+
+				paging = Paging.getInstance();
+				
+				textinput_search.text  = xmlData.getText();
+				
+				footer_text = paging.getFooter();
+				
+				if(bi.visible == true)
+				{
+					indicatormenu.visible = false;
+					bi.visible = false;
+				}
+			}
+			
+			public function getVideo(event:FlexEvent):void
+			{
+				vNotFound.visible = false;
+				list.visible = true;
+				connection.visible = false;
+				indicatormenu.visible = true;
+				bi.visible = true;
+				
+				xmlData.setOValue();
+				xmlData.setNewSearch();
+				xmlData.search(textinput_search.text, String(0));
+				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+			}
+			
+			public function loadNewView():void
+			{
+				list.visible = true;
+				connection.visible = false;
+
+				xmlData.removeEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				this.removeEventListener(BusyIndicatorEvent.INDICATORLOADED, loadIndicator);
+				this.removeEventListener(ResizeEvent.RESIZE, resize);
+				SeekPosition.getInstance().setPosition(0);
+				navigator.pushView(VideoDetailsView, list.selectedItem);
+			}
+		
+			public function applicationExit():void 
+			{	
+				list.visible = true;
+				connection.visible = false;
+
+				xmlData.removeEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				this.removeEventListener(BusyIndicatorEvent.INDICATORLOADED, loadIndicator);
+				this.removeEventListener(ResizeEvent.RESIZE, resize);
+
+				var exitingEvent:Event = new Event(Event.EXITING, false, true);
+				NativeApplication.nativeApplication.dispatchEvent(exitingEvent);
+				if (!exitingEvent.isDefaultPrevented()) {
+					NativeApplication.nativeApplication.exit();
+				}
+			}
+			
+			public function showInfo():void 
+			{   
+				list.visible = true;
+				connection.visible = false;
+				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				this.removeEventListener(BusyIndicatorEvent.INDICATORLOADED, loadIndicator);
+				navigator.pushView(InfoView, data);
+			}
+			
+			public function showConfig():void 
+			{
+				list.visible = true;
+				connection.visible = false;
+				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				this.removeEventListener(BusyIndicatorEvent.INDICATORLOADED, loadIndicator);
+				this.removeEventListener(ResizeEvent.RESIZE, resize);
+				navigator.pushView(AdoptersView, data);
+			}
+			
+			public function backPage():void
+			{
+				if(videos != null)
+				{
+					indicatormenu.visible = !indicatormenu.visible ;
+					bi.visible = !bi.visible;
+					paging.backPage(textinput_search.text);
+				}
+			}
+			
+			public function nextPage():void
+			{	
+				if(videos != null)
+				{
+					indicatormenu.visible = true;
+					bi.visible = true;
+					paging.nextPage(textinput_search.text);
+				}		
+	
+				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+			}
+			
+			public function loadMenu():void
+			{
+				mx.core.FlexGlobals.topLevelApplication.viewMenuOpen = true;
+			}
+			
+			// Event handler to handle hardware keyboard keys.
+			protected function handleButtons(event:KeyboardEvent):void
+			{
+				if (event.keyCode == Keyboard.BACK) {
+					applicationExit();
+				}
+			}
+			
+			public function closeToolTip():void 
+			{	
+				tTip.setFile();
+				tooltip.visible = false;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		<!--
+		<s:Button id="btn_sort" click="getVideo(null)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/sort48(1).png"
+										source240dpi="assets/sort72(1).png"
+										source320dpi="assets/sort96(1).png"/>
+			</s:icon>
+		</s:Button>
+		-->
+		<s:Button id="btn_search" click="getVideo(null)">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/search48(1).png"
+										source240dpi="assets/search72(1).png"
+										source320dpi="assets/search96(1).png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:titleContent>
+		<s:TextInput id="textinput_search" x="13" 
+					 width="{navigator.width - 163}" 
+					 enabled="true" text=""/>
+	</s:titleContent>
+	
+	<s:navigationContent>
+		<s:Button id="menu_button" click="loadMenu()">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/mlogo48x48.png"
+										source240dpi="assets/mlogo72x72.png"
+										source320dpi="assets/mlogo96x96.png"/>
+			</s:icon>
+		</s:Button>
+	</s:navigationContent>	
+	
+	<s:List id="list"
+			width="100%" height="100%"
+			dataProvider="{videos}"
+			itemRenderer="business.renderers.VideosItemRenderer"
+			change="loadNewView()"/>
+	
+	<s:View id="tooltip" visible="false"
+			backgroundColor="gray"
+			alpha="0.8"
+			width="{navigator.width}" 
+			height="{navigator.height}">
+		
+		<s:Group>	
+			<s:BitmapImage scaleMode="letterbox" id="up_left">
+				<s:source>
+					<s:MultiDPIBitmapSource
+						source160dpi="@Embed('assets/tooltip/top_left_350x268.png')"
+						source240dpi="@Embed('assets/tooltip/top_left_450x344.png')"
+						source320dpi="@Embed('assets/tooltip/top_left_550x421.png')"/>
+				</s:source>
+			</s:BitmapImage>
+			
+			<s:BitmapImage scaleMode="letterbox" id="up_right">
+				<s:source>
+					<s:MultiDPIBitmapSource
+						source160dpi="@Embed('assets/tooltip/top_right_350x268.png')"
+						source240dpi="@Embed('assets/tooltip/top_right_450x344.png')"
+						source320dpi="@Embed('assets/tooltip/top_right_550x421.png')"/>
+				</s:source>
+			</s:BitmapImage>
+			
+			<s:Image scaleMode="letterbox" id="down_center"
+					 click="closeToolTip()">
+				<s:source>
+					<s:MultiDPIBitmapSource
+						source160dpi="@Embed('assets/tooltip/bottom_500x377.png')"
+						source240dpi="@Embed('assets/tooltip/bottom_600x453.png')"
+						source320dpi="@Embed('assets/tooltip/bottom_700x529.png')"/>
+				</s:source>
+			</s:Image>
+			
+		</s:Group>
+		
+	</s:View>
+	
+	<s:Group>	
+		<s:View id = "connection" visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+			<s:Group width="250" height="80">
+				<s:Label text="It seems like that you´ve lost " 
+						 x="10" y = "14" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="your Internet connection. Sorry" 
+						 x="10" y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="Information cannot be displayed." 
+						 x="10" y = "50" 
+						 fontFamily="_sans" 
+						 color="white"/>
+			</s:Group>
+		</s:View>
+	</s:Group>
+	
+	<s:Group>	
+		<s:View id = "vNotFound" visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+			<s:Group width="250" height="80">
+				<s:Label text="Video not found!" 
+						 x="65" y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
+			</s:Group>
+		</s:View>
+	</s:Group>
+		
+	<s:View id = "indicatormenu" visible="true"
+			backgroundColor="white" 
+			fontFamily="_sans" 
+			alpha="0.9" 
+			x="0" y="{navigator.height - 110}">
+		
+		<s:Group width="{navigator.width}" height="50">
+			
+			<s:BusyIndicator id="bi" width="35" height="35" 
+							 visible="true"
+							 x="{navigator.width / 2 - 18}" 
+							 y ="8"
+							 symbolColor="red"/>
+		</s:Group>
+	</s:View>
+	
+	<s:viewMenuItems>		
+		<s:ViewMenuItem label="Config"
+						click="showConfig();"
+						iconPlacement="left">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/settings48x48.png"
+										source240dpi="assets/settings72x72.png"
+										source320dpi="assets/settings96x96.png"/>
+			</s:icon>
+		</s:ViewMenuItem>
+		
+		<s:ViewMenuItem label="Info"  
+						click="showInfo();"
+						iconPlacement="left">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/infoicon_48x48.png"
+										source240dpi="assets/infoicon_72x72.png"
+										source320dpi="assets/infoicon_96x96.png"/>
+			</s:icon>
+		</s:ViewMenuItem>
+	</s:viewMenuItems>
+</s:View>

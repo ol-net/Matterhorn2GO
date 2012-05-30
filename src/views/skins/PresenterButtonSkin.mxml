@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+			 xmlns:s="library://ns.adobe.com/flex/spark"
+			 xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+			 minWidth="48" minHeight="48"
+			 alpha.disabled="0.5">
+	
+	<!-- host component -->
+	<fx:Metadata>
+		<![CDATA[
+			[HostComponent("business.ImageButton")]
+		]]>
+	</fx:Metadata>
+	
+	<!-- states -->
+	<s:states>
+		<s:State name="up" />
+		<s:State name="over" />
+		<s:State name="down" />
+		<s:State name="disabled" />
+	</s:states>
+	
+	<s:Rect left="0" right="0" top="0" bottom="0" >
+		<s:fill>
+			<s:SolidColor alpha="0" />
+		</s:fill>
+	</s:Rect>
+	
+	<s:BitmapImage id="image_up" includeIn="up, disabled">
+		<s:source>
+			<s:MultiDPIBitmapSource
+				source160dpi="@Embed('assets/talking_head48x48.png')"
+				source240dpi="@Embed('assets/talking_head72x72.png')"
+				source320dpi="@Embed('assets/talking_head96x96.png')"/>
+		</s:source>
+	</s:BitmapImage>
+	<s:BitmapImage id="image_over" includeIn="over">
+		<s:source>
+			<s:MultiDPIBitmapSource
+				source160dpi="@Embed('assets/talking_head48x48_active.png')"
+				source240dpi="@Embed('assets/talking_head72x72_active.png')"
+				source320dpi="@Embed('assets/talking_head96x96_active.png')"/>
+		</s:source>
+	</s:BitmapImage>
+	<s:BitmapImage id="image_down" includeIn="down">
+		<s:source>
+			<s:MultiDPIBitmapSource
+				source160dpi="@Embed('assets/talking_head48x48_active.png')"
+				source240dpi="@Embed('assets/talking_head72x72_active.png')"
+				source320dpi="@Embed('assets/talking_head96x96_active.png')"/>
+		</s:source>
+	</s:BitmapImage>
+	
+</s:SparkSkin>

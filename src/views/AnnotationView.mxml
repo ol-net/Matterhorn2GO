@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Comments"
+		viewActivate="init()"
+		backKeyPressed="popThisView()">
+	<fx:Declarations>
+		<!-- Platzieren Sie nichtvisuelle Elemente (z. B. Dienste, Wertobjekte) hier -->
+	
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[			
+			import business.datahandler.AnnotationDataHandler;
+			import business.datahandler.XMLHandler;
+			
+			import events.AnnotationLoadedEvent;
+			
+			import mx.collections.XMLListCollection;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
+			
+			private var serviceObj:HTTPService = new HTTPService();
+			private var currentMediaId:String;
+			private var inTime:Number;
+			
+			[Bindable]
+			private var AnnoList:XMLListCollection;
+			
+			[Bindable]			
+			private var AnnoData:AnnotationDataHandler;			
+			private var xpathValue:XMLHandler;
+			
+			protected function init():void
+			{	
+				if(data == null){
+					return;
+				}
+				panel.setStyle("chromeColor", "white");
+				xpathValue = new XMLHandler();
+				var xml_data:XML = data as XML;				
+				var Path:String = "result/@id";
+				currentMediaId = xpathValue.getResult(Path, xml_data);				
+				
+				AnnoData = AnnotationDataHandler.getInstance(currentMediaId);
+				AnnoData.addEventListener(AnnotationLoadedEvent.ANNOTATIONLOADED, getAnnoListCollection);				
+			}
+			
+			public function getAnnoListCollection(event:AnnotationLoadedEvent):void
+			{
+				AnnoList = AnnoData.getAnnotationListCollection();
+				panel.title = "number of comments: " + AnnoData.getTotal() as String;
+			}	
+			
+			protected function popThisView():void
+			{
+				navigator.popView();
+				navigator.pushView(PlayerView, data);	
+			}
+			
+			protected function gotoAddAnnoView():void
+			{
+				navigator.popView();
+				navigator.pushView(AddAnnotationView, data, inTime);	
+			}
+			public function applicationExit():void {
+				var exitingEvent:Event = new Event(Event.EXITING, false, true);
+				NativeApplication.nativeApplication.dispatchEvent(exitingEvent);
+				if (!exitingEvent.isDefaultPrevented()) {
+					NativeApplication.nativeApplication.exit();
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>	
+		<s:Button id="pop_view_button" click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon48x48.png"
+										source240dpi="assets/BackIcon72x72.png"
+										source320dpi="assets/BackIcon96x96.png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:Panel id="panel" width="100%" height="100%">
+		<s:List id="list" width="100%" height="100%"
+				dataProvider="{AnnoList}" 
+				itemRenderer="business.renderers.AnnotationRenderer"/>
+		
+		<s:controlBarContent>
+			<s:Group>
+				<s:Button id="add_anno_button" label="add a comment" x="{navigator.width / 2 - 105}"  click="gotoAddAnnoView();" >
+					<s:icon>
+						<s:MultiDPIBitmapSource source160dpi="assets/button_addAnno48x48.png"
+												source240dpi="assets/button_addAnno72x72.png"
+												source320dpi="assets/button_addAnno96x96.png"/>
+					</s:icon>
+				</s:Button>
+			</s:Group>
+		</s:controlBarContent>
+		
+	</s:Panel>
+	
+	<s:viewMenuItems>
+		<s:ViewMenuItem label="schließen" click="applicationExit();"/>
+	</s:viewMenuItems>
+</s:View>

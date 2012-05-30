@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Add Comments"
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		creationComplete="init()" 
+		backKeyPressed="popThisView()">
+	
+	<fx:Declarations>
+		
+		<s:HTTPService id="addAnnotation" useProxy="false" method="POST"  > 
+			<s:url>{MatterhornURL}</s:url>
+			<mx:request xmlns=""> 				
+				<episode>{currentMediaId}</episode> 
+				<type>comment</type>
+				<value>{txt_name.text + " NameDelimiter " +txt_nachricht.text}</value> 
+				<in>{inTime}</in>
+				<out>{inTime}</out> 
+			</mx:request>         
+		</s:HTTPService> 
+		
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import business.datahandler.URLClass;
+			import business.datahandler.XMLHandler;
+			import mx.events.ResizeEvent;
+			
+			private var xpathValue:XMLHandler
+			[Bindable]
+			private var currentMediaId:String;
+			[Bindable]
+			private var inTime:String;
+			[Bindable]
+			private var outTime:String;
+			[Bindable]
+			private var MatterhornURL:String;
+			
+			[Bindable]
+			protected var height_num:Number = 0;
+			
+			[Bindable]
+			protected var width_num:Number = 0;
+			
+			protected function init():void
+			{
+				
+				//get the path to the video server annotation rest endpoint
+				MatterhornURL = URLClass.getInstance().getURL()+"/annotation/";
+				
+				xpathValue = new XMLHandler();
+				var xml_data:XML = data as XML;
+				var IdPath:String = "mediapackage/@id";
+				currentMediaId = xpathValue.getResult(IdPath, xml_data);	
+				currentMediaId.toString();
+				
+				//get inpoint of the comment
+				var InPath:String = "mediapackage/inTimePlayer";
+				
+				inTime = xpathValue.getResult(InPath, xml_data);				
+				inTime.toString();
+				var tmp:Number = Number(inTime);
+				tmp = tmp*6000;
+				inTime = String(tmp);
+				outTime = inTime;
+				outTime.toString();
+				
+				height_num = this.navigator.height -70;
+				width_num = this.navigator.width -10;
+				
+				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
+			}			
+			
+			protected function addAnno():void
+			{	
+				if(txt_name.text =="" || txt_nachricht.text =="") return;
+				addAnnotation.send();				
+				popThisView();
+			} 
+			
+			public function setSize(event:ResizeEvent):void
+			{	
+				height_num = this.navigator.height -70;
+				width_num = this.navigator.width -10;
+				
+				save_button.y = height_num;
+			}
+			
+			protected function popThisView():void
+			{
+				navigator.popView();
+				navigator.pushView(AnnotationView, data);	
+			}
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>		
+		<s:Button id="pop_view_button" click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon48x48.png"
+										source240dpi="assets/BackIcon72x72.png"
+										source320dpi="assets/BackIcon96x96.png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:VGroup paddingTop="0"  paddingLeft="10">
+		<s:Scroller width="{width_num}" height="{height_num}">
+			<s:Group>
+					<s:VGroup y="20" x="10">
+						<s:Label text="Name:" x="10" y="10"/>
+
+						<s:TextInput id="txt_name" x="40" y="10"
+						 width="261"/>
+						
+						<s:Label text="Message:" x="10" y="50"/>
+
+						<s:TextArea id="txt_nachricht" x="10" y="70"
+								width="260" height="172"/>
+					</s:VGroup>
+					
+					<s:Button id="save_button" width="260" label="add" click="addAnno()" x="10" y="{height_num}">
+						<s:icon>
+							<s:MultiDPIBitmapSource source160dpi="assets/save48x48.png"
+													source240dpi="assets/save72x72.png"
+													source320dpi="assets/save96x96.png"/>
+						</s:icon>
+					</s:Button>
+				
+			</s:Group>
+		</s:Scroller>
+	</s:VGroup>
+</s:View>

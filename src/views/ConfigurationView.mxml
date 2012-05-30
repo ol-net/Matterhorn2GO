@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Configuration" 
+		creationComplete="init()">
+	<fx:Declarations>
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			
+			import business.ConfigurationReader;
+			import business.datahandler.URLClass;
+			
+			import events.FileReaderCompleteEvent;
+			
+			import mx.events.ResizeEvent;
+			import mx.core.UIComponent;
+			
+			private var tit:TextField;
+			
+			private var titleComp:UIComponent;
+			
+			private var fontFamily:String = "_sans";
+			
+			private var fontSize:Number = 16;
+			
+			[Bindable]
+			protected var height_num:Number = 0;
+			
+			[Bindable]
+			protected var width_num:Number = 0;
+			
+			// The initialisation function
+			protected function init():void
+			{
+				tit = new TextField();
+				tit.multiline = true;
+				tit.wordWrap = true;
+				tit.defaultTextFormat = new TextFormat(fontFamily, fontSize, null, null);
+				tit.autoSize = "left";
+				tit.width = this.navigator.width - 30;
+				
+				tit.text = data.AdopterName;
+				
+				titleComp = new UIComponent();
+				titleComp.y=6;
+				titleComp.x=70;
+				titleComp.addChild(tit);
+				
+				group.addElement(titleComp);
+				
+				configuration_label.visible = false;
+				height_num = navigator.height - 70;
+				width_num = navigator.width - 10;
+				
+				//textinput_url.text = URLClass.getInstance().getURL();
+				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
+			}
+			
+			public function setSize(event:ResizeEvent):void
+			{	
+				height_num = this.navigator.height -70;
+				width_num = this.navigator.width -10;
+			}
+			
+			public function setURL():void
+			{
+				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+				
+				fileReader.setURL(data.AdopterURL);
+				
+				configuration_label.visible = true;
+			}
+			
+			protected function popThisView():void
+			{
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				navigator.popView();
+				navigator.pushView(MobileMatterhornHomeView, data);	
+			}
+		]]>
+	</fx:Script>
+	<s:actionContent>
+		<s:Button id="pop_view_button" click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon48x48.png"
+										source240dpi="assets/BackIcon72x72.png"
+										source320dpi="assets/BackIcon96x96.png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:VGroup paddingTop="0"  paddingLeft="10">
+		<s:Scroller width="{width_num}" height="{height_num}">
+			<s:Group>
+				<s:VGroup y="30">
+					<s:Group id="group">
+						
+						<s:Label text="Server: " 
+								 x="10" y="10"
+								 fontWeight="bold" 
+								 fontFamily="_sans"/>
+						
+						<!--
+						
+						<s:TextInput id="textinput_url" editable="" 
+									 x="60" 
+									 width="{navigator.width - 90}" 
+									 enabled="true"/>-->
+						
+						<s:Label id="configuration_label"
+								 text="Configuration saved!" 
+								 x="10" y="70"
+								 fontWeight="bold" 
+								 fontFamily="_sans"/>
+
+						<s:Label text="Save Configuration: " 
+								 x="10" y="130"
+								 fontWeight="bold" 
+								 fontFamily="_sans"/>
+						
+						<s:Button id="save_button"
+								  x="165" y="115" click="setURL();">
+							<s:icon>
+								<s:MultiDPIBitmapSource source160dpi="assets/save48x48.png"
+														source240dpi="assets/save72x72.png"
+														source320dpi="assets/save96x96.png"/>
+							</s:icon>
+						</s:Button>
+						
+					</s:Group>
+				</s:VGroup>
+			</s:Group>
+		</s:Scroller>
+	</s:VGroup> 
+</s:View>

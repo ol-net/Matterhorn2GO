@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qnx>
+  <permission>access_shared</permission>
+  <permission>record_audio</permission>
+  <permission>read_geolocation</permission>
+  
+  <permission>access_internet</permission>
+  <permission>play_audio</permission>
+  <permission>post_notification</permission>
+  <permission>set_audio_volume</permission>
+  <permission>read_device_identifying_information</permission>
+</qnx>

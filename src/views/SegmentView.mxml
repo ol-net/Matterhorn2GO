@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="VideoSegments"
+		xmlns:views="views.*" 
+		creationComplete="init()"
+		backKeyPressed="popThisView()">
+	
+	<fx:Declarations>
+		<!--<s:HTTPService id="srv" url="http://gruinard.virtuos.uos.de:8080/search/episode.xml?id=a3e2a717-242f-4f9c-960a-b7b43f75c348" result="showresults();" fault="failure();"/> -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import business.datahandler.DataHandler;
+			import business.datahandler.XMLHandler;
+			import business.datahandler.SegmentDataHandler;
+			
+			import events.SegmentLoadedEvent;
+			
+			import flash.events.Event;
+			
+			import mx.collections.XMLListCollection;
+			
+			[Bindable]
+			public var videos:XMLListCollection;
+			private var xmlData:DataHandler;
+			private var height_window:int;
+			
+			private var segment_xml:SegmentDataHandler;
+			
+			public function init():void
+			{
+				
+				var	xpathValue:XMLHandler = new XMLHandler();
+				
+				segment_xml = SegmentDataHandler.getInstance(xpathValue.getResult("mediapackage/@id", data));
+				segment_xml.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
+			}
+			
+			public function getXMLListCollection(event:SegmentLoadedEvent):void
+			{
+				videos = segment_xml.getSegmentListCollection();
+			}
+			
+			protected function popThisView():void
+			{
+				navigator.popView();
+				navigator.pushView(PlayerView, data);	
+			}
+			
+
+			
+			public function loadVideo():void
+			{
+				var selectedItem:Object = list.selectedItem
+				
+				var	xpathValue:XMLHandler = new XMLHandler();
+				
+				var segment:String = xpathValue.getResult("mediapackage/@id", data)+" "+selectedItem.@time;
+
+				navigator.popView();
+
+				navigator.pushView(PlayerView, segment);
+			}
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		<s:Button id="pop_view_button" click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon48x48.png"
+										source240dpi="assets/BackIcon72x72.png"
+										source320dpi="assets/BackIcon96x96.png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:List id="list" width="100%" height="100%"
+			dataProvider="{videos}"
+			labelField="fontName"
+			itemRenderer="business.renderers.SegmentRenderer" 
+			change="loadVideo()"/>
+	
+</s:View>
