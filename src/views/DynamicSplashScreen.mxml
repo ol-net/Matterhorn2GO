@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SplashScreenImage xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					 xmlns:s="library://ns.adobe.com/flex/spark">   
+	<s:SplashScreenImageSource dpi="160" 
+							   aspectRatio="portrait" 
+							   source="@Embed('assets/splashscreen/splash_screen_logo768x1024.jpg')"/>   
+	<s:SplashScreenImageSource dpi="240" 
+							   aspectRatio="portrait" 
+							   source="@Embed('assets/splashscreen/splash_screen_logo480x810.jpg')"/>
+	<s:SplashScreenImageSource dpi="320" 
+							   aspectRatio="portrait" 
+							   source="@Embed('assets/splashscreen/splash_screen_logo640x960.jpg')"/>
+	<s:SplashScreenImageSource dpi="160" 
+							   aspectRatio="landscape" 
+							   source="@Embed('assets/splashscreen/splash_screen_logo1024x768.jpg')"/>  
+	<s:SplashScreenImageSource dpi="240" 
+							   aspectRatio="landscape" 
+							   source="@Embed('assets/splashscreen/splash_screen_logo810x480.jpg')"/>
+	<s:SplashScreenImageSource dpi="320" 
+							   aspectRatio="landscape" 
+							   source="@Embed('assets/splashscreen/splash_screen_logo960x640.jpg')"/>
+</s:SplashScreenImage>
