@@ -22,6 +22,7 @@ USA
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		xmlns:views="views.*"	
 		creationComplete="init()"
+		tabBarVisible="false"
 		backKeyPressed="popThisView()" 
 		backgroundColor="black" 
 		actionBarVisible="false" 
@@ -161,6 +162,9 @@ USA
 				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
 				this.navigator.addEventListener(MouseEvent.CLICK, getButtonPanel);
 				
+				this.addEventListener("keyDown", handleButtons, false, 1);
+				this.addEventListener("keyUp", handleButtons, false, 1);
+				
 				setTimer();
 				
 				var	xpathValue:XMLHandler = new XMLHandler();
@@ -174,10 +178,10 @@ USA
 			public function getXMLListCollection(event:SegmentLoadedEvent):void
 			{
 				videos = segment_xml.getSegmentAsXML();
-				
+
 				var xmlHandler:XMLHandler = new XMLHandler();
 				
-				var x:String = xmlHandler.getResult("count(result/segments/segment)", videos); 
+				var x:String = xmlHandler.getResult("count(//segments/segment)", videos); 
 				maxSegmentIndex =  new int(x);
 				
 				if(maxSegmentIndex == 0)
@@ -231,14 +235,14 @@ USA
 					notConnected(null);
 				}
 				
+
 				if(osmfplayer.player.currentTime == osmfplayer.player.duration || osmfplayer.player.currentTime == 0)
-				{
+				{						
+					osmfplayer.player.seek(0);
+					seekBar.value = 0;
 					pause_button.visible = false;
 					play_button.visible = true;
 					osmfplayer.player.pause();
-					
-					seekBar.value = 0;
-					osmfplayer.player.seek(0.00001);
 					return;
 				}
 				
@@ -258,7 +262,7 @@ USA
 					
 					time_text = timerend(e.time * 1000);
 				}
-				
+					
 				seekPosition = 0;
 				
 				if(duration_text == "00:00:00")
@@ -337,16 +341,19 @@ USA
 			public function videoSize():void
 			{	
 				var videoPath:String = "mediapackage/media/track[mimetype='video/x-flv'][@type='presenter/delivery'][tags/tag[2]='medium-quality'][2]/url"; 
-				var videoPathTwo:String = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][tags/tag[2]='medium-quality'][2]/url"; 
+				var videoPathTwo:String = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][tags/tag[2]='medium-quality'][2]/url";
 				
-				//if(xpathValue.getResult(videoPath, data) == "") 
-				//{
-				//var	videoPath:String = "mediapackage/media/track[mimetype='video/mp4'][@type='presenter/delivery'][tags/tag[3]='high-quality'][2]/url"; 
-			    //var videoPathTwo:String = "mediapackage/media/track[mimetype='video/mp4'][@type='presentation/delivery'][tags/tag[3]='high-quality'][2]/url"; 
-				//}
-				  
-				//trace(data)
-			    //trace(" TEST : " + xpathValue.getResult(videoPath, data))
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='presenter/delivery'][2]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][2]/url";
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='presenter/delivery'][1]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][1]/url";
+				}
 				
 				if(xpathValue.getResult(videoPath, data) != "")
 				{
@@ -358,7 +365,7 @@ USA
 					
 					if(osmfplayer.player != null)
 					{
-						osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
+						osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 					}
 					
 					if(xpathValue.getResult(videoPathTwo, data) != "" && parallelViewState)
@@ -403,8 +410,11 @@ USA
 			{		
 				if(osmfplayer != null)
 				{
-					if(osmfplayer.player.playing || osmfplayer.player.paused)
+					if(osmfplayer.player != null)
+					{
+						if(osmfplayer.player.playing || osmfplayer.player.paused)
 						osmfplayer.player.seek(seekBar.value * 60 + 10);
+					}
 				}
 			}
 			
@@ -412,8 +422,11 @@ USA
 			{
 				if(osmfplayer != null)
 				{
-					if(osmfplayer.player.playing || osmfplayer.player.paused)
-						osmfplayer.player.seek(seekBar.value * 60 - 10);
+					if(osmfplayer.player != null)
+					{
+						if(osmfplayer.player.playing || osmfplayer.player.paused)
+							osmfplayer.player.seek(seekBar.value * 60 - 10);
+					}
 				}
 			}
 			
@@ -421,25 +434,28 @@ USA
 			{
 				if(osmfplayer != null)
 				{
-					if(maxSegmentIndex >= segmentCounter && osmfplayer.player.playing || osmfplayer.player.paused)
+					if(osmfplayer.player != null)
 					{
-						var xmlHandler:XMLHandler = new XMLHandler();
-						
-						var i:String = xmlHandler.getResult("result/segments/segment[@time>'"+seekBar.value * 60000+"'][1]/@index", videos);
-						
-						var cIndex:int = new int(i);
-						
-						segmentCounter = cIndex;
-						
-						var x:String = xmlHandler.getResult("result/segments/segment[@index='"+segmentCounter+"']/@time", videos); 
-						
-						var value:Number = new Number(x) / 1000;
-						
-						if(osmfplayer.player.playing || osmfplayer.player.paused)
-							osmfplayer.player.seek(value);
-						
-						if(maxSegmentIndex > segmentCounter)
-							segmentCounter++;
+						if(maxSegmentIndex >= segmentCounter && osmfplayer.player.playing || osmfplayer.player.paused)
+						{
+							var xmlHandler:XMLHandler = new XMLHandler();
+							
+							var i:String = xmlHandler.getResult("//segments/segment[@time>'"+seekBar.value * 60000+"'][1]/@index", videos);
+							
+							var cIndex:int = new int(i);
+							
+							segmentCounter = cIndex;
+							
+							var x:String = xmlHandler.getResult("//segments/segment[@index='"+segmentCounter+"']/@time", videos); 
+							
+							var value:Number = new Number(x) / 1000;
+							
+							if(osmfplayer.player.playing || osmfplayer.player.paused)
+								osmfplayer.player.seek(value);
+							
+							if(maxSegmentIndex > segmentCounter)
+								segmentCounter++;
+						}
 					}
 				}
 			}
@@ -448,46 +464,49 @@ USA
 			{
 				if(osmfplayer != null)
 				{
-					if(minSegmentIndex <= segmentCounter && osmfplayer.player.playing || osmfplayer.player.paused)
+					if(osmfplayer.player != null)
 					{
-						var xmlHandler:XMLHandler = new XMLHandler();
-						
-						var ci:String =  xmlHandler.getResult("count(result/segments/segment[@time<'"+seekBar.value * 60000+"']/@index)", videos);
-						
-						var num:int = new int(ci);
-						
-						if(num == 1)
-							num = maxSegmentIndex;
-						
-						num = num -1;
-						
-						var i:String = xmlHandler.getResult("result/segments/segment[@time<'"+seekBar.value * 60000+"']["+num+"]/@index", videos);
-						
-						var cIndex:int = new int(i);
-						
-						segmentCounter = cIndex;
-						
-						var x:String = xmlHandler.getResult("result/segments/segment[@index='"+segmentCounter+"']/@time", videos); 
-						
-						var value:Number = new Number(x) / 1000;
-						
-						if(osmfplayer.player.playing || osmfplayer.player.paused)
-							osmfplayer.player.seek(value);
-						
-						if(segmentCounter > 0)
+						if(minSegmentIndex <= segmentCounter && osmfplayer.player.playing || osmfplayer.player.paused)
 						{
-							segmentCounter--;
-						}
-						else
-						{
-							segmentCounter = maxSegmentIndex - 1;
+							var xmlHandler:XMLHandler = new XMLHandler();
 							
-							x = xmlHandler.getResult("result/segments/segment[@index='"+segmentCounter+"']/@time", videos); 
+							var ci:String =  xmlHandler.getResult("count(//segments/segment[@time<'"+seekBar.value * 60000+"']/@index)", videos);
 							
-							value = new Number(x) / 1000;
+							var num:int = new int(ci);
+							
+							if(num == 1)
+								num = maxSegmentIndex;
+							
+							num = num -1;
+							
+							var i:String = xmlHandler.getResult("//segments/segment[@time<'"+seekBar.value * 60000+"']["+num+"]/@index", videos);
+							
+							var cIndex:int = new int(i);
+							
+							segmentCounter = cIndex;
+							
+							var x:String = xmlHandler.getResult("//segments/segment[@index='"+segmentCounter+"']/@time", videos); 
+							
+							var value:Number = new Number(x) / 1000;
 							
 							if(osmfplayer.player.playing || osmfplayer.player.paused)
 								osmfplayer.player.seek(value);
+							
+							if(segmentCounter > 0)
+							{
+								segmentCounter--;
+							}
+							else
+							{
+								segmentCounter = maxSegmentIndex - 1;
+								
+								x = xmlHandler.getResult("//segments/segment[@index='"+segmentCounter+"']/@time", videos); 
+								
+								value = new Number(x) / 1000;
+								
+								if(osmfplayer.player.playing || osmfplayer.player.paused)
+									osmfplayer.player.seek(value);
+							}
 						}
 					}
 				}
@@ -592,8 +611,11 @@ USA
 				
 				if(osmfplayer != null)
 				{
-					if(osmfplayer.player.playing || osmfplayer.player.paused)
-						onSeek(seekBar.value);
+					if(osmfplayer.player != null)
+					{
+						if(osmfplayer.player.playing || osmfplayer.player.paused)
+							onSeek(seekBar.value);
+					}
 				}
 			}
 			
@@ -628,12 +650,15 @@ USA
 			
 			public function playVideo():void
 			{
-				if(osmfplayer != null && osmfplayer.player.paused)
+				if(osmfplayer != null)
 				{
-					menu.visible = false;
-					play_button.visible = false;
-					pause_button.visible = true;
-					osmfplayer.player.play();
+					if (osmfplayer.player != null) 
+					{
+						menu.visible = false;
+						play_button.visible = false;
+						pause_button.visible = true;
+						osmfplayer.player.play();
+					}
 				}
 			}
 			
@@ -650,11 +675,14 @@ USA
 			
 			public function pauseVideo():void
 			{
-				if(osmfplayer != null && osmfplayer.player.playing)
+				if(osmfplayer != null)
 				{
-					pause_button.visible = false;
-					play_button.visible = true;
-					osmfplayer.player.pause();
+					if(osmfplayer.player != null)
+					{
+						pause_button.visible = false;
+						play_button.visible = true;
+						osmfplayer.player.pause();
+					}
 				}
 			}
 			
@@ -709,10 +737,13 @@ USA
 			{
 				if(osmfplayer != null)
 				{
-					if(osmfplayer.player.playing || osmfplayer.player.paused)
+					if(osmfplayer.player != null)
 					{
-						osmfplayer.player.stop();
-						osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
+						if(osmfplayer.player.playing || osmfplayer.player.paused)
+						{
+							osmfplayer.player.stop();
+							osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
+						}
 					}
 				}
 				
@@ -735,6 +766,18 @@ USA
 			public function notConnected(event:NotConnectedEvent):void 
 			{
 				popThisView();
+			}
+			
+			// Event handler to handle hardware keyboard keys.
+			protected function handleButtons(event:KeyboardEvent):void
+			{
+				if (event.keyCode == Keyboard.HOME) {
+					if(osmfplayer != null) 
+					{
+						osmfplayer.player.stop();
+					}
+					popThisView();
+				}
 			}
 		]]>
 	</fx:Script>

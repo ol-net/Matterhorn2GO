@@ -18,28 +18,63 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
 USA 
 -->
-<s:ViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
-							xmlns:s="library://ns.adobe.com/flex/spark" 
-							firstView="views.MobileMatterhornHomeView"
-							applicationDPI="160" 
-							splashScreenImage="@Embed('assets/startscreen.png')"
-							persistNavigatorState="true" creationComplete="init();">
+<s:TabbedViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+								  xmlns:s="library://ns.adobe.com/flex/spark" 
+								  applicationComplete="onApplicationComplete(event)"
+								  applicationDPI="160" 
+								  backgroundColor="#861B1D"
+								  splashScreenImage="views.DynamicSplashScreen"
+								  persistNavigatorState="true">
 	
 	<fx:Style source="views/skins/menustyle/css/global.css"/>
 	
-	<fx:Script>
-		<![CDATA[
-			
-		 	public function init():void
-		 	{
-				 NativeApplication.nativeApplication.addEventListener(Event.DEACTIVATE, handleDeactivate, false, 0, true);
-		    }
-						
-			private function handleDeactivate(event:Event):void
-			{
-				NativeApplication.nativeApplication.exit();
-			}			
-		]]>
-	</fx:Script>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		
+		s|TabbedViewNavigator { 
+			backgroundColor:#FFFFFF;
+			skinClass: ClassReference("views.skins.view.TabbedViewNavigatorSkin"); 
+		}
+		
+		s|ActionBar {
+			chromeColor: #861B1D;
+			defaultButtonAppearance: default;
+			skinClass: ClassReference("views.skins.actionbar.CustomActionBarSkin");
+		}
+		
+	</fx:Style>	
 	
-</s:ViewNavigatorApplication>
+	<fx:Script> 
+		<![CDATA[ 
+			import mx.events.FlexEvent; 
+			import spark.events.IndexChangeEvent; 
+			import events.ChangeTabViewEvent;
+			
+			protected function onApplicationComplete (event:FlexEvent):void
+			{ 
+				//vn1.actionBar.visible=false; 
+				//tabbedNavigator.addEventListener(IndexChangeEvent.CHANGE,onChange); 
+				tabbedNavigator.addEventListener(ChangeTabViewEvent.CHANGETAB, onChange); 
+			} 
+			
+			protected function onChange(event:ChangeTabViewEvent):void 
+			{ 
+				this.tabbedNavigator.selectedIndex = 1;
+				//this.tabIndex = 1;
+				//if (event.newIndex==0) vn1.activeView.actionBarVisible=false; 
+			} 
+			
+		]]> </fx:Script> 
+	
+	<s:ViewNavigator id="vn1"
+					 label="Series" 
+					 width="100%" 
+					 height="100%" 
+					 firstView="views.SeriesView"/> 
+	
+	<s:ViewNavigator label="Episodes" 
+					 width="100%" 
+					 height="100%" 
+					 firstView="views.EpisodeView"/> 
+	
+</s:TabbedViewNavigatorApplication>

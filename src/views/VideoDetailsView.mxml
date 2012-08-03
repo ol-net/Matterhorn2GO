@@ -21,7 +21,9 @@ USA
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		title="Video-Description"
-		xmlns:views="views.*"
+		xmlns:views="views.*" 
+		backgroundColor="#F2F2F2" 
+		tabBarVisible="false"
 		viewActivate="init()"
 		backKeyPressed="loadNewView()" 
 		xmlns:business="business.*">
@@ -33,7 +35,6 @@ USA
 			//import com.adobe.nativeExtensions.Networkinfo.NetworkInfo;
 			//import com.adobe.nativeExtensions.Networkinfo.NetworkInterface; 
 			
-			import business.datahandler.DataHandler;
 			import business.datahandler.SegmentDataHandler;
 			import business.datahandler.XMLHandler;
 			
@@ -53,7 +54,6 @@ USA
 			[Bindable]
 			protected var width_num:Number = 0;
 			
-			private var xmlData:DataHandler;
 			private var dataHandler:SegmentDataHandler;
 			
 			private var detailTitle:TextField;
@@ -219,6 +219,9 @@ USA
 			{	
 				if(titleComp != null)
 				{
+					height_num = this.navigator.height - 70;
+					width_num = this.navigator.width - 10;
+					
 					detailGroup.removeElement(titleComp);
 					detailGroup.removeElement(authorComp);
 					detailGroup.removeElement(seriesComp);
@@ -228,9 +231,6 @@ USA
 					authorComp.removeChild(author);
 					seriesComp.removeChild(series);
 					descriptionComp.removeChild(description);
-					
-					height_num = this.navigator.height - 70;
-					width_num = this.navigator.width - 10;
 					
 					initText();
 					
@@ -260,7 +260,7 @@ USA
 			protected function loadNewView():void
 			{
 				popThisView();
-				navigator.pushView(MobileMatterhornHomeView);					
+				navigator.pushView(EpisodeView);					
 			}
 			
 			public function notConnected(event:NotConnectedEvent):void 
@@ -272,6 +272,18 @@ USA
 	</fx:Script>
 	
 	<s:actionContent>
+		<s:Button id="back_button" 
+				  height="53"
+				  width="60"
+				  click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon40x40.png"
+										source240dpi="assets/BackIcon64x64.png"
+										source320dpi="assets/BackIcon88x88.png"/>
+			</s:icon>
+		</s:Button>
+		
+		<!--
 		<s:VGroup>
 			<s:Group width="60" height="60">
 				<business:ImageButton id="back_button"
@@ -281,16 +293,17 @@ USA
 									  skinClass="views.skins.BackButtonSkin"/>
 			</s:Group>
 		</s:VGroup>
+		-->
 	</s:actionContent>
 	
 	<s:Group>	
 		<s:View id = "connection" visible="false"
-				backgroundColor="black" 
+				backgroundColor="#861B1D" 
 				fontFamily="_sans" 
-				alpha="0.7" 
+				alpha="0.9" 
 				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
 			<s:Group width="250" height="80">
-				<s:Label text="It seems like that youÂ´ve lost " 
+				<s:Label text="It seems like that you´ve lost " 
 						 x="10" y = "14" 
 						 fontFamily="_sans" 
 						 color="white"/>
@@ -325,9 +338,9 @@ USA
 				</s:HGroup>
 				
 				<s:View id = "menu" visible="false"
-						backgroundColor="black" 
+						backgroundColor="#861B1D" 
 						fontFamily="_sans" 
-						alpha="0.7" 
+						alpha="0.9" 
 						x="{navigator.width / 2 - 133.5}" y="{epsilonS + 100}">
 					<s:Group width="250" height="80">
 						<s:Label text="You've lost your WiFi connection." 
@@ -346,7 +359,7 @@ USA
 				</s:View>
 				
 				<s:View id = "startvideo" visible="true"
-						backgroundColor="gray" 
+						backgroundColor="#BDBDBD" 
 						fontFamily="_sans" 
 						x="10" y="{epsilonS + 35}">
 					<s:Group width="{navigator.width - 40}" height="{detailImage.height + 20}">

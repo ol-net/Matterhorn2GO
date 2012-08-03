@@ -25,11 +25,11 @@ package business.datahandler
 	{
 		static private var instance:URLClass;
 		
-		private static const MATTERHORNURL:String = "http://video2.virtuos.uni-osnabrueck.de:8080";
+		private static const MATTERHORNURL:String = "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/";
 		
-		///private static const MATTERHORNURL:String = "http://gruinard.virtuos.uos.de:8080";
+		//private static const MATTERHORNURL:String = "http://video2.virtuos.uos.de:8080/search/";
 
-		//private static const MATTERHORNURL:String ="http://demo.opencastproject.org";
+		//private static const MATTERHORNURL:String ="http://demo.opencastproject.org/search/";
 		
 		//private static const MATTERHORNURL:String = "http://vm083.rz.uos.de/test/webservices/lernfunk";
 		
@@ -55,7 +55,14 @@ package business.datahandler
 			
 			if(matterhorn_url != '')
 			{
-				return matterhorn_url;
+				if(matterhorn_url != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/")
+				{
+					return matterhorn_url+"/search/";
+				}
+				else
+				{
+					return matterhorn_url;
+				}
 			}
 			else
 			{
@@ -63,6 +70,32 @@ package business.datahandler
 			}
 		}
 		
+		public function getURLNoSearch():String
+		{
+			//return "http://video2.virtuos.uni-osnabrueck.de:8080";
+			//return "http://matterhorn.teltek.es";
+			var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+			fileReader.readFile();
+			
+			var matterhorn_url:String = fileReader.getURL();
+			
+			if(matterhorn_url != '')
+			{
+				if(matterhorn_url != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/")
+				{
+					return matterhorn_url;
+				}
+				else
+				{
+					return matterhorn_url;
+				}
+			}
+			else
+			{
+				return MATTERHORNURL;
+			}
+		}
+
 		static public function getCommentSupport():Boolean{
 			return SUPPORTCOMMENTS;
 		}

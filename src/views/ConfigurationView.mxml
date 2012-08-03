@@ -20,7 +20,11 @@ USA
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
-		title="Configuration" 
+		title="Custom URL" 
+		xmlns:views="views.*"
+		backgroundColor="#F2F2F2" 
+		tabBarVisible="false"
+		xmlns:business="business.*"
 		creationComplete="init()">
 	<fx:Declarations>
 		
@@ -30,11 +34,13 @@ USA
 			
 			import business.ConfigurationReader;
 			import business.datahandler.URLClass;
+			import business.datahandler.EpisodesDataHandler;
+			import business.datahandler.SeriesDataHandler;
 			
 			import events.FileReaderCompleteEvent;
 			
-			import mx.events.ResizeEvent;
 			import mx.core.UIComponent;
+			import mx.events.ResizeEvent;
 			
 			private var tit:TextField;
 			
@@ -43,6 +49,8 @@ USA
 			private var fontFamily:String = "_sans";
 			
 			private var fontSize:Number = 16;
+			
+			private var dH:EpisodesDataHandler;
 			
 			[Bindable]
 			protected var height_num:Number = 0;
@@ -53,6 +61,28 @@ USA
 			// The initialisation function
 			protected function init():void
 			{
+				addText();
+								
+				height_num = navigator.height - 70;
+				width_num = navigator.width - 10;
+				
+				var tmp:String = URLClass.getInstance().getURLNoSearch();
+				
+				if(tmp != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/")
+				{
+					textinput_url.text = tmp;
+				}
+				
+				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
+				
+				this.addEventListener(KeyboardEvent.KEY_DOWN, handleButtons, false, 0, true);
+				this.addEventListener(KeyboardEvent.KEY_UP, handleButtons, false, 0, true);
+				//this.addEventListener("keyDown", handleButtons, false, 1);
+				//this.addEventListener("keyUp", handleButtons, false, 1);
+			}
+			
+			public function addText():void
+			{
 				tit = new TextField();
 				tit.multiline = true;
 				tit.wordWrap = true;
@@ -60,94 +90,136 @@ USA
 				tit.autoSize = "left";
 				tit.width = this.navigator.width - 30;
 				
-				tit.text = data.AdopterName;
+				tit.text ="Depending on the video-encoding and distribution type an Matterhorn installation might work or not with this app. We are sorry but we can not offer any support for any server that you might add here."
 				
 				titleComp = new UIComponent();
-				titleComp.y=6;
-				titleComp.x=70;
+				titleComp.y=130;
+				titleComp.x=10;
 				titleComp.addChild(tit);
 				
 				group.addElement(titleComp);
-				
-				configuration_label.visible = false;
-				height_num = navigator.height - 70;
-				width_num = navigator.width - 10;
-				
-				//textinput_url.text = URLClass.getInstance().getURL();
-				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
 			}
 			
 			public function setSize(event:ResizeEvent):void
 			{	
+				titleComp.removeChild(tit);
+				addText();
 				height_num = this.navigator.height -70;
 				width_num = this.navigator.width -10;
 			}
 			
-			public function setURL():void
+			public function setURL(e:Event):void
 			{
+				save_button.setFocus();
 				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
 				
-				fileReader.setURL(data.AdopterURL);
+				fileReader.setURL(textinput_url.text);
 				
-				configuration_label.visible = true;
+				dH = EpisodesDataHandler.getInstance();
+				//dH.setXMLListCollection(null);
+				dH.initLoadOK();0
+				dH.setOValue();
+				
+				//var eDH:EpisodesDataHandler = EpisodesDataHandler.getInstance();
+				//eDH.initLoadOK();
+				//eDH.init();
+				
+				var sDH:SeriesDataHandler = SeriesDataHandler.getInstance();
+				sDH.setXMLSeries(null);
+				sDH.initLoadOK();
+				sDH.initThumbnailOK();
+				sDH.setOValue();
+				//sDH.init();
+				
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				navigator.popView();
+				if(e == null)
+				 	navigator.popView();
+				//this.navigator.pu
+				
+				//navigator.pushView(SeriesView, data);
+				//navigator.pushView(EpisodeView, data);	
 			}
 			
 			protected function popThisView():void
 			{
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
+				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
 				navigator.popView();
-				navigator.pushView(MobileMatterhornHomeView, data);	
+				//navigator.pushView(AdoptersView, data);	
+			}
+			
+			// Event handler to handle hardware keyboard keys.
+			protected function handleButtons(event:KeyboardEvent):void
+			{				
+				if(event.keyCode == 13)
+				{
+					setURL(event);
+					stage.focus = null;
+				}
 			}
 		]]>
 	</fx:Script>
 	<s:actionContent>
-		<s:Button id="pop_view_button" click="popThisView();">
+		
+		<s:Button id="back_button" 
+				  height="53"
+				  width="60"
+				  click="popThisView();">
 			<s:icon>
-				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon48x48.png"
-										source240dpi="assets/BackIcon72x72.png"
-										source320dpi="assets/BackIcon96x96.png"/>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon40x40.png"
+										source240dpi="assets/BackIcon64x64.png"
+										source320dpi="assets/BackIcon88x88.png"/>
 			</s:icon>
 		</s:Button>
+		<!--
+		<s:Group width="60" height="60">
+			<business:ImageButton id="back_button"
+								  click="popThisView();"
+								  buttonMode="true"
+								  x="5" y="5"
+								  skinClass="views.skins.BackButtonSkin"/>
+		</s:Group>
+		
+		-->
 	</s:actionContent>
 	
 	<s:VGroup paddingTop="0"  paddingLeft="10">
 		<s:Scroller width="{width_num}" height="{height_num}">
 			<s:Group>
-				<s:VGroup y="30">
+				<s:VGroup y="20">
 					<s:Group id="group">
 						
-						<s:Label text="Server: " 
-								 x="10" y="10"
-								 fontWeight="bold" 
-								 fontFamily="_sans"/>
-						
-						<!--
-						
-						<s:TextInput id="textinput_url" editable="" 
-									 x="60" 
-									 width="{navigator.width - 90}" 
-									 enabled="true"/>-->
-						
-						<s:Label id="configuration_label"
-								 text="Configuration saved!" 
-								 x="10" y="70"
+						<s:Label text="URL: " 
+								 x="10" y="0"
 								 fontWeight="bold" 
 								 fontFamily="_sans"/>
 
-						<s:Label text="Save Configuration: " 
-								 x="10" y="130"
-								 fontWeight="bold" 
-								 fontFamily="_sans"/>
+						<s:TextInput id="textinput_url" 
+									 skinClass="spark.skins.mobile.TextInputSkin" 
+									 softKeyboardType="url"  
+									 needsSoftKeyboard="true"
+									 x="10" y="25"
+									 enter="setURL(event);"
+									 width="{navigator.width - 40}"/>
 						
-						<s:Button id="save_button"
-								  x="165" y="115" click="setURL();">
-							<s:icon>
-								<s:MultiDPIBitmapSource source160dpi="assets/save48x48.png"
-														source240dpi="assets/save72x72.png"
-														source320dpi="assets/save96x96.png"/>
-							</s:icon>
-						</s:Button>
+						<s:Button id="save_button" 
+								  height="30" 
+								  y="80"
+								  x="{navigator.width / 2 - 74}"
+								  label="add your URL"
+								  click="setURL(null);"/>
+							
+						<!--
 						
+						<business:ImageButton id="save_button"
+											  click="setURL(event);"
+											  buttonMode="true"
+											  x="{navigator.width / 2 - 35}" y="80"
+											  skinClass="views.skins.SaveButtonSkin"/>	
+						-->
+						<s:Label y="290"/>	
 					</s:Group>
 				</s:VGroup>
 			</s:Group>

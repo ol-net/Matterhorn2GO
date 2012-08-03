@@ -15,14 +15,14 @@
 	<!-- Transparent Rect to ensure proper scaling -->
 	<Rect width="159" height="100" x="0" y="0">
 		<fill>
-			<SolidColor color="#333333" alpha="0.9"/>
+			<SolidColor color="#861B1D" alpha="1"/>
 		</fill>
 	</Rect>
 
 	<!-- Border -->
 	<Rect width="158" height="99" x=".5" y=".5">
 		<stroke>
-			<SolidColorStroke weight="1" color="#333333" alpha="0.9"/> 
+			<SolidColorStroke weight="1" color="#861B1D" alpha="1"/> 
 		</stroke>
 	</Rect>
 </Graphic>

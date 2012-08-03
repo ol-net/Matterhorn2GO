@@ -19,12 +19,16 @@ USA
 */
 package business.renderers
 {
-	import business.Paging;
+	import business.LoadNextEpisodes;
+	import business.LoadNextSeries;
 	import business.core.StyleClient;
 	import business.datahandler.CheckForPublicVideo;
-	import business.datahandler.DataHandler;
+	import business.datahandler.EpisodesDataHandler;
+	import business.datahandler.SeriesDataHandler;
 	
-	import events.BusyIndicatorEvent;
+	import events.BusyIndicatorEventEpisode;
+	import events.BusyIndicatorEventSeries;
+
 	import events.VideoAvailableEvent;
 	
 	import mx.collections.XMLListCollection;
@@ -43,9 +47,12 @@ package business.renderers
 		
 		protected var instance:CheckForPublicVideo;
 		
-		private var paging:Paging = Paging.getInstance();
+		private var loadNextEpisodes:LoadNextEpisodes = LoadNextEpisodes.getInstance();
 		
-		private var xmlData:DataHandler;
+		private var loadNextSeries:LoadNextSeries = LoadNextSeries.getInstance();
+		
+		private var xmlEpisodeData:EpisodesDataHandler;
+		private var xmlSeriesData:SeriesDataHandler;
 		
 		private var videos:XMLListCollection;
 		
@@ -54,19 +61,37 @@ package business.renderers
 			if(value != null)
 			{
 				if(value.code == "update_view")
-				{
-					var indicatorLoaded:BusyIndicatorEvent = new BusyIndicatorEvent(BusyIndicatorEvent.INDICATORLOADED);
-					dispatchEvent(indicatorLoaded);
+				{	
+					if(value.@type == "episode")
+					{							
+						var indicatorLoaded:BusyIndicatorEventEpisode = new BusyIndicatorEventEpisode(BusyIndicatorEventEpisode.INDICATORLOADED);
+						dispatchEvent(indicatorLoaded);
+						
+						xmlEpisodeData = EpisodesDataHandler.getInstance();
+		
+						loadNextEpisodes.nextPage(xmlEpisodeData.getText());
+						
+						videos = xmlEpisodeData.getXMLListCollection();
+												
+						
+						videos.removeItemAt(videos.length - 1);
+						xmlEpisodeData.setXMLListCollection(videos);
+					}
+					else
+					{	
+						var indicatorLoadedSeries:BusyIndicatorEventSeries = new BusyIndicatorEventSeries(BusyIndicatorEventSeries.INDICATORLOADEDS);
+						dispatchEvent(indicatorLoadedSeries);
+						
+						xmlSeriesData = SeriesDataHandler.getInstance();
+						
+						loadNextSeries.nextPage(xmlSeriesData.getText());
+						
+						videos = xmlSeriesData.getXMLListCollection();
+						
+						videos.removeItemAt(videos.length - 1);
+						xmlSeriesData.setXMLListCollection(videos);
+					}
 					
-					xmlData = DataHandler.getInstance();
-	
-					paging.nextPage(xmlData.getText());
-					
-					videos = xmlData.getXMLListCollection();
-					
-					videos.removeItemAt(videos.length - 1);
-					
-					xmlData.setXMLListCollection(videos);
 				}
 				
 				if( _data == value || value.code == "update_view")

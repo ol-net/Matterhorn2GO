@@ -16,8 +16,8 @@
 	<Rect width="159" height="101" x="0" y="0">
 		<fill>
 			<LinearGradient rotation = "90">
-				<GradientEntry color="#222222" ratio="0" alpha="1"/>
-				<GradientEntry color="#222222" ratio="1" alpha="1"/>
+				<GradientEntry color="#661516" ratio="0" alpha="1"/>
+				<GradientEntry color="#661516" ratio="1" alpha="1"/>
 			</LinearGradient>
 		</fill>
 	</Rect>

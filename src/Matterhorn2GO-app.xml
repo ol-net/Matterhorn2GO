@@ -13,7 +13,7 @@
 			the application. Optional.
 -->
 
-	<!-- für apple <id>de.uos.matterhorn2go</id>-->
+	<!-- fÃ¼r apple <id>de.uos.matterhorn2go</id>-->
 
 	<!-- A universally unique application identifier. Must be unique across all AIR applications.
 	Using a reverse DNS-style name as the id is recommended. (Eg. com.example.ExampleApplication.) Required. -->
@@ -29,7 +29,7 @@
 	<!-- A string value of the format <0-999>.<0-999>.<0-999> that represents application version which can be used to check for application upgrade. 
 	Values can also be 1-part or 2-part. It is not necessary to have a 3-part value.
 	An updated version of application must have a versionNumber value higher than the previous version. Required for namespace >= 2.5 . -->
-	<versionNumber>1.0.4</versionNumber>
+	<versionNumber>1.1.0</versionNumber>
     
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents the version of the application, as it should be shown to users. Optional. -->
 	<!-- <versionLabel></versionLabel> -->
@@ -51,7 +51,7 @@
 	<initialWindow>
 		<!-- The main SWF or HTML file of the application. Required. -->
 		<!-- Note: In Flash Builder, the SWF reference is set automatically. -->
-		<content>[Dieser Wert wird von Flash Builder in der app.xml-Ausgabedatei überschrieben]</content>
+		<content>[Dieser Wert wird von Flash Builder in der app.xml-Ausgabedatei Ã¼berschrieben]</content>
 		
 		<!-- The title of the main window. Optional. -->
 		<!-- <title></title> -->
@@ -113,7 +113,7 @@
 		<autoOrients>true</autoOrients>
         <fullScreen>true</fullScreen>
         <visible>true</visible>
-        <softKeyboardBehavior>none</softKeyboardBehavior>
+        <softKeyboardBehavior>pan</softKeyboardBehavior>
     </initialWindow>
     
 
@@ -233,18 +233,18 @@
 			<manifest android:installLocation="auto">
 			    <!--See the Adobe AIR documentation for more information about setting Google Android permissions-->
 			    <!--Wenn Sie die Berechtigung android.permission.INTERNET entfernen,
-		ist auch kein Debugging der Anwendung auf Ihrem Gerät mehr möglich.-->
+		ist auch kein Debugging der Anwendung auf Ihrem GerÃ¤t mehr mÃ¶glich.-->
 			    <uses-permission android:name="android.permission.INTERNET"/>
 			    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 			    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 			    <!--<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>-->
-			    <!--Die DISABLE_KEYGUARD- und WAKE_LOCK-Berechtigungen müssen gemeinsam
-		umgeschaltet werden, um auf die SystemIdleMode-APIs von AIR zugreifen zu können.-->
+			    <!--Die DISABLE_KEYGUARD- und WAKE_LOCK-Berechtigungen mÃ¼ssen gemeinsam
+		umgeschaltet werden, um auf die SystemIdleMode-APIs von AIR zugreifen zu kÃ¶nnen.-->
 			    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 			    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 			    <!--<uses-permission android:name="android.permission.CAMERA"/>-->
 			    <!--<uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
-			    <!--Die ACCESS_NETWORK_STATE- und ACCESS_WIFI_STATE-Berechtigungen müssen gemeinsam
+			    <!--Die ACCESS_NETWORK_STATE- und ACCESS_WIFI_STATE-Berechtigungen mÃ¼ssen gemeinsam
 		umgeschaltet werden, um die NetworkInfo-APIs von AIR zu verwenden.-->
 			    <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>-->
 			    <!--<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>-->
@@ -259,12 +259,12 @@
 				<string>1</string>
 				<string>2</string>
 			</array>
-			<key>UIApplicationExitsOnSuspend</key> 
-    		<true/>
             <key>UIStatusBarStyle</key> 
     		<string>UIStatusBarStyleBlackOpaque</string> 
     		<key>UIRequiresPersistentWiFi</key> 
     		<string>YES</string> 
+    		<key>UIApplicationExitsOnSuspend</key> 
+    		<true/>
 		]]></InfoAdditions>
       <!--  <requestedDisplayResolution>high</requestedDisplayResolution> -->
     </iPhone>

@@ -31,7 +31,6 @@ USA
 	
 	<fx:Script>
 		<![CDATA[
-			import business.datahandler.DataHandler;
 			import business.datahandler.XMLHandler;
 			import business.datahandler.SegmentDataHandler;
 			
@@ -43,7 +42,6 @@ USA
 			
 			[Bindable]
 			public var videos:XMLListCollection;
-			private var xmlData:DataHandler;
 			private var height_window:int;
 			
 			private var segment_xml:SegmentDataHandler;

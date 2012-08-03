@@ -22,26 +22,28 @@ USA
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		title="Matterhorn Endpoints"
 		xmlns:views="views.*" 
+		backgroundColor="#F2F2F2" 
 		xmlns:business="business.*"
-		creationComplete="init()"
-		backKeyPressed="popThisView()">
+		tabBarVisible="false"
+		creationComplete="init()">
 
 	<fx:Script>
 		<![CDATA[
 			import business.ConfigurationReader;
-			import business.Paging;
 			import business.datahandler.AdoptersDataHandler;
-			import business.datahandler.DataHandler;
+			import business.datahandler.EpisodesDataHandler;
+			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.XMLHandler;
 			
 			import events.AdoptersLoadedEvent;
-			import events.VideosLoadedEvent;
 			import events.NotConnectedEvent;
+			import events.VideosLoadedEvent;
 			
 			import flash.events.Event;
 			
 			import mx.collections.XMLListCollection;
 			import mx.core.UIComponent;
+			import mx.events.ResizeEvent;
 			
 			[Bindable]
 			public var adoptersList:XMLListCollection;
@@ -50,13 +52,14 @@ USA
 			
 			private var adopters:AdoptersDataHandler;
 			
-			private var dH:DataHandler;
-			
-			private var paging:Paging;
+			private var dH:EpisodesDataHandler;
 			
 			public function init():void
 			{
 				list.visible = true;
+				
+				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
+				
 				connection.visible = false;
 
 				var	xpathValue:XMLHandler = new XMLHandler();
@@ -80,6 +83,7 @@ USA
 			
 			protected function popThisView():void
 			{
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				adopters.removeEventListener(AdoptersLoadedEvent.ADOPTERSLOADED, getAdopters);
 				adopters.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				navigator.popView();
@@ -95,16 +99,48 @@ USA
 				
 				fileReader.setURL(selectedItem.AdopterURL);
 				
-				dH = DataHandler.getInstance();
+				dH = EpisodesDataHandler.getInstance();
+				dH.initLoadOK();
 				dH.setOValue();
-				
+								
+				var sDH:SeriesDataHandler = SeriesDataHandler.getInstance();
+				sDH.initLoadOK();
+				sDH.initThumbnailOK();
+				sDH.setOValue();
+				//sDH.init();
 				navigator.popView();
-				navigator.pushView(MobileMatterhornHomeView, data);	
+				//navigator.popView();
+	
+				//navigator.pushView(SeriesView, data);	
+				//navigator.pushView(
+			}
+			
+			public function setSize(event:ResizeEvent):void
+			{	
+				
+			}
+			
+			public function addAdopter():void
+			{				
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+				//navigator.popView();
+				navigator.pushView(ConfigurationView, data);	
 			}
 		]]>
 	</fx:Script>
 	
 	<s:actionContent>
+		<s:Button id="back_button" 
+				  height="53"
+				  width="60"
+				  click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon40x40.png"
+										source240dpi="assets/BackIcon64x64.png"
+										source320dpi="assets/BackIcon88x88.png"/>
+			</s:icon>
+		</s:Button>
+		<!--
 		<s:VGroup>
 			<s:Group width="60" height="60">
 				<business:ImageButton id="back_button"
@@ -114,13 +150,14 @@ USA
 									  skinClass="views.skins.BackButtonSkin"/>
 			</s:Group>
 		</s:VGroup>
+		-->
 	</s:actionContent>
 	
 	<s:Group>	
 		<s:View id = "connection" visible="false"
-				backgroundColor="black" 
+				backgroundColor="#861B1D" 
 				fontFamily="_sans" 
-				alpha="0.7" 
+				alpha="0.9" 
 				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
 			<s:Group width="250" height="80">
 				<s:Label text="It seems like that you´ve lost " 
@@ -139,10 +176,38 @@ USA
 		</s:View>
 	</s:Group>
 	
-	<s:List id="list" width="100%" height="100%"
-			dataProvider="{adoptersList}"
-			labelField="fontName"
-			itemRenderer="business.renderers.AdoptersRenderer" 
-			change="loadAdopter()"/>
-	
+	<s:VGroup height="{this.height}">
+		<s:List id="list"
+				height="100%" 
+				width="100%"
+				dataProvider="{adoptersList}"
+				labelField="fontName"
+				itemRenderer="business.renderers.AdoptersRenderer" 
+				change="loadAdopter()"/>
+		
+		<s:View id = "add_url_button"
+				backgroundColor="#BDBDBD" 
+				fontFamily="_sans" 
+				x="0" 
+				y="{this.navigator.height - 80}">
+			
+			<s:Group height="45" width="{this.navigator.width}">
+			
+				<s:Button id="add_button" 
+						  height="30" 
+						  y="7"
+						  x="{navigator.width / 2 - 75}"
+						  label="add Custom URL" 
+						  click="addAdopter();">
+				<!--<s:icon>
+						<s:MultiDPIBitmapSource source160dpi="assets/button_add48x48.png"
+												source240dpi="assets/button_add72x72.png"
+												source320dpi="assets/button_add96x96.png"/>
+					</s:icon>
+					-->
+				</s:Button>
+				
+			</s:Group>
+		</s:View>
+	</s:VGroup>
 </s:View>

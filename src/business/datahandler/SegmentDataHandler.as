@@ -67,7 +67,16 @@ package business.datahandler
 			serviceObj.useProxy = false;
 			serviceObj.addEventListener(ResultEvent.RESULT, processResult);	
 			serviceObj.addEventListener(FaultEvent.FAULT, notConnected);
-			serviceObj.url = URLClass.getInstance().getURL()+'/search/episode.xml?id='+id;
+			
+			if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/')
+			{
+				serviceObj.url = URLClass.getInstance().getURL()+'episode.xml?id='+id;
+			}
+			else
+			{
+				serviceObj.url = URLClass.getInstance().getURL()+'episode.xml?q='+id;
+			}
+			
 			serviceObj.send();
 		}
 		
@@ -76,8 +85,8 @@ package business.datahandler
 			var XMLResults:XML = response.result as XML;
 			
 			segments = new XMLListCollection(XMLResults.result.segments.children());
-			
-			segAsXML = new XML(XMLResults.result);
+		
+			segAsXML = new XML(XMLResults);
 			
 			mediapackage = new XMLListCollection(XMLResults.result.mediapackage);
 			

@@ -197,7 +197,7 @@ package business.renderers
 		{			
 			titleField.text = String(data.AdopterName);
 			var tmp:String = String(data.AdopterURL);
-			var tmp2:String = String(URLClass.getInstance().getURL());
+			var tmp2:String = String(URLClass.getInstance().getURLNoSearch());
 			
 			if(tmp == tmp2)
 			{

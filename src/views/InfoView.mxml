@@ -23,6 +23,7 @@ USA
 		title="Information" 
 		xmlns:views="views.*"
 		xmlns:business="business.*"
+		tabBarVisible="false"
 		creationComplete="init()">
 	<fx:Declarations>
 
@@ -55,7 +56,7 @@ USA
 			protected function init():void
 			{	
 				//import flash.system.Capabilities;
-				
+
 				initText();
 				
 				detailComp = new UIComponent();
@@ -107,6 +108,9 @@ USA
 			
 			public function setSize(event:ResizeEvent):void
 			{	
+				height_num = this.navigator.height - 70;
+				width_num = this.navigator.width -10;
+				
 				view.visible=true;
 				
 				detailComp.removeChild(detail);
@@ -124,17 +128,14 @@ USA
 				
 				if(this.navigator.width < this.navigator.height)
 				{
-					license.y = 245;
-					detailGroup.y = 260;
+					license.y = 265;
+					detailGroup.y = 280;
 				}
 				else
 				{
-					license.y = 235;
-					detailGroup.y = 250;
+					license.y = 255;
+					detailGroup.y = 270;
 				}
-
-				height_num = this.navigator.height - 70;
-				width_num = this.navigator.width -10;
 			}
 
 			protected function popThisView():void
@@ -147,6 +148,17 @@ USA
 	</fx:Script>
 
 	<s:actionContent>
+		<s:Button id="back_button" 
+				  height="53"
+				  width="60"
+				  click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon40x40.png"
+										source240dpi="assets/BackIcon64x64.png"
+										source320dpi="assets/BackIcon88x88.png"/>
+			</s:icon>
+		</s:Button>
+		<!--
 		<s:VGroup>
 			<s:Group width="60" height="60">
 				<business:ImageButton id="back_button"
@@ -156,6 +168,7 @@ USA
 									  skinClass="views.skins.BackButtonSkin"/>
 			</s:Group>
 		</s:VGroup>
+		-->
 	</s:actionContent>
 	
 	<s:VGroup id="view" paddingTop="0" paddingLeft="10" visible="false">
@@ -171,7 +184,7 @@ USA
 					
 					<s:VGroup verticalAlign="bottom">
 						<s:Group >
-							<s:Label text="Version: 1.0.4"
+							<s:Label text="Version: 1.1.0"
 									 fontFamily="_sans"  
 									 y="5"/>
 							<s:Label text="Markus Ketterl (mketterl@uos.de)"
@@ -190,7 +203,7 @@ USA
 									 y="90"
 									 fontSize="14"
 									 fontFamily="_sans"/>
-							<s:Label text="Philipp Bauer (phbauer@uos.de)"
+							<s:Label text="Lars Kiesow (lkiesow@uos.de)"
 									 y="110"
 									 fontSize="14"
 									 fontFamily="_sans"/>
@@ -198,18 +211,22 @@ USA
 									 y="130"
 									 fontSize="14"
 									 fontFamily="_sans"/>
+							<s:Label text="Philipp Bauer (phbauer@uos.de)"
+									 y="150"
+									 fontSize="14"
+									 fontFamily="_sans"/>
 							<s:Label text="Matterhorn Endpoints:"
-									 y="155"
+									 y="175"
 									 fontFamily="_sans"/>
 							<s:Group id="announceGroup"
-									 x ="-3" y="170"/>
+									 x ="-3" y="190"/>
 							<s:Label id = "license" 
 									 text="License: " 
 									 fontFamily="_sans" 
-									 y="245"/>	
+									 y="275"/>	
 							<s:Group id="detailGroup" 
-									 x="-3" y="260"/>
-							<s:Label y="290"/>	
+									 x="-3" y="280"/>
+							<s:Label y="330"/>	
 						</s:Group>
 					</s:VGroup>
 				</s:VGroup>

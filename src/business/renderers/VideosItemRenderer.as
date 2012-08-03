@@ -100,6 +100,7 @@ package business.renderers
 				titleField.wordWrap = true;
 				titleField.multiline = true;
 				titleField.defaultTextFormat = new TextFormat(fontFamily, fontSize);
+				titleField.textColor = 0x861B1D;
 				titleField.autoSize = "left";
 				
 				addChild(titleField);

@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qnx>
-  <permission>access_shared</permission>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+<permission>access_shared</permission>
   <permission>record_audio</permission>
   <permission>read_geolocation</permission>
-  
+  <permission>use_camera</permission>
   <permission>access_internet</permission>
   <permission>play_audio</permission>
   <permission>post_notification</permission>
