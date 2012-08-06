@@ -33,8 +33,6 @@ package business.renderers
 	
 	import business.datahandler.URLClass;
 	
-	import business.datahandler.CheckForPublicVideo;
-	
 	import events.VideoAvailableEvent;
 	
 	public class VideosItemRenderer extends BaseRenderer

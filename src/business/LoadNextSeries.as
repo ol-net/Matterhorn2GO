@@ -77,6 +77,8 @@ package business
 			}
 			else 
 			{
+				limit_value = 20;
+				
 				max_pages = total_value / limit_value + 1;
 			}
 			

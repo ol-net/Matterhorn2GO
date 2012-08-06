@@ -52,8 +52,6 @@ package business.datahandler
 		private var sId:String = "";
 		private var oValue:String = "0";
 		
-		private var checkInstance:CheckForPublicVideo;
-		
 		private var index:Number;
 		
 		private var newSearch:Boolean = false;
@@ -105,7 +103,7 @@ package business.datahandler
 				}
 				else
 				{
-					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/')
+					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
 					{
 						serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
 					}
@@ -136,7 +134,7 @@ package business.datahandler
 				serviceObj.addEventListener(ResultEvent.RESULT, processResult);
 				serviceObj.addEventListener(FaultEvent.FAULT, notConnected);
 				
-				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/')
+				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
 				{
 					serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
 				}
@@ -338,7 +336,7 @@ package business.datahandler
 		
 		public function setIdText(s:String):void
 		{
-			sId = s;
+			sId = s+'&lfunk=1';
 		}
 		
 		public function setNewSearch():void

@@ -19,7 +19,6 @@ USA
 */
 package business.renderers
 {	
-	import business.datahandler.CheckForPublicVideo;
 	import business.datahandler.URLClass;
 	import business.datahandler.XMLHandler;
 	

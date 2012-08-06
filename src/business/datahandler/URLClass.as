@@ -25,7 +25,7 @@ package business.datahandler
 	{
 		static private var instance:URLClass;
 		
-		private static const MATTERHORNURL:String = "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/";
+		private static const MATTERHORNURL:String = "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py";
 		
 		//private static const MATTERHORNURL:String = "http://video2.virtuos.uos.de:8080/search/";
 
@@ -55,18 +55,11 @@ package business.datahandler
 			
 			if(matterhorn_url != '')
 			{
-				if(matterhorn_url != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/")
-				{
-					return matterhorn_url+"/search/";
-				}
-				else
-				{
-					return matterhorn_url;
-				}
+				return matterhorn_url+"/search/";
 			}
 			else
 			{
-				return MATTERHORNURL;
+				return MATTERHORNURL+"/search/";
 			}
 		}
 		
@@ -81,14 +74,7 @@ package business.datahandler
 			
 			if(matterhorn_url != '')
 			{
-				if(matterhorn_url != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/")
-				{
 					return matterhorn_url;
-				}
-				else
-				{
-					return matterhorn_url;
-				}
 			}
 			else
 			{

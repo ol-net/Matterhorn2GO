@@ -29,15 +29,18 @@ USA
 	<fx:Style source="views/skins/menustyle/css/global.css"/>
 	
 	<fx:Style>
-		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace s "library://ns.adobe.com/flex/spark";     
+		
+		s|Application {
+			backgroundColor: #861B1D;
+		}
 		
 		s|TabbedViewNavigator { 
-			backgroundColor:#FFFFFF;
 			skinClass: ClassReference("views.skins.view.TabbedViewNavigatorSkin"); 
 		}
 		
 		s|ActionBar {
-			chromeColor: #861B1D;
+			chromeColor:#861B1D;
 			defaultButtonAppearance: default;
 			skinClass: ClassReference("views.skins.actionbar.CustomActionBarSkin");
 		}
@@ -66,15 +69,19 @@ USA
 			
 		]]> </fx:Script> 
 	
-	<s:ViewNavigator id="vn1"
-					 label="Series" 
-					 width="100%" 
-					 height="100%" 
-					 firstView="views.SeriesView"/> 
+	<s:navigators>
+		<s:ViewNavigator id="vn1" 
+						 backgroundColor="#F2F2F2"
+						 label="Series" 
+						 width="100%" 
+						 height="100%" 
+						 firstView="views.SeriesView"/> 
 	
-	<s:ViewNavigator label="Episodes" 
-					 width="100%" 
-					 height="100%" 
-					 firstView="views.EpisodeView"/> 
-	
+		<s:ViewNavigator label="Episodes"
+						 backgroundColor="#F2F2F2"
+						 width="100%" 
+						 height="100%" 
+						 firstView="views.EpisodeView"/> 
+	</s:navigators>
+
 </s:TabbedViewNavigatorApplication>

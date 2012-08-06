@@ -22,6 +22,7 @@ USA
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		title="Information" 
 		xmlns:views="views.*"
+		backgroundColor="#F2F2F2"
 		xmlns:business="business.*"
 		tabBarVisible="false"
 		creationComplete="init()">
@@ -74,9 +75,7 @@ USA
 				
 				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
 				
-				view.visible=true;	
-				
-				height_num = navigator.height - 70;
+				height_num = navigator.height - 40;
 				width_num = navigator.width - 10;
 			}
 			
@@ -171,66 +170,68 @@ USA
 		-->
 	</s:actionContent>
 	
-	<s:VGroup id="view" paddingTop="0" paddingLeft="10" visible="false">
-		<s:Scroller width="{width_num}" height="{height_num}">
-			<s:Group>
-				<s:VGroup x="10" y="15">
+	<s:View backgroundColor="#F2F2F2">
+		<s:VGroup id="view" paddingTop="0" paddingLeft="10" paddingBottom="30">
+			<s:Scroller width="{width_num}" height="{height_num}">
+				<s:Group>
 					<s:VGroup x="10" y="15">
-						<s:HGroup verticalAlign="middle">
-							<s:Image width="200" height="50" scaleMode="letterbox" smooth="true"
-									 smoothingQuality="default" source="assets/virtuos.png"  x="10"/>
-						</s:HGroup>
+						<s:VGroup x="10" y="15">
+							<s:HGroup verticalAlign="middle">
+								<s:Image width="200" height="50" scaleMode="letterbox" smooth="true"
+										 smoothingQuality="default" source="assets/virtuos.png"  x="10"/>
+							</s:HGroup>
+						</s:VGroup>
+						
+						<s:VGroup verticalAlign="bottom">
+							<s:Group >
+								<s:Label text="Version: 1.1.0"
+										 fontFamily="_sans"  
+										 y="5"/>
+								<s:Label text="Markus Ketterl (mketterl@uos.de)"
+										 y="30" 
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Rüdiger Rolf (rrolf@uos.de)"
+										 y="50"
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Leonid Oldenburger (loldenbu@uos.de)"
+										 y="70"
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Lucas Köhler (lkoehler@uos.de)"
+										 y="90"
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Lars Kiesow (lkiesow@uos.de)"
+										 y="110"
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Karina Meyer (karimeye@uos.de)"
+										 y="130"
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Philipp Bauer (phbauer@uos.de)"
+										 y="150"
+										 fontSize="14"
+										 fontFamily="_sans"/>
+								<s:Label text="Matterhorn Endpoints:"
+										 y="175"
+										 fontFamily="_sans"/>
+								<s:Group id="announceGroup"
+										 x ="-3" y="190"/>
+								<s:Label id = "license" 
+										 text="License: " 
+										 fontFamily="_sans" 
+										 y="275"/>	
+								<s:Group id="detailGroup"
+										 x="-3" y="280"/>
+								<s:Label y="330" height="20" backgroundColor="#F2F2F2"/>	
+							</s:Group>
+						</s:VGroup>
 					</s:VGroup>
-					
-					<s:VGroup verticalAlign="bottom">
-						<s:Group >
-							<s:Label text="Version: 1.1.0"
-									 fontFamily="_sans"  
-									 y="5"/>
-							<s:Label text="Markus Ketterl (mketterl@uos.de)"
-									 y="30" 
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Rüdiger Rolf (rrolf@uos.de)"
-									 y="50"
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Leonid Oldenburger (loldenbu@uos.de)"
-									 y="70"
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Lucas Köhler (lkoehler@uos.de)"
-									 y="90"
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Lars Kiesow (lkiesow@uos.de)"
-									 y="110"
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Karina Meyer (karimeye@uos.de)"
-									 y="130"
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Philipp Bauer (phbauer@uos.de)"
-									 y="150"
-									 fontSize="14"
-									 fontFamily="_sans"/>
-							<s:Label text="Matterhorn Endpoints:"
-									 y="175"
-									 fontFamily="_sans"/>
-							<s:Group id="announceGroup"
-									 x ="-3" y="190"/>
-							<s:Label id = "license" 
-									 text="License: " 
-									 fontFamily="_sans" 
-									 y="275"/>	
-							<s:Group id="detailGroup" 
-									 x="-3" y="280"/>
-							<s:Label y="330"/>	
-						</s:Group>
-					</s:VGroup>
-				</s:VGroup>
-			</s:Group>
-		</s:Scroller>
-	</s:VGroup> 
+				</s:Group>
+			</s:Scroller>
+		</s:VGroup> 
+	</s:View>
 </s:View>

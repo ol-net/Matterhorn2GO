@@ -115,15 +115,28 @@ USA
 				if(videos.length == 0 || xmlData.getURL() != URLClass.getInstance().getURL())
 				{	
 					btn_sort.enabled = false;
-					
 					adoptersInit.initGetFilter();
-					
 					indicatormenu.visible = true;
 					bi.visible = true;
 					xmlData.init();
 				}
 				else
-				{
+				{	
+					loadNextEpisodes = LoadNextEpisodes.getInstance();
+					
+					if(loadNextEpisodes != null)
+					{
+						if(loadNextEpisodes.getMaxPages() == loadNextEpisodes.getPage())
+						{
+							btn_sort.enabled = true;
+						}
+						else
+						{
+							if(btn_sort.enabled)
+								btn_sort.enabled = false;
+						}
+					}
+					
 					indicatormenu.visible = false;
 					bi.visible = false;
 				}
@@ -152,6 +165,7 @@ USA
 				xmlData.setXMLListCollection(new XMLListCollection());
 				xmlData.setOValue();
 				vNotFound.visible = true;
+				btn_sort.enabled = false;
 			}
 			
 			public function setPosition():void 
@@ -210,6 +224,11 @@ USA
 						bi.visible = true;
 					}
 				}
+				else
+				{
+					indicatormenu.visible = true;
+					bi.visible = true;
+				}
 			}
 			
 			public function getXMLListCollection(event:VideosLoadedEvent):void
@@ -227,7 +246,7 @@ USA
 					indicatormenu.visible = false;
 					bi.visible = false;
 				}
-				
+
 				if(loadNextEpisodes.getMaxPages() == loadNextEpisodes.getPage())
 				{
 					btn_sort.enabled = true;
@@ -237,6 +256,9 @@ USA
 					if(btn_sort.enabled)
 						btn_sort.enabled = false;
 				}
+				
+				if(videos.length == 0)
+					videoNotFound(null);
 			}
 			
 			public function getVideo(event:FlexEvent):void
@@ -294,19 +316,19 @@ USA
 			
 			public function showInfo():void 
 			{   
-				list.visible = true;
-				connection.visible = false;
+				//list.visible = true;
+				//connection.visible = false;
 				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
-				this.removeEventListener(BusyIndicatorEventEpisode.INDICATORLOADED, loadIndicator);
-				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
-				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
+				//this.removeEventListener(BusyIndicatorEventEpisode.INDICATORLOADED, loadIndicator);
+				//this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
+				//this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
 				navigator.pushView(InfoView, data);
 			}
 			
 			public function showConfig():void 
 			{
-				list.visible = true;
-				connection.visible = false;
+				//list.visible = true;
+				//connection.visible = false;
 				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				//this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
 				//this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
@@ -379,7 +401,7 @@ USA
 				else
 				{
 					btn_sort.visible = false;
-					textinput_search.text = "";
+					//textinput_search.text = "";
 					textinput_search.visible = true;
 					textinput_search.setFocus();
 				}
@@ -470,195 +492,197 @@ USA
 		
 	</s:navigationContent>	
 	
-	<s:List id="list" y="36"
-			width="100%" 
-			height="{navigator.height - 50}"
-			dataProvider="{videos}"
-			itemRenderer="business.renderers.VideosItemRenderer"
-			change="loadNewView()"/>
-	
-	<s:View id="sort_menu" visible="false"
-			backgroundColor="black"
-			alpha="0.7"
-			width="{navigator.width}" 
-			height="100">
+	<s:View backgroundColor="#F2F2F2">
+		<s:List id="list" y="36"
+				width="100%" 
+				height="{navigator.height - 50}"
+				dataProvider="{videos}"
+				itemRenderer="business.renderers.VideosItemRenderer"
+				change="loadNewView()"/>
 		
-		<s:Group>
-			<!--
-			<s:Label text="1st step:" 
-			y="67" x="{navigator.width/2 - 150}"
-			color="white"/>
-			<s:Label text="2nd step:" 
-			y="117" x="{navigator.width/2 - 150}"
-			color="white"/>
-			-->
-			<s:RadioButton groupName="sortgroup_kind" visible="false"
-						   selected="true"
-						   fontWeight="bold"
-						   color="white"
-						   y="60" x="{navigator.width/2-80}"
-						   id="asc_sort"
-						   label="asc" 
-						   width="150"/>
-			<s:RadioButton groupName="sortgroup_kind" visible="false" 
-						   fontWeight="bold"
-						   color="white"
-						   y="60" x="{navigator.width/2+45}"
-						   id="desc_sort"
-						   label="desc" 
-						   width="150"/>
+		<s:View id="sort_menu" visible="false"
+				backgroundColor="black"
+				alpha="0.7"
+				width="{navigator.width}" 
+				height="100">
 			
-			<s:RadioButton groupName="sortgroup" selected="true"
-						   click="sortEpisodes('date')"
-						   fontWeight="bold"
-						   color="white"
-						   x="{navigator.width/2-120}" y="50"
-						   id="date_sort"
-						   label="time" 
-						   width="150"/>
+			<s:Group>
+				<!--
+				<s:Label text="1st step:" 
+				y="67" x="{navigator.width/2 - 150}"
+				color="white"/>
+				<s:Label text="2nd step:" 
+				y="117" x="{navigator.width/2 - 150}"
+				color="white"/>
+				-->
+				<s:RadioButton groupName="sortgroup_kind" visible="false"
+							   selected="true"
+							   fontWeight="bold"
+							   color="white"
+							   y="60" x="{navigator.width/2-80}"
+							   id="asc_sort"
+							   label="asc" 
+							   width="150"/>
+				<s:RadioButton groupName="sortgroup_kind" visible="false" 
+							   fontWeight="bold"
+							   color="white"
+							   y="60" x="{navigator.width/2+45}"
+							   id="desc_sort"
+							   label="desc" 
+							   width="150"/>
+				
+				<s:RadioButton groupName="sortgroup" selected="true"
+							   click="sortEpisodes('date')"
+							   fontWeight="bold"
+							   color="white"
+							   x="{navigator.width/2-120}" y="50"
+							   id="date_sort"
+							   label="time" 
+							   width="150"/>
+				
+				<s:RadioButton groupName="sortgroup" 
+							   click="sortEpisodes('title')"
+							   fontWeight="bold"
+							   color="white"
+							   x="{navigator.width/2-30}" y="50"
+							   id="title_sort"
+							   label="title" 
+							   width="150"/>
+				
+				<s:RadioButton groupName="sortgroup" 
+							   click="sortEpisodes('author')"
+							   fontWeight="bold"
+							   color="white"
+							   x="{navigator.width/2+50}" y="50"
+							   id="author_sort"
+							   label="author" 
+							   width="150"/>   
+			</s:Group>
+		</s:View>
+		
+		<s:View id="tooltip" visible="false"
+				backgroundColor="black"
+				alpha="0.7"
+				width="{navigator.width}" 
+				height="{navigator.height}">
 			
-			<s:RadioButton groupName="sortgroup" 
-						   click="sortEpisodes('title')"
-						   fontWeight="bold"
-						   color="white"
-						   x="{navigator.width/2-30}" y="50"
-						   id="title_sort"
-						   label="title" 
-						   width="150"/>
+			<s:Group>	
+				<s:BitmapImage scaleMode="letterbox" 
+							   id="up_left">
+					<s:source>
+						<s:MultiDPIBitmapSource
+							source160dpi="@Embed('assets/tooltip/top_left_350x268.png')"
+							source240dpi="@Embed('assets/tooltip/top_left_450x344.png')"
+							source320dpi="@Embed('assets/tooltip/top_left_550x421.png')"/>
+					</s:source>
+				</s:BitmapImage>
+				
+				<s:BitmapImage scaleMode="letterbox" 
+							   id="up_right">
+					<s:source>
+						<s:MultiDPIBitmapSource
+							source160dpi="@Embed('assets/tooltip/top_right_350x268.png')"
+							source240dpi="@Embed('assets/tooltip/top_right_450x344.png')"
+							source320dpi="@Embed('assets/tooltip/top_right_550x421.png')"/>
+					</s:source>
+				</s:BitmapImage>
+				
+				<s:Image scaleMode="letterbox" 
+						 id="down_center"
+						 click="closeToolTip()">
+					<s:source>
+						<s:MultiDPIBitmapSource
+							source160dpi="@Embed('assets/tooltip/bottom_500x293.png')"
+							source240dpi="@Embed('assets/tooltip/bottom_600x351.png')"
+							source320dpi="@Embed('assets/tooltip/bottom_700x410.png')"/>
+					</s:source>
+				</s:Image>
+			</s:Group>
 			
-			<s:RadioButton groupName="sortgroup" 
-						   click="sortEpisodes('author')"
-						   fontWeight="bold"
-						   color="white"
-						   x="{navigator.width/2+50}" y="50"
-						   id="author_sort"
-						   label="author" 
-						   width="150"/>   
-		</s:Group>
-	</s:View>
-	
-	<s:View id="tooltip" visible="false"
-			backgroundColor="black"
-			alpha="0.7"
-			width="{navigator.width}" 
-			height="{navigator.height}">
+		</s:View>
 		
 		<s:Group>	
-			<s:BitmapImage scaleMode="letterbox" 
-						   id="up_left">
-				<s:source>
-					<s:MultiDPIBitmapSource
-						source160dpi="@Embed('assets/tooltip/top_left_350x268.png')"
-						source240dpi="@Embed('assets/tooltip/top_left_450x344.png')"
-						source320dpi="@Embed('assets/tooltip/top_left_550x421.png')"/>
-				</s:source>
-			</s:BitmapImage>
-			
-			<s:BitmapImage scaleMode="letterbox" 
-						   id="up_right">
-				<s:source>
-					<s:MultiDPIBitmapSource
-						source160dpi="@Embed('assets/tooltip/top_right_350x268.png')"
-						source240dpi="@Embed('assets/tooltip/top_right_450x344.png')"
-						source320dpi="@Embed('assets/tooltip/top_right_550x421.png')"/>
-				</s:source>
-			</s:BitmapImage>
-			
-			<s:Image scaleMode="letterbox" 
-					 id="down_center"
-					 click="closeToolTip()">
-				<s:source>
-					<s:MultiDPIBitmapSource
-						source160dpi="@Embed('assets/tooltip/bottom_500x293.png')"
-						source240dpi="@Embed('assets/tooltip/bottom_600x351.png')"
-						source320dpi="@Embed('assets/tooltip/bottom_700x410.png')"/>
-				</s:source>
-			</s:Image>
+			<s:View id = "connection" visible="false"
+					backgroundColor="#861B1D" 
+					fontFamily="_sans" 
+					alpha="0.9" 
+					x="{navigator.width / 2 - 127.5}" y="{navigator.height / 2 - 70}">
+				<s:Group width="260" height="95">
+					<s:Label text="It seems like that you´ve lost " 
+							 x="10" y = "14" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="your Internet connection or you are" 
+							 x="10" y = "32" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="using the wrong Endpoint. Sorry" 
+							 x="10" y = "50" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="Information cannot be displayed." 
+							 x="10" y = "68" 
+							 fontFamily="_sans" 
+							 color="white"/>
+				</s:Group>
+			</s:View>
 		</s:Group>
 		
-	</s:View>
-	
-	<s:Group>	
-		<s:View id = "connection" visible="false"
-				backgroundColor="#861B1D" 
+		<s:Group>	
+			<s:View id = "vNotFound" visible="false"
+					backgroundColor="#861B1D" 
+					fontFamily="_sans" 
+					alpha="1" 
+					x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+				<s:Group width="250" height="80">
+					<s:Label text="Video not found!" 
+							 x="65" y = "32" 
+							 fontFamily="_sans" 
+							 color="white"/>
+				</s:Group>
+			</s:View>
+		</s:Group>
+		
+		<s:View id = "indicatormenu" visible="true"
+				backgroundColor="white" 
 				fontFamily="_sans" 
 				alpha="0.9" 
-				x="{navigator.width / 2 - 127.5}" y="{navigator.height / 2 - 70}">
-			<s:Group width="260" height="95">
-				<s:Label text="It seems like that you´ve lost " 
-						 x="10" y = "14" 
-						 fontFamily="_sans" 
-						 color="white"/>
-				<s:Label text="your Internet connection or you are" 
-						 x="10" y = "32" 
-						 fontFamily="_sans" 
-						 color="white"/>
-				<s:Label text="using the wrong Endpoint. Sorry" 
-						 x="10" y = "50" 
-						 fontFamily="_sans" 
-						 color="white"/>
-				<s:Label text="Information cannot be displayed." 
-						 x="10" y = "68" 
-						 fontFamily="_sans" 
-						 color="white"/>
-			</s:Group>
-		</s:View>
-	</s:Group>
-	
-	<s:Group>	
-		<s:View id = "vNotFound" visible="false"
-				backgroundColor="#861B1D" 
-				fontFamily="_sans" 
-				alpha="1" 
-				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
-			<s:Group width="250" height="80">
-				<s:Label text="Video not found!" 
-						 x="65" y = "32" 
-						 fontFamily="_sans" 
-						 color="white"/>
-			</s:Group>
-		</s:View>
-	</s:Group>
-	
-	<s:View id = "indicatormenu" visible="true"
-			backgroundColor="white" 
-			fontFamily="_sans" 
-			alpha="0.9" 
-			x="0" y="{navigator.height - 65}">
-		
-		<s:Group width="{navigator.width}" height="50">
+				x="0" y="{navigator.height - 65}">
 			
-			<s:BusyIndicator id="bi" width="35" height="35" 
-							 visible="true"
-							 x="{navigator.width / 2 - 18}" 
-							 y ="8"
-							 symbolColor="#861B1D"/>
-		</s:Group>
-	</s:View>
-	
-	<business:ImageButton id="dummy_button" visible="false"
-						  buttonMode="true"
-						  skinClass="views.skins.SaveButtonSkin"/>	
-	
-	<s:viewMenuItems>		
-		<s:ViewMenuItem label="Config"
-						click="showConfig();"
-						iconPlacement="left">
-			<s:icon>
-				<s:MultiDPIBitmapSource source160dpi="assets/button_settings40x40.png"
-										source240dpi="assets/button_settings64x64.png"
-										source320dpi="assets/button_settings88x88.png"/>
-			</s:icon>
-		</s:ViewMenuItem>
+			<s:Group width="{navigator.width}" height="50">
+				
+				<s:BusyIndicator id="bi" width="35" height="35" 
+								 visible="true"
+								 x="{navigator.width / 2 - 18}" 
+								 y ="8"
+								 symbolColor="#861B1D"/>
+			</s:Group>
+		</s:View>
 		
-		<s:ViewMenuItem label="Info"  
-						click="showInfo();"
-						iconPlacement="left">
-			<s:icon>
-				<s:MultiDPIBitmapSource source160dpi="assets/button_info40x40.png"
-										source240dpi="assets/button_info64x64.png"
-										source320dpi="assets/button_info88x88.png"/>
-			</s:icon>
-		</s:ViewMenuItem>
-	</s:viewMenuItems>
+		<business:ImageButton id="dummy_button" visible="false"
+							  buttonMode="true"
+							  skinClass="views.skins.SaveButtonSkin"/>	
+	</s:View>
+
+		<s:viewMenuItems>		
+			<s:ViewMenuItem label="Config"
+							click="showConfig();"
+							iconPlacement="left">
+				<s:icon>
+					<s:MultiDPIBitmapSource source160dpi="assets/button_settings40x40.png"
+											source240dpi="assets/button_settings64x64.png"
+											source320dpi="assets/button_settings88x88.png"/>
+				</s:icon>
+			</s:ViewMenuItem>
+			
+			<s:ViewMenuItem label="Info"  
+							click="showInfo();"
+							iconPlacement="left">
+				<s:icon>
+					<s:MultiDPIBitmapSource source160dpi="assets/button_info40x40.png"
+											source240dpi="assets/button_info64x64.png"
+											source320dpi="assets/button_info88x88.png"/>
+				</s:icon>
+			</s:ViewMenuItem>
+		</s:viewMenuItems>
 </s:View>

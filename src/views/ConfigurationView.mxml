@@ -68,7 +68,7 @@ USA
 				
 				var tmp:String = URLClass.getInstance().getURLNoSearch();
 				
-				if(tmp != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/")
+				if(tmp != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py")
 				{
 					textinput_url.text = tmp;
 				}
@@ -90,7 +90,7 @@ USA
 				tit.autoSize = "left";
 				tit.width = this.navigator.width - 30;
 				
-				tit.text ="Depending on the video-encoding and distribution type an Matterhorn installation might work or not with this app. We are sorry but we can not offer any support for any server that you might add here."
+				tit.text ="Depending on the video-encoding and distribution type a Matterhorn installation might work or not with this app. We are sorry but we can not offer any support for any server that you might add here."
 				
 				titleComp = new UIComponent();
 				titleComp.y=130;
@@ -208,7 +208,7 @@ USA
 								  height="30" 
 								  y="80"
 								  x="{navigator.width / 2 - 74}"
-								  label="add your URL"
+								  label="edit your URL"
 								  click="setURL(null);"/>
 							
 						<!--

@@ -161,41 +161,8 @@ USA
 				detailTitle.text = xmlList.getItemAt(0).title;
 				
 				author.text = xmlList.getItemAt(0).creators.creator;
-
-				descriptionComp = new UIComponent();
-				descriptionComp.addChild(description);
-				
-				detailGroup.addElement(descriptionComp);
-				
-				epsilon = detailTitle.textHeight;
-				
-				titleComp = new UIComponent();
-				titleComp.y=30;
-				titleComp.addChild(detailTitle);
-				
-				detailGroup.addElement(titleComp);
-				
-				//detailCreator.y = epsilon + 45;
-				
-				authorComp = new UIComponent();
-				authorComp.y = epsilon + 45;
-				authorComp.addChild(author);
-				
-				detailGroup.addElement(authorComp);
-				
-				epsilon = epsilon + author.textHeight;
 				
 				series.text = xmlList.getItemAt(0).seriestitle;
-				
-				epsilonS = epsilon + 105 + series.textHeight;
-				
-				seriesComp = new UIComponent();
-				seriesComp.y = epsilon + 115;
-				seriesComp.addChild(series);
-				
-				detailGroup.addElement(seriesComp);
-				
-				//detailCreator.text = xmlList.getItemAt(0).creators.creator;
 				
 				var str:String = xmlList.getItemAt(0).@start;
 				var pattern:RegExp = /(\d+)-(\d+)-(\d+)/g;
@@ -205,9 +172,39 @@ USA
 				
 				var imagePath:String = "mediapackage/attachments/attachment[1]/url";
 				detailImage.source = xpathValue.getResult(imagePath, xmlList.getItemAt(0));
-				
+
 				description.text = dataHandler.getDescriptionListCollection();
 				
+				descriptionComp = new UIComponent();
+				descriptionComp.addChild(description);
+				detailGroup.addElement(descriptionComp);
+				
+				epsilon = detailTitle.textHeight;
+				
+				titleComp = new UIComponent();
+				titleComp.y=30;
+				titleComp.addChild(detailTitle);
+				detailGroup.addElement(titleComp);
+				
+				//detailCreator.y = epsilon + 45;
+				
+				authorComp = new UIComponent();
+				authorComp.y = epsilon + 45;
+				authorComp.addChild(author);
+				detailGroup.addElement(authorComp);
+				
+				epsilon = epsilon + author.textHeight;
+						
+				epsilonS = epsilon + 105 + series.textHeight;
+				
+				seriesComp = new UIComponent();
+				seriesComp.y = epsilon + 115;
+				seriesComp.addChild(series);
+				
+				detailGroup.addElement(seriesComp);
+				
+				//detailCreator.text = xmlList.getItemAt(0).creators.creator;
+								
 				descriptionComp.y = epsilonS + 252;
 				
 				epsilonD = epsilonS + 360 + description.textHeight;
@@ -320,7 +317,7 @@ USA
 	</s:Group>
 	
 	<s:VGroup id="vgroup" paddingLeft="10" paddingTop="0" visible="false">
-		<s:Scroller width="{width_num}" height="{height_num}">
+		<s:Scroller width="{this.navigator.width - 10}" height="{this.navigator.height - 70}">
 			<s:Group>
 				<s:HGroup x="10" y="0">
 					<s:VGroup>

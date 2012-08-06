@@ -21,8 +21,8 @@ USA
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		title="Matterhorn Endpoints"
-		xmlns:views="views.*" 
 		backgroundColor="#F2F2F2" 
+		xmlns:views="views.*" 
 		xmlns:business="business.*"
 		tabBarVisible="false"
 		creationComplete="init()">
@@ -153,61 +153,55 @@ USA
 		-->
 	</s:actionContent>
 	
-	<s:Group>	
-		<s:View id = "connection" visible="false"
-				backgroundColor="#861B1D" 
-				fontFamily="_sans" 
-				alpha="0.9" 
-				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
-			<s:Group width="250" height="80">
-				<s:Label text="It seems like that you´ve lost " 
-						 x="10" y = "14" 
-						 fontFamily="_sans" 
-						 color="white"/>
-				<s:Label text="your Internet connection. Sorry" 
-						 x="10" y = "32" 
-						 fontFamily="_sans" 
-						 color="white"/>
-				<s:Label text="Information cannot be displayed." 
-						 x="10" y = "50" 
-						 fontFamily="_sans" 
-						 color="white"/>
-			</s:Group>
-		</s:View>
-	</s:Group>
-	
-	<s:VGroup height="{this.height}">
-		<s:List id="list"
-				height="100%" 
-				width="100%"
-				dataProvider="{adoptersList}"
-				labelField="fontName"
-				itemRenderer="business.renderers.AdoptersRenderer" 
-				change="loadAdopter()"/>
+	<s:View backgroundColor="#F2F2F2" >
+		<s:Group>	
+			<s:View id="connection" visible="false"
+					backgroundColor="#861B1D" 
+					fontFamily="_sans" 
+					alpha="0.9" 
+					x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+				<s:Group width="250" height="80">
+					<s:Label text="It seems like that you´ve lost " 
+							 x="10" y = "14" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="your Internet connection. Sorry" 
+							 x="10" y = "32" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="Information cannot be displayed." 
+							 x="10" y = "50" 
+							 fontFamily="_sans" 
+							 color="white"/>
+				</s:Group>
+			</s:View>
+		</s:Group>
 		
-		<s:View id = "add_url_button"
-				backgroundColor="#BDBDBD" 
-				fontFamily="_sans" 
-				x="0" 
-				y="{this.navigator.height - 80}">
+		<s:VGroup height="{this.height}">
+			<s:List id="list"
+					height="100%" 
+					width="100%"
+					dataProvider="{adoptersList}"
+					labelField="fontName"
+					itemRenderer="business.renderers.AdoptersRenderer" 
+					change="loadAdopter()"/>
 			
-			<s:Group height="45" width="{this.navigator.width}">
-			
-				<s:Button id="add_button" 
-						  height="30" 
-						  y="7"
-						  x="{navigator.width / 2 - 75}"
-						  label="add Custom URL" 
-						  click="addAdopter();">
-				<!--<s:icon>
-						<s:MultiDPIBitmapSource source160dpi="assets/button_add48x48.png"
-												source240dpi="assets/button_add72x72.png"
-												source320dpi="assets/button_add96x96.png"/>
-					</s:icon>
-					-->
-				</s:Button>
+			<s:View id="add_url_button"
+					backgroundColor="#BDBDBD" 
+					fontFamily="_sans" 
+					x="0" 
+					y="{this.navigator.height - 130}">
 				
-			</s:Group>
-		</s:View>
-	</s:VGroup>
+				<s:Group height="45" width="{this.navigator.width}">
+					<s:Button id="add_button" 
+							  height="30" 
+							  y="7"
+							  x="{navigator.width / 2 - 75}"
+							  label="add Custom URL" 
+							  click="addAdopter();">
+					</s:Button>	
+				</s:Group>
+			</s:View>
+		</s:VGroup>
+	</s:View>
 </s:View>

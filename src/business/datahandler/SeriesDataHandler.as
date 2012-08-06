@@ -53,8 +53,6 @@ package business.datahandler
 		private var sText:String = "";
 		private var oValue:String = "0";
 		
-		private var checkInstance:CheckForPublicVideo;
-		
 		private var index:Number;
 		
 		private var newSearch:Boolean = false;
@@ -261,7 +259,7 @@ package business.datahandler
 			{
 				initThumbnail = false;
 				
-				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/')
+				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
 				{
 					serviceObj2.url =URLClass.getInstance().getURL()+'episode.xml?id='+id+'&limit=1&offset=1';
 				}

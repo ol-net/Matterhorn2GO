@@ -22,7 +22,6 @@ package business.renderers
 	import business.LoadNextEpisodes;
 	import business.LoadNextSeries;
 	import business.core.StyleClient;
-	import business.datahandler.CheckForPublicVideo;
 	import business.datahandler.EpisodesDataHandler;
 	import business.datahandler.SeriesDataHandler;
 	
@@ -44,8 +43,6 @@ package business.renderers
 		protected var _data:Object;
 		
 		protected var ok:Boolean = true;
-		
-		protected var instance:CheckForPublicVideo;
 		
 		private var loadNextEpisodes:LoadNextEpisodes = LoadNextEpisodes.getInstance();
 		
