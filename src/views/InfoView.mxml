@@ -114,6 +114,8 @@ USA
 				
 				detailComp.removeChild(detail);
 				announceComp.removeChild(announce);
+				detailGroup.removeElement(detailComp);
+				announceGroup.removeElement(announceComp);
 				
 				initText();
 				

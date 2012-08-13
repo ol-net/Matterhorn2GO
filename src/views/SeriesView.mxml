@@ -86,6 +86,7 @@ USA
 			
 			public function init():void
 			{	
+				tTip.setDisplay(String(this.navigator.width), String(this.navigator.height));
 				
 				setPosition();
 				
@@ -461,8 +462,14 @@ USA
 				//title_sort.selected = false;
 				//author_sort.selected = false;
 				//date_sort.selected = true;
-				
-				sort_menu.visible = true;
+				if(sort_menu.visible)
+				{
+					sort_menu.visible = false;
+				}
+				else
+				{
+					sort_menu.visible = true;
+				}
 			}	
 		]]>
 	</fx:Script>
@@ -563,7 +570,7 @@ USA
 							   label="desc" 
 							   width="150"/>
 				
-				<s:RadioButton groupName="sortgroup" selected="true"
+				<s:RadioButton groupName="sortgroup"
 							   click="sortSeries('date')"
 							   fontWeight="bold"
 							   color="white"

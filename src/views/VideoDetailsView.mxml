@@ -8,7 +8,7 @@ modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
 
-This library is distributed in the hope that it will be useful,
+ This library is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 Lesser General Public License for more details.
@@ -38,9 +38,9 @@ USA
 			import business.datahandler.SegmentDataHandler;
 			import business.datahandler.XMLHandler;
 			
+			import events.NotConnectedEvent;
 			import events.SegmentLoadedEvent;
 			import events.VideosLoadedEvent;
-			import events.NotConnectedEvent;
 			
 			import mx.collections.XMLListCollection;
 			import mx.core.UIComponent;
@@ -87,6 +87,13 @@ USA
 			[Bindable]
 			private var epsilonS:Number;
 			
+			private var title_text:String;
+			private var author_text:String;
+			private var series_text:String;
+			private var description_text:String;
+			private var date_text:String;
+			private var image_path:String;
+			
 			//private var interfaces:Vector.<com.adobe.nativeExtensions.Networkinfo.NetworkInterface> = com.adobe.nativeExtensions.Networkinfo.NetworkInfo.networkInfo.findInterfaces();
 			
 			// The initialisation function
@@ -98,13 +105,13 @@ USA
 				// only for iOS loop	
 				for each (var interfaceObj:com.adobe.nativeExtensions.Networkinfo.NetworkInterface in interfaces)
 				{
-				if(interfaceObj.name == "en0" && interfaceObj.active == false)
-				{
-				startvideo.visible = false;
-				menu.visible = true;
+					if(interfaceObj.name == "en0" && interfaceObj.active == false)
+					{
+						startvideo.visible = false;
+						menu.visible = true;
+					}	
 				}	
-				}	*/			
-				
+				*/
 				xpathValue = new XMLHandler();
 				dataHandler = SegmentDataHandler.getInstance(xpathValue.getResult("mediapackage/@id", data));
 				dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
@@ -153,27 +160,39 @@ USA
 			{
 				xmlList = dataHandler.getMediapackageListCollection();
 				
-				setValues();
-			}
-			
-			public function setValues():void
-			{
-				detailTitle.text = xmlList.getItemAt(0).title;
+				title_text = xmlList.getItemAt(0).title;
 				
-				author.text = xmlList.getItemAt(0).creators.creator;
-				
-				series.text = xmlList.getItemAt(0).seriestitle;
+				author_text = xmlList.getItemAt(0).creators.creator;
 				
 				var str:String = xmlList.getItemAt(0).@start;
 				var pattern:RegExp = /(\d+)-(\d+)-(\d+)/g;
 				var re:RegExp = /(T)/;
 				str = str.split(re)[0];
-				detailDate.text = str.replace(pattern, "$3.$2.$1");
+				date_text = str.replace(pattern, "$3.$2.$1");
+				
+				series_text = xmlList.getItemAt(0).seriestitle;
 				
 				var imagePath:String = "mediapackage/attachments/attachment[1]/url";
-				detailImage.source = xpathValue.getResult(imagePath, xmlList.getItemAt(0));
+				image_path = xpathValue.getResult(imagePath, xmlList.getItemAt(0));
+				
+				description_text = dataHandler.getDescriptionListCollection();
 
-				description.text = dataHandler.getDescriptionListCollection();
+				setValues();
+			}
+			
+			public function setValues():void
+			{
+				detailTitle.text = title_text;
+				
+				author.text = author_text;
+				
+				series.text = series_text;
+				
+				detailDate.text = date_text;
+				
+				detailImage.source = image_path;
+
+				description.text = description_text;
 				
 				descriptionComp = new UIComponent();
 				descriptionComp.addChild(description);
@@ -215,9 +234,8 @@ USA
 			public function setSize(event:ResizeEvent):void
 			{	
 				if(titleComp != null)
-				{
-					height_num = this.navigator.height - 70;
-					width_num = this.navigator.width - 10;
+				{	
+					vgroup.visible=true;
 					
 					detailGroup.removeElement(titleComp);
 					detailGroup.removeElement(authorComp);
@@ -232,6 +250,9 @@ USA
 					initText();
 					
 					setValues();
+					
+					height_num = this.navigator.height - 70;
+					width_num = this.navigator.width - 10;
 				}
 			}
 			
@@ -317,7 +338,7 @@ USA
 	</s:Group>
 	
 	<s:VGroup id="vgroup" paddingLeft="10" paddingTop="0" visible="false">
-		<s:Scroller width="{this.navigator.width - 10}" height="{this.navigator.height - 70}">
+		<s:Scroller width="{width_num}" height="{height_num}">
 			<s:Group>
 				<s:HGroup x="10" y="0">
 					<s:VGroup>

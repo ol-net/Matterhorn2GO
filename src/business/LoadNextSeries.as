@@ -116,7 +116,6 @@ package business
 			{
 				offset_value = offset_value + limit_value;
 				xmlData.search(textinput_search, String(offset_value));
-				//trace(offset_value + " " + limit_value +" "+ xmlData.getTotal());
 			}
 		}
 		

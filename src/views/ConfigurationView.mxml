@@ -33,9 +33,10 @@ USA
 		<![CDATA[
 			
 			import business.ConfigurationReader;
-			import business.datahandler.URLClass;
+			import business.datahandler.did.CustomURLHandler;
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
+			import business.datahandler.URLClass;
 			
 			import events.FileReaderCompleteEvent;
 			
@@ -52,15 +53,21 @@ USA
 			
 			private var dH:EpisodesDataHandler;
 			
+			private var url:CustomURLHandler;
+			
 			[Bindable]
 			protected var height_num:Number = 0;
 			
 			[Bindable]
 			protected var width_num:Number = 0;
 			
+			private var ok:Boolean = false; 
+			
 			// The initialisation function
 			protected function init():void
 			{
+				ok = false;
+				
 				addText();
 								
 				height_num = navigator.height - 70;
@@ -111,9 +118,10 @@ USA
 			public function setURL(e:Event):void
 			{
 				save_button.setFocus();
-				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
 				
-				fileReader.setURL(textinput_url.text);
+				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+
+				fileReader.setURL(textinput_url.text, true);
 				
 				dH = EpisodesDataHandler.getInstance();
 				//dH.setXMLListCollection(null);
@@ -133,9 +141,21 @@ USA
 				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				navigator.popView();
-				if(e == null)
+				
+				if(e == null) {
+					url = CustomURLHandler.getInstance();
+					url.setCustomURL(textinput_url.text);
 				 	navigator.popView();
-				//this.navigator.pu
+				} 
+				else
+				{
+					if(!ok) 
+					{
+						ok = true;
+						url = CustomURLHandler.getInstance();
+						url.setCustomURL(textinput_url.text);
+					}
+				}
 				
 				//navigator.pushView(SeriesView, data);
 				//navigator.pushView(EpisodeView, data);	

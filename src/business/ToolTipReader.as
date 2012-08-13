@@ -19,6 +19,9 @@ USA
 */
 package business
 {
+	import business.datahandler.did.DeviceInfoHandler;
+	import business.datahandler.did.AndroidNetworkInfo;
+
 	import events.FileReaderCompleteEvent;
 	
 	import flash.events.Event;
@@ -33,6 +36,11 @@ package business
 		private var status:String = "nein";
 		
 		static private var instance:ToolTipReader;
+		
+		private var device_info:DeviceInfoHandler;
+		
+		private var width:String = "0";
+		private var height:String = "0";
 		
 		static public function getInstance():ToolTipReader 
 		{
@@ -58,14 +66,24 @@ package business
 			
 			//if(f.exists == false)
 			//	return null; 
-			
+
 			// Try creating and opening the stream. 
 			var fs:FileStream = new FileStream(); 
 			
 			try { 
 				// If we are writing asynchronously, openAsync. 
 				if(write && !sync) 
+				{
+					//trace("inside")
+					device_info = DeviceInfoHandler.getInstance();
+					device_info.getIOSDeviceInfo(width, height);
+					//device_info.getAndroideDeviceInfo(width, height);
+					//var a_n_i:AndroidNetworkInfo = new AndroidNetworkInfo();
+					//var u_id:String = a_n_i.getNetworkInfo();
+					//trace(u_id)
 					fs.openAsync(f, FileMode.WRITE); 
+					//trace("out")
+				}
 				else
 				{ 
 					// For synchronous write, or all reads, open synchronously. 
@@ -111,6 +129,12 @@ package business
 			{
 				return false;
 			}
+		}
+		
+		public function setDisplay(w:String, h:String):void
+		{
+			this.width = w;
+			this.height = h;
 		}
 	}
 }

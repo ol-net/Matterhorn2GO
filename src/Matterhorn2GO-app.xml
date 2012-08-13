@@ -17,7 +17,7 @@
 
 	<!-- A universally unique application identifier. Must be unique across all AIR applications.
 	Using a reverse DNS-style name as the id is recommended. (Eg. com.example.ExampleApplication.) Required. -->
-	<id>de.uos.matterhorn2go</id>
+	<id>Matterhorn2GO</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Matterhorn</filename>
@@ -231,6 +231,10 @@
         <colorDepth>16bit</colorDepth>
         <manifestAdditions><![CDATA[
 			<manifest android:installLocation="auto">
+				<!--Die ACCESS_NETWORK_STATE- und ACCESS_WIFI_STATE-Berechtigungen mÃ¼ssen gemeinsam
+		umgeschaltet werden, um die NetworkInfo-APIs von AIR zu verwenden.-->
+			    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+			    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 			    <!--See the Adobe AIR documentation for more information about setting Google Android permissions-->
 			    <!--Wenn Sie die Berechtigung android.permission.INTERNET entfernen,
 		ist auch kein Debugging der Anwendung auf Ihrem GerÃ¤t mehr mÃ¶glich.-->
@@ -244,10 +248,6 @@
 			    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 			    <!--<uses-permission android:name="android.permission.CAMERA"/>-->
 			    <!--<uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
-			    <!--Die ACCESS_NETWORK_STATE- und ACCESS_WIFI_STATE-Berechtigungen mÃ¼ssen gemeinsam
-		umgeschaltet werden, um die NetworkInfo-APIs von AIR zu verwenden.-->
-			    <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>-->
-			    <!--<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>-->
 			</manifest>
 			
 		]]></manifestAdditions>
@@ -270,7 +270,8 @@
     </iPhone>
     
 	
-<extensions>
-        <extensionID>com.adobe.Networkinfo</extensionID>
-    </extensions>
+
+
+
+
 </application>

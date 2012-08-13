@@ -97,7 +97,7 @@ USA
 				
 				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
 				
-				fileReader.setURL(selectedItem.AdopterURL);
+				fileReader.setURL(selectedItem.AdopterURL, false);
 				
 				dH = EpisodesDataHandler.getInstance();
 				dH.initLoadOK();

@@ -258,7 +258,7 @@ package business.datahandler
 
 				if(sId != '')
 				{	
-					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/')
+					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
 					{
 						searchurl = url+'?id='+sId+'&limit='+20+'&offset='+oValue;
 					}

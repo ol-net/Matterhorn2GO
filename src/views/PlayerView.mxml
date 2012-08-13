@@ -218,17 +218,16 @@ USA
 				// only for iOS loop					
 				for each (var interfaceObj:com.adobe.nativeExtensions.Networkinfo.NetworkInterface in interfaces)
 				{
-				if(interfaceObj.name == "en0" && interfaceObj.active == false)
-				{
-				//menu.visible = true;
-				osmfplayer.player.stop();
-				//pause_button.visible = false;
-				//play_button.visible = true;
-				popThisView();
-				}	
+					if(interfaceObj.name == "en0" && interfaceObj.active == false)
+					{
+						//menu.visible = true;
+						osmfplayer.player.stop();
+						//pause_button.visible = false;
+						//play_button.visible = true;
+						popThisView();
+					}	
 				}
 				*/
-				
 				if(isNaN(osmfplayer.player.currentTime)) 
 				{
 					osmfplayer.player.stop();

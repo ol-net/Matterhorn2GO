@@ -25,13 +25,7 @@ package business.datahandler
 	{
 		static private var instance:URLClass;
 		
-		private static const MATTERHORNURL:String = "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py";
-		
-		//private static const MATTERHORNURL:String = "http://video2.virtuos.uos.de:8080/search/";
-
-		//private static const MATTERHORNURL:String ="http://demo.opencastproject.org/search/";
-		
-		//private static const MATTERHORNURL:String = "http://vm083.rz.uos.de/test/webservices/lernfunk";
+		private static const MATTERHORNURL:String = "http://demo.opencastproject.org/search/";
 		
 		//declare if annotation service is supported
 		private static const SUPPORTCOMMENTS:Boolean = false;
@@ -65,8 +59,6 @@ package business.datahandler
 		
 		public function getURLNoSearch():String
 		{
-			//return "http://video2.virtuos.uni-osnabrueck.de:8080";
-			//return "http://matterhorn.teltek.es";
 			var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
 			fileReader.readFile();
 			

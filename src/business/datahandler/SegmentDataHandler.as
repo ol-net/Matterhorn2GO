@@ -68,14 +68,7 @@ package business.datahandler
 			serviceObj.addEventListener(ResultEvent.RESULT, processResult);	
 			serviceObj.addEventListener(FaultEvent.FAULT, notConnected);
 			
-			if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
-			{
-				serviceObj.url = URLClass.getInstance().getURL()+'episode.xml?id='+id;
-			}
-			else
-			{
-				serviceObj.url = URLClass.getInstance().getURL()+'episode.xml?q='+id;
-			}
+			serviceObj.url = URLClass.getInstance().getURL()+'episode.xml?id='+id;
 			
 			serviceObj.send();
 		}

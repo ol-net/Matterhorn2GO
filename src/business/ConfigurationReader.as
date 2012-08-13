@@ -19,12 +19,16 @@ USA
 */
 package business
 {
+	import business.datahandler.did.CustomURLHandler;
+	
 	import events.FileReaderCompleteEvent;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
 	import flash.filesystem.*;
 	import flash.net.FileReference;
+	import flash.utils.Timer;
 	
 	public class ConfigurationReader extends EventDispatcher 
 	{
@@ -35,6 +39,12 @@ package business
 		private var tmp:String;
 		
 		static private var instance:ConfigurationReader;
+		
+		private var url:CustomURLHandler;
+		
+		protected var myTimer:Timer;
+		
+		private var u_r_l:String;
 		
 		static public function getInstance():ConfigurationReader 
 		{
@@ -62,8 +72,9 @@ package business
 			
 			try { 
 				// If we are writing asynchronously, openAsync. 
-				if(write && !sync) 
+				if(write && !sync) {
 					fs.openAsync(f, FileMode.WRITE); 
+				}
 				else
 				{ 
 					// For synchronous write, or all reads, open synchronously. 
@@ -92,11 +103,11 @@ package business
 			} 
 		}
 		
-		public function setURL(url:String):void 
+		public function setURL(u:String, ok:Boolean):void 
 		{ 
 			// Get stream and write to it – asynchronously, to avoid hitching. 
 			var fs:FileStream = getSaveStream(true, false); 
-			fs.writeUTFBytes(url);
+			fs.writeUTFBytes(u);
 			fs.close(); 
 		}
 
