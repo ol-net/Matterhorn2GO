@@ -63,9 +63,6 @@ package business
 		{ 
 			// The data file lives in the app storage directory, per iPhone guidelines. 
 			var f:File = File.applicationStorageDirectory.resolvePath("tooltip.cfg"); 
-			
-			//if(f.exists == false)
-			//	return null; 
 
 			// Try creating and opening the stream. 
 			var fs:FileStream = new FileStream(); 
@@ -74,15 +71,10 @@ package business
 				// If we are writing asynchronously, openAsync. 
 				if(write && !sync) 
 				{
-					//trace("inside")
-					device_info = DeviceInfoHandler.getInstance();
-					device_info.getIOSDeviceInfo(width, height);
+					//device_info = DeviceInfoHandler.getInstance();
+					//device_info.getIOSDeviceInfo(width, height);
 					//device_info.getAndroideDeviceInfo(width, height);
-					//var a_n_i:AndroidNetworkInfo = new AndroidNetworkInfo();
-					//var u_id:String = a_n_i.getNetworkInfo();
-					//trace(u_id)
 					fs.openAsync(f, FileMode.WRITE); 
-					//trace("out")
 				}
 				else
 				{ 

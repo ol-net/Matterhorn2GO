@@ -29,6 +29,5 @@ package events {
 		{
 			super(type, bubbles, cancelable);
 		}
-		
 	}
 }

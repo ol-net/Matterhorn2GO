@@ -49,22 +49,29 @@ USA
 	
 	<fx:Script> 
 		<![CDATA[ 
-			import mx.events.FlexEvent; 
-			import spark.events.IndexChangeEvent; 
+			import business.datahandler.SeriesDataHandler;
+			import business.datahandler.EpisodesDataHandler;
+			
 			import events.ChangeTabViewEvent;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
 			
 			protected function onApplicationComplete (event:FlexEvent):void
 			{ 
-				//vn1.actionBar.visible=false; 
-				//tabbedNavigator.addEventListener(IndexChangeEvent.CHANGE,onChange); 
+				var e:EpisodesDataHandler = EpisodesDataHandler.getInstance();
+				e.init();
+				
+				var s:SeriesDataHandler = SeriesDataHandler.getInstance();
+				s.init();
+			
 				tabbedNavigator.addEventListener(ChangeTabViewEvent.CHANGETAB, onChange); 
 			} 
 			
 			protected function onChange(event:ChangeTabViewEvent):void 
 			{ 
 				this.tabbedNavigator.selectedIndex = 1;
-				//this.tabIndex = 1;
-				//if (event.newIndex==0) vn1.activeView.actionBarVisible=false; 
 			} 
 			
 		]]> </fx:Script> 

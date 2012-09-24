@@ -233,15 +233,16 @@ USA
 					osmfplayer.player.stop();
 					notConnected(null);
 				}
-				
 
-				if(osmfplayer.player.currentTime == osmfplayer.player.duration || osmfplayer.player.currentTime == 0)
+				if(osmfplayer.player.currentTime == osmfplayer.player.duration) // || osmfplayer.player.currentTime == 0)
 				{						
 					osmfplayer.player.seek(0);
 					seekBar.value = 0;
+
 					pause_button.visible = false;
 					play_button.visible = true;
-					osmfplayer.player.pause();
+					
+					//osmfplayer.player.stop();
 					return;
 				}
 				
@@ -249,8 +250,9 @@ USA
 				{
 					if(seekPosition != 0)
 					{
-						if(osmfplayer.player.playing || osmfplayer.player.paused)
+						if(osmfplayer.player.playing || osmfplayer.player.paused) {
 							osmfplayer.player.seek(seekPosition / 1000);
+						}
 					}
 					else
 					{
@@ -653,9 +655,10 @@ USA
 				{
 					if (osmfplayer.player != null) 
 					{
-						menu.visible = false;
 						play_button.visible = false;
 						pause_button.visible = true;
+						
+						menu.visible = false;
 						osmfplayer.player.play();
 					}
 				}

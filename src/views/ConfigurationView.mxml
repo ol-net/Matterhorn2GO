@@ -26,9 +26,7 @@ USA
 		tabBarVisible="false"
 		xmlns:business="business.*"
 		creationComplete="init()">
-	<fx:Declarations>
-		
-	</fx:Declarations>
+	
 	<fx:Script>
 		<![CDATA[
 			
@@ -42,6 +40,8 @@ USA
 			
 			import mx.core.UIComponent;
 			import mx.events.ResizeEvent;
+			
+			protected var myTimer:Timer;
 			
 			private var tit:TextField;
 			
@@ -67,7 +67,7 @@ USA
 			protected function init():void
 			{
 				ok = false;
-				
+
 				addText();
 								
 				height_num = navigator.height - 70;
@@ -124,20 +124,14 @@ USA
 				fileReader.setURL(textinput_url.text, true);
 				
 				dH = EpisodesDataHandler.getInstance();
-				//dH.setXMLListCollection(null);
-				dH.initLoadOK();0
+				dH.initLoadOK();
 				dH.setOValue();
-				
-				//var eDH:EpisodesDataHandler = EpisodesDataHandler.getInstance();
-				//eDH.initLoadOK();
-				//eDH.init();
 				
 				var sDH:SeriesDataHandler = SeriesDataHandler.getInstance();
 				sDH.setXMLSeries(null);
 				sDH.initLoadOK();
 				sDH.initThumbnailOK();
 				sDH.setOValue();
-				//sDH.init();
 				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				navigator.popView();
@@ -156,9 +150,6 @@ USA
 						url.setCustomURL(textinput_url.text);
 					}
 				}
-				
-				//navigator.pushView(SeriesView, data);
-				//navigator.pushView(EpisodeView, data);	
 			}
 			
 			protected function popThisView():void
@@ -167,7 +158,6 @@ USA
 				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
 				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
 				navigator.popView();
-				//navigator.pushView(AdoptersView, data);	
 			}
 			
 			// Event handler to handle hardware keyboard keys.
@@ -193,16 +183,6 @@ USA
 										source320dpi="assets/BackIcon88x88.png"/>
 			</s:icon>
 		</s:Button>
-		<!--
-		<s:Group width="60" height="60">
-			<business:ImageButton id="back_button"
-								  click="popThisView();"
-								  buttonMode="true"
-								  x="5" y="5"
-								  skinClass="views.skins.BackButtonSkin"/>
-		</s:Group>
-		
-		-->
 	</s:actionContent>
 	
 	<s:VGroup paddingTop="0"  paddingLeft="10">
@@ -230,15 +210,6 @@ USA
 								  x="{navigator.width / 2 - 74}"
 								  label="edit your URL"
 								  click="setURL(null);"/>
-							
-						<!--
-						
-						<business:ImageButton id="save_button"
-											  click="setURL(event);"
-											  buttonMode="true"
-											  x="{navigator.width / 2 - 35}" y="80"
-											  skinClass="views.skins.SaveButtonSkin"/>	
-						-->
 						<s:Label y="290"/>	
 					</s:Group>
 				</s:VGroup>

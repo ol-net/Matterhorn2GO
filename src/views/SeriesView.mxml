@@ -36,6 +36,7 @@ USA
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
+			import business.datahandler.did.DeviceInfoReader;
 			
 			import events.BusyIndicatorEventSeries;
 			import events.ChangeTabViewEvent;
@@ -68,6 +69,8 @@ USA
 			
 			private var tTip:ToolTipReader = ToolTipReader.getInstance();
 			
+			private var dInfo:DeviceInfoReader = DeviceInfoReader.getInstance();
+
 			[Bindable]
 			private var xTooltip:int;
 			
@@ -86,23 +89,35 @@ USA
 			
 			public function init():void
 			{	
+				textinput_search.addEventListener(FocusEvent.FOCUS_OUT, handleFocusOut);	
+
 				tTip.setDisplay(String(this.navigator.width), String(this.navigator.height));
+				dInfo.setDisplay(String(this.navigator.width), String(this.navigator.height));
 				
 				setPosition();
 				
 				tTip.readFile();
+				dInfo.readFile();
 				
 				if(connection.visible)
 					xmlData.setXMLListCollection(new XMLListCollection());
 				
 				if(tTip.getStatus() == true)
 				{
+					btn_sort.visible = false;
 					tooltip.visible = false;
 				}
 				else
 				{
+					btn_sort.visible = true;
 					tooltip.visible = true;	
 				}
+				
+				if(dInfo.getStatus() != true)
+				{
+					dInfo.setFile();
+				}
+				
 				this.addEventListener(KeyboardEvent.KEY_DOWN, handleButtons, false, 0, true);
 				this.addEventListener(KeyboardEvent.KEY_UP, handleButtons, false, 0, true);
 				
@@ -111,12 +126,14 @@ USA
 								
 				xmlData = SeriesDataHandler.getInstance();
 				
+				textinput_search.text = xmlData.getText();
+
 				videos = xmlData.getXMLListCollection();
 				
 				if(videos.length == 0 || xmlData.getURL() != URLClass.getInstance().getURL())
 				{	
-					btn_sort.enabled = false;
-
+					btnSortVisible();
+					
 					adoptersInit.initGetFilter();
 					
 					indicatormenu.visible = true;
@@ -125,20 +142,7 @@ USA
 				}
 				else
 				{
-					loadNextSeries = LoadNextSeries.getInstance();
-					
-					if(loadNextSeries != null)
-					{
-						if(loadNextSeries.getMaxPages() == loadNextSeries.getPage())
-						{
-							btn_sort.enabled = true;
-						}
-						else
-						{
-							btn_sort.enabled = false;
-						}
-					}
-
+					btnSortVisible();
 					indicatormenu.visible = false;
 					bi.visible = false;
 				}
@@ -170,7 +174,7 @@ USA
 				xmlData.setXMLListCollection(new XMLListCollection());
 				xmlData.setOValue();
 				vNotFound.visible = true;
-				btn_sort.enabled = false;
+				btn_sort.visible = false;
 			}
 			
 			public function setPosition():void 
@@ -253,15 +257,7 @@ USA
 					bi.visible = false;
 				}
 				
-				if(loadNextSeries.getMaxPages() == loadNextSeries.getPage())
-				{
-					btn_sort.enabled = true;
-				}
-				else
-				{
-					if(btn_sort.enabled)
-						btn_sort.enabled = false;
-				}
+				btnSortVisible();
 				
 				if(videos.length == 0)
 					videoNotFound(null);
@@ -270,7 +266,6 @@ USA
 			public function getVideo(event:FlexEvent):void
 			{
 				dummy_button.setFocus();
-				btn_sort.visible = true;
 				textinput_search.visible = false;
 				vNotFound.visible = false;
 				list.visible = true;
@@ -278,17 +273,20 @@ USA
 				indicatormenu.visible = true;
 				bi.visible = true;
 				
+				var e:EpisodesDataHandler = EpisodesDataHandler.getInstance();
+				e.setNewSearch();
+				e.setOValue();
+				e.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
+				
 				xmlData.setOValue();
 				xmlData.setNewSearch();
-				xmlData.search(textinput_search.text, String(0));
+				xmlData.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
 				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
 				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 			}
 			
 			public function loadNewView():void
 			{
-				//list.visible = true;
-				
 				xmlData.removeEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
 				xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				
@@ -297,11 +295,6 @@ USA
 				this.removeEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
 				this.removeEventListener(ResizeEvent.RESIZE, resize);
 				SeekPosition.getInstance().setPosition(0);
-				
-				//this.parent.taß bIndex = 1; // .selectedIndex = 1;
-				//TabbedViewNavigator(navigator.parentNavigator).selectedIndex = 1;
-				
-				//DataHandler.getInstance().search(list.selectedItem.@id, 0);
 				
 				var xml:XML = list.selectedItem as XML;
 				
@@ -315,9 +308,6 @@ USA
 				myTimer = new Timer(200, 1); 
 				myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, changeTab);
 				myTimer.start();
-				
-				//trace(list.selectedItem)
-				//navigator.pushView(VideoDetailsView, list.selectedItem);
 			}
 			
 			public function changeTab(e:TimerEvent):void
@@ -350,7 +340,6 @@ USA
 			{   
 				list.visible = true;
 				connection.visible = false;
-				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				this.removeEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
 				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
 				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
@@ -361,11 +350,6 @@ USA
 			{
 				list.visible = true;
 				connection.visible = false;
-				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
-				//this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
-				//this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
-				//this.removeEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
-				//this.removeEventListener(ResizeEvent.RESIZE, resize);
 				navigator.pushView(AdoptersView, data);
 			}
 			
@@ -414,8 +398,9 @@ USA
 			
 			public function closeToolTip():void 
 			{	
-				tTip.setFile();
 				tooltip.visible = false;
+				tTip.setFile();
+				btnSortVisible();
 			}
 			
 			public function closeKeyBoardAndGetVideos(e:Event):void
@@ -427,8 +412,18 @@ USA
 			{
 				if(textinput_search.visible)
 				{
+					if(tooltip.visible) 
+					{
+						btn_sort.visible = true;
+					}
+					else
+					{
+						btnSortVisible();
+					}		
+					
+					stage.focus = null;
+
 					getVideo(null);
-					btn_sort.visible = true;
 				} 
 				else
 				{
@@ -438,13 +433,30 @@ USA
 				}
 			}
 			
+			public function handleFocusOut(e:FocusEvent):void
+			{
+				myTimer = new Timer(200, 1); 
+				myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, closeTextField);
+				myTimer.start();
+			}
+			
+			public function closeTextField(e:TimerEvent):void
+			{
+				if(tooltip.visible) 
+				{
+					btn_sort.visible = true;
+				}
+				else
+				{
+					btnSortVisible();
+				}
+				getVideo(null);
+			}
+			
 			public function sortSeries(typ:String):void
 			{
 				var mySort:Sort = new Sort();
 				var sortField:SortField = new SortField(typ);
-				
-				//if(typ == 'date')
-				//	sortField.numeric = true;
 				
 				if(desc_sort.selected == true)
 					sortField.descending = true;
@@ -459,9 +471,6 @@ USA
 			
 			public function openSortMenu():void
 			{
-				//title_sort.selected = false;
-				//author_sort.selected = false;
-				//date_sort.selected = true;
 				if(sort_menu.visible)
 				{
 					sort_menu.visible = false;
@@ -471,6 +480,41 @@ USA
 					sort_menu.visible = true;
 				}
 			}	
+			
+			public function btnSortVisible():void
+			{
+				loadNextSeries = LoadNextSeries.getInstance();
+				
+				var ok:Boolean = false;
+				
+				if(loadNextSeries != null)
+				{
+					if(loadNextSeries.getMaxPages() == loadNextSeries.getPage())
+					{
+						ok = true;
+					}
+					else
+					{
+						ok = false;
+					}
+				}
+				
+				if (tooltip.visible && !textinput_search.visible) 
+				{
+					btn_sort.visible = true;
+				}
+				else
+				{
+					if(!ok  || textinput_search.visible)
+					{
+						btn_sort.visible = false;
+					}
+					else
+					{
+						btn_sort.visible = true;
+					}
+				}
+			}
 		]]>
 	</fx:Script>
 	
@@ -498,8 +542,7 @@ USA
 										source320dpi="assets/search88.png"/>
 			</s:icon>
 		</s:Button>
-
-		
+	
 	</s:actionContent>
 	
 	<s:titleContent>
@@ -546,14 +589,6 @@ USA
 				height="100">
 				
 			<s:Group>
-				<!--
-				<s:Label text="1st step:" 
-						 y="67" x="{navigator.width/2 - 150}"
-						 color="white"/>
-				<s:Label text="2nd step:" 
-						 y="117" x="{navigator.width/2 - 150}"
-						 color="white"/>
-				-->
 				<s:RadioButton groupName="sortgroup_kind" visible="false"
 							   selected="true"
 							   fontWeight="bold"
@@ -576,7 +611,7 @@ USA
 							   color="white"
 							   x="{navigator.width/2-120}" y="50"
 							   id="date_sort"
-							   label="time" 
+							   label="Date" 
 							   width="150"/>
 				
 				<s:RadioButton groupName="sortgroup" 
@@ -585,7 +620,7 @@ USA
 							   color="white"
 							   x="{navigator.width/2-30}" y="50"
 							   id="title_sort"
-							   label="title" 
+							   label="Title" 
 							   width="150"/>
 	
 				<s:RadioButton groupName="sortgroup" 
@@ -594,7 +629,7 @@ USA
 							   color="white"
 							   x="{navigator.width/2+50}" y="50"
 							   id="author_sort"
-							   label="author" 
+							   label="Author" 
 							   width="150"/>   
 			</s:Group>
 		</s:View>

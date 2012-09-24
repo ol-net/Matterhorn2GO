@@ -119,9 +119,6 @@ package business.datahandler
 			initThumbnail = true;
 			var XMLResults:XML = response.result as XML;
 			
-			//trace()
-			//trace(XMLResults.result)
-			
 			this.urlThumbnail = XMLResults.result.mediapackage.attachments.attachment.url[0];
 			
 			if(urlThumbnail == null)
@@ -131,10 +128,6 @@ package business.datahandler
 			{
 				createNewElement();
 			}
-			//attachments/attachment[1]/url
-			
-			//xmlVideos = new XMLListCollection(XMLResults.result.mediapackage);
-			
 		}
 		
 		// The result processing function
@@ -209,7 +202,6 @@ package business.datahandler
 			if(index < xmlSeries.length) 
 			{
 				getImage(xmlSeries.getItemAt(index).@id);
-				//getImage(xmlSeries.getItemAt(index).dcTitle);
 			}
 			else
 			{
@@ -247,7 +239,6 @@ package business.datahandler
 				
 				var url:String = matterhornURL;
 				var searchurl:String = url+'?q='+sText+'&limit='+20+'&offset='+oValue+'&series=true';
-				//trace(searchurl)
 				serviceObj.url = searchurl;
 				serviceObj.send();
 			}

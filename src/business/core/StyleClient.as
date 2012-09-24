@@ -31,7 +31,6 @@ package business.core
 	import spark.core.SpriteVisualElement;
 	
 	//SpriteVisualElement
-	
 	public class StyleClient extends SpriteVisualElement implements IStyleClient, IChildList, IAdvancedStyleClient
 	{
 		protected var layoutWidth:Number;
@@ -67,6 +66,7 @@ package business.core
 		{
 			return  parent as IAdvancedStyleClient;;
 		}
+		
 		public function set styleParent( value:IAdvancedStyleClient ):void
 		{
 			_styleParent = value;
@@ -174,7 +174,6 @@ package business.core
 		{
 			_nonInheritingStyles = value;
 		}
-		
 		
 		private var _styleDeclaration:CSSStyleDeclaration;
 		public function get styleDeclaration():CSSStyleDeclaration

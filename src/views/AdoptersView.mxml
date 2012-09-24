@@ -107,12 +107,8 @@ USA
 				sDH.initLoadOK();
 				sDH.initThumbnailOK();
 				sDH.setOValue();
-				//sDH.init();
+				
 				navigator.popView();
-				//navigator.popView();
-	
-				//navigator.pushView(SeriesView, data);	
-				//navigator.pushView(
 			}
 			
 			public function setSize(event:ResizeEvent):void
@@ -123,7 +119,6 @@ USA
 			public function addAdopter():void
 			{				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
-				//navigator.popView();
 				navigator.pushView(ConfigurationView, data);	
 			}
 		]]>
@@ -140,17 +135,6 @@ USA
 										source320dpi="assets/BackIcon88x88.png"/>
 			</s:icon>
 		</s:Button>
-		<!--
-		<s:VGroup>
-			<s:Group width="60" height="60">
-				<business:ImageButton id="back_button"
-									  click="popThisView();"
-									  buttonMode="true"
-									  x="5" y="5"
-									  skinClass="views.skins.BackButtonSkin"/>
-			</s:Group>
-		</s:VGroup>
-		-->
 	</s:actionContent>
 	
 	<s:View backgroundColor="#F2F2F2" >
