@@ -31,10 +31,10 @@ USA
 		<![CDATA[
 			
 			import business.ConfigurationReader;
-			import business.datahandler.did.CustomURLHandler;
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
+			import business.datahandler.did.CustomURLHandler;
 			
 			import events.FileReaderCompleteEvent;
 			
@@ -97,7 +97,12 @@ USA
 				tit.autoSize = "left";
 				tit.width = this.navigator.width - 30;
 				
-				tit.text ="Depending on the video-encoding and distribution type a Matterhorn installation might work or not with this app. We are sorry but we can not offer any support for any server that you might add here."
+				tit.text ="Depending on the video-encoding " +
+					"and distribution type a Matterhorn " +
+					"installation might work or not with " +
+					"this app. We are sorry but we can not " +
+					"offer any support for any server that " +
+					"you might add here."
 				
 				titleComp = new UIComponent();
 				titleComp.y=130;
@@ -120,8 +125,35 @@ USA
 				save_button.setFocus();
 				
 				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+				
+				// verifying your url 
+				var cURL:String = textinput_url.text;
+				
+				var pattern:RegExp = /http:\/\//i;
+				
+				if(pattern.test(cURL))
+				{
+					cURL = cURL.split(pattern)[1];
+				}	  
+				
+				var pattern2:RegExp = /https:\/\//i;
+				
+				if(pattern2.test(cURL))
+				{
+					cURL = cURL.split(pattern2)[1];
+				}	
+				
+				var pattern3:RegExp = /(\d+)/g;
+				var re0:RegExp = /(\/\w*)/i;
 
-				fileReader.setURL(textinput_url.text, true);
+				cURL = cURL.split(re0)[0];
+
+				cURL = cURL.replace(pattern3, "$1");
+
+				cURL = "http://"+cURL;
+				// end of verifying
+
+				fileReader.setURL(cURL, true);
 				
 				dH = EpisodesDataHandler.getInstance();
 				dH.initLoadOK();
@@ -135,6 +167,7 @@ USA
 				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				navigator.popView();
+				
 				
 				if(e == null) {
 					url = CustomURLHandler.getInstance();
@@ -210,6 +243,7 @@ USA
 								  x="{navigator.width / 2 - 74}"
 								  label="edit your URL"
 								  click="setURL(null);"/>
+						
 						<s:Label y="290"/>	
 					</s:Group>
 				</s:VGroup>

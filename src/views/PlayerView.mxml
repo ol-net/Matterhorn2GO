@@ -360,6 +360,8 @@ USA
 				{
 					if(osmfplayer == null)
 					{
+						//trace(xpathValue.getResult(videoPath, data))
+						//trace(xpathValue.getResult(videoPathTwo, data))
 						osmfplayer = new OSMFPlayer(xpathValue.getResult(videoPath, data), xpathValue.getResult(videoPathTwo, data));  
 						osmfplayer.setSize(navigator.height, navigator.width);
 					}

@@ -330,6 +330,7 @@ USA
 				this.removeEventListener(ResizeEvent.RESIZE, resize);
 				
 				var exitingEvent:Event = new Event(Event.EXITING, false, true);
+				
 				NativeApplication.nativeApplication.dispatchEvent(exitingEvent);
 				if (!exitingEvent.isDefaultPrevented()) {
 					NativeApplication.nativeApplication.exit();
