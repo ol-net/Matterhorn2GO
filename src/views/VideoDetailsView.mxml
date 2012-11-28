@@ -66,6 +66,7 @@ USA
 					{
 						startvideo.visible = false;
 						menu.visible = true;
+						return;
 					}	
 				}	
 				*/

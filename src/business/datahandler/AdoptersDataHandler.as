@@ -22,9 +22,11 @@ package business.datahandler
 	
 	import business.datahandler.URLClass;
 	import business.datahandler.XMLHandler;
+	import business.dbaccess.SQLViewHandler;
 	
 	import events.AdoptersLoadedEvent;
 	import events.NotConnectedEvent;
+	import events.SQLConnectionIsOpen;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -33,12 +35,14 @@ package business.datahandler
 	import mx.rpc.events.FaultEvent;
 	import mx.rpc.events.ResultEvent;
 	import mx.rpc.http.HTTPService;
-	
+		
 	public class AdoptersDataHandler extends EventDispatcher
 	{		
 		private var serviceObj:HTTPService; 
 		private var adopters:XMLListCollection;
 		static private var instance:AdoptersDataHandler;
+		
+		private var xmlAdopters:SQLViewHandler;
 		
 		private var useFilterFlag:String;
 	
@@ -64,7 +68,7 @@ package business.datahandler
 			serviceObj.addEventListener(FaultEvent.FAULT, notConnected);
 			serviceObj.send();
 		}
-		
+
 		public function initGetFilter():void
 		{	
 			serviceObj.url = "http://vm083.rz.uos.de/release/webservices/matterhorn2go";
@@ -100,15 +104,21 @@ package business.datahandler
 			var xmlHandler:XMLHandler = new XMLHandler();
 			var tmp2:String = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/AdopterURL", XMLResults);
 			useFilterFlag = tmp2;
-			
-			
-			if(tmp != tmp2)
-			{
-				var ad:Object = "<adopter><AdopterURL>"+tmp+"</AdopterURL><AdopterName>Your Custom URL</AdopterName></adopter>";
+			//if(tmp != tmp2)
+		//	{
+				//var ad:Object = "<adopter><AdopterURL>"+tmp+"</AdopterURL><AdopterName>Your Custom URL</AdopterName></adopter>";
 				
-				var xml:XML = new XML(ad);
-			    adopters.addItem(xml);
-			}
+				//var xml:XML = new XML(ad);
+			xmlAdopters = SQLViewHandler.getInstance();
+			xmlAdopters.addEventListener(SQLConnectionIsOpen.READERCOMPLETE, xmlComplete);
+			xmlAdopters.initSQLViewAdopters(adopters);
+			    //adopters.addItem(xml);
+		//	}
+		}
+		
+		public function xmlComplete(event:SQLConnectionIsOpen):void
+		{
+			adopters = xmlAdopters.getAdopterXML();
 			
 			var xmlAdoptersLoaded:AdoptersLoadedEvent = new AdoptersLoadedEvent(AdoptersLoadedEvent.ADOPTERSLOADED);
 			dispatchEvent(xmlAdoptersLoaded);	

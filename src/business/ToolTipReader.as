@@ -71,9 +71,9 @@ package business
 				// If we are writing asynchronously, openAsync. 
 				if(write && !sync) 
 				{
-					device_info = DeviceInfoHandler.getInstance();
+					//device_info = DeviceInfoHandler.getInstance();
 					//device_info.getIOSDeviceInfo(width, height);
-					device_info.getAndroideDeviceInfo(width, height);
+					//device_info.getAndroideDeviceInfo(width, height);
 					fs.openAsync(f, FileMode.WRITE); 
 				}
 				else

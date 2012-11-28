@@ -49,8 +49,9 @@ USA
 	
 	<fx:Script> 
 		<![CDATA[ 
-			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.EpisodesDataHandler;
+			import business.datahandler.SeriesDataHandler;
+			import business.dbaccess.SQLConnectionHandler;
 			
 			import events.ChangeTabViewEvent;
 			
@@ -60,6 +61,9 @@ USA
 			
 			protected function onApplicationComplete (event:FlexEvent):void
 			{ 
+				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
+				sqlConnection.initConnection();
+				
 				var e:EpisodesDataHandler = EpisodesDataHandler.getInstance();
 				e.init();
 				

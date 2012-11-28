@@ -57,6 +57,7 @@ package business.renderers
 		{	
 			if(value != null)
 			{
+				//trace("value "+ value)
 				if(value.code == "update_view")
 				{	
 					if(value.@type == "episode")
@@ -74,7 +75,7 @@ package business.renderers
 						videos.removeItemAt(videos.length - 1);
 						xmlEpisodeData.setXMLListCollection(videos);
 					}
-					else
+					else if(value.@type == "series")
 					{	
 						var indicatorLoadedSeries:BusyIndicatorEventSeries = new BusyIndicatorEventSeries(BusyIndicatorEventSeries.INDICATORLOADEDS);
 						dispatchEvent(indicatorLoadedSeries);

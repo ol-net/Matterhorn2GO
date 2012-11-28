@@ -194,17 +194,26 @@ package business.renderers
 		
 		override protected function setValues():void
 		{			
+			//trace(data)
+			
 			titleField.text = String(data.AdopterName);
+			
 			var tmp:String = String(data.AdopterURL);
 			var tmp2:String = String(URLClass.getInstance().getURLNoSearch());
 			
+			//trace("tmp "+tmp)
+			
+			//trace("tmp2 "+tmp2)
+			
 			if(tmp == tmp2)
 			{
+				//trace("in")
 				radioButton.selected = true;
 				//trace(data.AdopterURL)
 			}
 			else
 			{
+				//trace("out")
 				radioButton.enabled = false;
 			}
 		}

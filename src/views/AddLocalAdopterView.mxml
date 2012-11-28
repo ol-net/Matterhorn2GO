@@ -20,7 +20,7 @@ USA
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
-		title="Edit Custom URL" 
+		title="Add Custom URL" 
 		xmlns:views="views.*"
 		backgroundColor="#F2F2F2" 
 		tabBarVisible="false"
@@ -34,7 +34,6 @@ USA
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
-			import business.datahandler.XMLHandler;
 			import business.datahandler.did.CustomURLHandler;
 			import business.dbaccess.SQLEditHandler;
 			
@@ -55,7 +54,7 @@ USA
 			
 			private var dH:EpisodesDataHandler;
 			
-			//private var url:CustomURLHandler;
+			private var url:CustomURLHandler;
 			
 			[Bindable]
 			protected var height_num:Number = 0;
@@ -65,37 +64,22 @@ USA
 			
 			private var ok:Boolean = false; 
 			
-			private var id_adopter:String;
-			private var url_adopter:String;
-			private var name_adopter:String;
-			
 			// The initialisation function
 			protected function init():void
 			{
 				ok = false;
-
+				
 				addText();
-								
+				
 				height_num = navigator.height - 70;
 				width_num = navigator.width - 10;
 				
-				var tmp:String = URLClass.getInstance().getURLNoSearch();
+				//var tmp:String = URLClass.getInstance().getURLNoSearch();
 				
-				var ado:Object = "<adopters>";
-				ado = ado + data;
-				ado = ado + "</adopters>";
-				
-				var xmlHandler:XMLHandler = new XMLHandler();
-				id_adopter = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/id", ado);
-				url_adopter = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/AdopterURL", ado);
-				name_adopter = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/AdopterName", ado);
-				
-				textinput_name.text = name_adopter;
-				
-				if(tmp != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py")
-				{
-					textinput_url.text = tmp;
-				}
+				//if(tmp != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py")
+				//{
+				//	textinput_url.text = tmp;
+				//}
 				
 				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
 				
@@ -119,7 +103,7 @@ USA
 					"installation might work or not with " +
 					"this app. We are sorry but we can not " +
 					"offer any support for any server that " +
-					"you might add here."
+					"you might add here.";
 				
 				titleComp = new UIComponent();
 				titleComp.y=190;
@@ -162,16 +146,16 @@ USA
 				
 				var pattern3:RegExp = /(\d+)/g;
 				var re0:RegExp = /(\/\w*)/i;
-
+				
 				cURL = cURL.split(re0)[0];
-
+				
 				cURL = cURL.replace(pattern3, "$1");
-
+				
 				cURL = "http://"+cURL;
 				// end of verifying
-
-				fileReader.setURL(cURL, true);
 				
+				fileReader.setURL(cURL, true);
+								
 				dH = EpisodesDataHandler.getInstance();
 				dH.initLoadOK();
 				dH.setOValue();
@@ -186,30 +170,22 @@ USA
 				navigator.popView();
 				
 				var aU:SQLEditHandler = SQLEditHandler.getInstance();
-
+				
 				if(e == null) {
-					//url = CustomURLHandler.getInstance();
-					//url.setCustomURL(textinput_url.text);
+					url = CustomURLHandler.getInstance();
+					url.setCustomURL(textinput_url.text);
+					aU.insertAdopter(textinput_name.text, cURL);
 					
-					if(id_adopter != "")
-					{
-						aU.updateAdopter(id_adopter, textinput_name.text, cURL);
-					}
-					
-				 	navigator.popView();
+					navigator.popView();
 				} 
 				else
 				{
 					if(!ok) 
 					{
 						ok = true;
-						//url = CustomURLHandler.getInstance();
-						//url.setCustomURL(textinput_url.text);
-						
-						if(id_adopter != "")
-						{
-							aU.updateAdopter(id_adopter, textinput_name.text, cURL);
-						}
+						url = CustomURLHandler.getInstance();
+						url.setCustomURL(textinput_url.text);
+						aU.insertAdopter(textinput_name.text, cURL);
 					}
 				}
 			}
@@ -270,7 +246,7 @@ USA
 								 x="10" y="70"
 								 fontWeight="bold" 
 								 fontFamily="_sans"/>
-
+						
 						<s:TextInput id="textinput_url" 
 									 skinClass="spark.skins.mobile.TextInputSkin" 
 									 softKeyboardType="url"  
@@ -283,7 +259,7 @@ USA
 								  height="30" 
 								  y="150"
 								  x="{navigator.width / 2 - 74}"
-								  label="edit your URL"
+								  label="add your URL"
 								  click="setURL(null);"/>
 						
 						<s:Label y="290"/>	

@@ -123,6 +123,28 @@ USA
 			
 			protected function init():void
 			{					
+				/*
+				// only for iOS loop					
+				for each (var interfaceObj:com.adobe.nativeExtensions.Networkinfo.NetworkInterface in interfaces)
+				{
+					if(interfaceObj.name == "en0" && interfaceObj.active == false)
+					{
+						menu.visible = true;
+						//osmfplayer.player.stop();
+						//pause_button.visible = false;
+						//play_button.visible = true;
+						if(osmfplayer != null)
+						{ 
+							if(osmfplayer.player.paused || osmfplayer.player.playing)
+								osmfplayer.player.stop();
+						}
+						
+						popThisView();
+						return;
+					}	
+				}
+				*/
+				
 				menu.visible = false;
 				
 				presenter_button.setVisible(false);
@@ -220,11 +242,18 @@ USA
 				{
 					if(interfaceObj.name == "en0" && interfaceObj.active == false)
 					{
-						//menu.visible = true;
-						osmfplayer.player.stop();
+						menu.visible = true;
+						//osmfplayer.player.stop();
 						//pause_button.visible = false;
 						//play_button.visible = true;
+						if(osmfplayer != null)
+						{ 
+							if(osmfplayer.player.paused || osmfplayer.player.playing)
+								osmfplayer.player.stop();
+						}
+						
 						popThisView();
+						return;
 					}	
 				}
 				*/
@@ -751,7 +780,6 @@ USA
 					}
 				}
 				
-				navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				seekBar.removeEventListener(MouseEvent.MOUSE_DOWN, stopUpdate);
 				seekBar.removeEventListener(MouseEvent.MOUSE_UP, startUpdate);
 				seekBar.removeEventListener(MouseEvent.MOUSE_MOVE, updateTime);

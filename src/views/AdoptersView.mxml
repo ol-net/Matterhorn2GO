@@ -62,7 +62,7 @@ USA
 				
 				connection.visible = false;
 
-				var	xpathValue:XMLHandler = new XMLHandler();
+				//var	xpathValue:XMLHandler = new XMLHandler();
 				
 				adopters = AdoptersDataHandler.getInstance();
 				adopters.init();
@@ -72,7 +72,10 @@ USA
 			
 			public function getAdopters(event:AdoptersLoadedEvent):void
 			{
-				adoptersList = adopters.getXMLListAdopters();
+				//adoptersList = adopters.getXMLListAdopters();
+				//trace("list loadet")
+				list.dataProvider = adopters.getXMLListAdopters();
+
 			}
 			
 			public function notConnected(event:NotConnectedEvent):void 
@@ -93,12 +96,13 @@ USA
 			
 			public function loadAdopter():void
 			{
-				var selectedItem:Object = list.selectedItem
+				//trace()
+				var selectedItem:Object = list.selectedItem;
 				
 				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
 				
 				fileReader.setURL(selectedItem.AdopterURL, false);
-				
+				adopters.init();
 				dH = EpisodesDataHandler.getInstance();
 				dH.initLoadOK();
 				dH.setOValue();
@@ -107,20 +111,30 @@ USA
 				sDH.initLoadOK();
 				sDH.initThumbnailOK();
 				sDH.setOValue();
-				
-				navigator.popView();
-			}
+			} 
 			
 			public function setSize(event:ResizeEvent):void
 			{	
+			}
+			
+			public function editAdopter():void
+			{
+				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				
+				navigator.pushView(ConfigurationView, adoptersList);	
 			}
 			
 			public function addAdopter():void
 			{				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
-				navigator.pushView(ConfigurationView, data);	
+				navigator.pushView(AddLocalAdopterView, data);	
 			}
+			
+			public function useAdopter():void
+			{
+				navigator.popView();
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -165,7 +179,6 @@ USA
 			<s:List id="list"
 					height="100%" 
 					width="100%"
-					dataProvider="{adoptersList}"
 					labelField="fontName"
 					itemRenderer="business.renderers.AdoptersRenderer" 
 					change="loadAdopter()"/>
@@ -177,13 +190,38 @@ USA
 					y="{this.navigator.height - 130}">
 				
 				<s:Group height="45" width="{this.navigator.width}">
-					<s:Button id="add_button" 
+					<s:Button id="add_button" width="70" 
+							  height="30" 
+							  y="7"
+							  x="{navigator.width / 2 - 155}"
+							  label="add" 
+							  click="addAdopter();">
+					</s:Button>	
+					
+					<s:Button id="delete_button" width="70" 
 							  height="30" 
 							  y="7"
 							  x="{navigator.width / 2 - 75}"
-							  label="add Custom URL" 
-							  click="addAdopter();">
+							  label="delete" 
+							  click="">
 					</s:Button>	
+					
+					<s:Button id="edit_button" width="70" 
+							  height="30" 
+							  y="7"
+							  x="{navigator.width / 2 + 5}"
+							  label="edit" 
+							  click="editAdopter();">
+					</s:Button>	
+					
+					<s:Button id="use_button" width="70"
+							  height="30" 
+							  y="7"
+							  x="{navigator.width / 2 + 85}"
+							  label="use" 
+							  click="useAdopter();">
+					</s:Button>	
+					
 				</s:Group>
 			</s:View>
 		</s:VGroup>
