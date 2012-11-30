@@ -194,7 +194,7 @@ package business.renderers
 		
 		override protected function setValues():void
 		{			
-			//trace(data)
+			trace(data)
 			
 			titleField.text = String(data.AdopterName);
 			
@@ -207,13 +207,13 @@ package business.renderers
 			
 			if(tmp == tmp2)
 			{
-				//trace("in")
+				trace("in")
 				radioButton.selected = true;
 				//trace(data.AdopterURL)
 			}
 			else
 			{
-				//trace("out")
+				trace("out")
 				radioButton.enabled = false;
 			}
 		}

@@ -19,7 +19,7 @@ USA
 */
 package business
 {
-	import business.datahandler.did.CustomURLHandler;
+	//import business.datahandler.did.CustomURLHandler;
 	
 	import events.FileReaderCompleteEvent;
 	
@@ -40,7 +40,7 @@ package business
 		
 		static private var instance:ConfigurationReader;
 		
-		private var url:CustomURLHandler;
+		//private var url:CustomURLHandler;
 		
 		protected var myTimer:Timer;
 		

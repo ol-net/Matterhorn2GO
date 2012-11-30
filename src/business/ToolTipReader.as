@@ -19,8 +19,8 @@ USA
 */
 package business
 {
-	import business.datahandler.did.DeviceInfoHandler;
-	import business.datahandler.did.AndroidNetworkInfo;
+	//import business.datahandler.did.DeviceInfoHandler;
+	//import business.datahandler.did.AndroidNetworkInfo;
 
 	import events.FileReaderCompleteEvent;
 	
@@ -37,7 +37,7 @@ package business
 		
 		static private var instance:ToolTipReader;
 		
-		private var device_info:DeviceInfoHandler;
+		//private var device_info:DeviceInfoHandler;
 		
 		private var width:String = "0";
 		private var height:String = "0";
