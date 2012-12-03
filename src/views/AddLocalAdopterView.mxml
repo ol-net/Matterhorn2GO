@@ -34,7 +34,7 @@ USA
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
-			import business.datahandler.did.CustomURLHandler;
+			//import business.datahandler.did.CustomURLHandler;
 			import business.dbaccess.SQLEditHandler;
 			
 			import events.FileReaderCompleteEvent;
@@ -54,7 +54,7 @@ USA
 			
 			private var dH:EpisodesDataHandler;
 			
-			private var url:CustomURLHandler;
+			//private var url:CustomURLHandler;
 			
 			[Bindable]
 			protected var height_num:Number = 0;
@@ -172,8 +172,8 @@ USA
 				var aU:SQLEditHandler = SQLEditHandler.getInstance();
 				
 				if(e == null) {
-					url = CustomURLHandler.getInstance();
-					url.setCustomURL(textinput_url.text);
+					//url = CustomURLHandler.getInstance();
+					//url.setCustomURL(textinput_url.text);
 					aU.insertAdopter(textinput_name.text, cURL);
 					
 					navigator.popView();
@@ -183,8 +183,8 @@ USA
 					if(!ok) 
 					{
 						ok = true;
-						url = CustomURLHandler.getInstance();
-						url.setCustomURL(textinput_url.text);
+						//url = CustomURLHandler.getInstance();
+						//url.setCustomURL(textinput_url.text);
 						aU.insertAdopter(textinput_name.text, cURL);
 					}
 				}

@@ -36,7 +36,7 @@ USA
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
-			import business.datahandler.did.DeviceInfoReader;
+			//import business.datahandler.did.DeviceInfoReader;
 			
 			import events.BusyIndicatorEventEpisode;
 			import events.NotConnectedEvent;
@@ -68,7 +68,7 @@ USA
 			
 			private var tTip:ToolTipReader = ToolTipReader.getInstance();
 			
-			private var dInfo:DeviceInfoReader = DeviceInfoReader.getInstance();
+			//private var dInfo:DeviceInfoReader = DeviceInfoReader.getInstance();
 			
 			[Bindable]
 			private var xTooltip:int;
@@ -91,7 +91,7 @@ USA
 				textinput_search.addEventListener(FocusEvent.FOCUS_OUT, handleFocusOut);
 
 				tTip.setDisplay(String(this.navigator.width), String(this.navigator.height));
-				dInfo.setDisplay(String(this.navigator.width), String(this.navigator.height));
+				//dInfo.setDisplay(String(this.navigator.width), String(this.navigator.height));
 
 				this.addEventListener(BusyIndicatorEventEpisode.INDICATORLOADED, loadIndicator);
 				
@@ -103,7 +103,7 @@ USA
 				setPosition();
 				
 				tTip.readFile();
-				dInfo.readFile();
+				//dInfo.readFile();
 				
 				if(connection.visible)
 					xmlData.setXMLListCollection(new XMLListCollection());
@@ -119,10 +119,12 @@ USA
 					tooltip.visible = true;	
 				}
 				
+				/*
 				if(dInfo.getStatus() != true)
 				{
 					dInfo.setFile();
 				}
+				*/
 				
 				//this.addEventListener("keyDown", handleButtons, false, 1);
 				//this.addEventListener("keyUp", handleButtons, false, 1);
