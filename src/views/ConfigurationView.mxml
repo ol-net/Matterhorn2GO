@@ -146,31 +146,15 @@ USA
 				// verifying your url 
 				var cURL:String = textinput_url.text;
 
-				var protocol:String = "http://";
+				// Check if the given URL has a valid protocol.
+				// Users often omit them (stupid users).
+				// If no protocol is given, we assume that we should use HTTP.
+				var pattern:RegExp = /https{0,1}:\/\//i;
 				
-				var pattern:RegExp = /http:\/\//i;
-				
-				if(pattern.test(cURL))
+				if(!pattern.test(cURL))
 				{
-					cURL = cURL.split(pattern)[1];
+					cURL = "http://" + cURL;
 				}	  
-				
-				var pattern2:RegExp = /https:\/\//i;
-				
-				if(pattern2.test(cURL))
-				{
-					cURL = cURL.split(pattern2)[1];
-					protocol = "https://";
-				}	
-				
-				var pattern3:RegExp = /(\d+)/g;
-				var re0:RegExp = /(\/\w*)/i;
-
-				cURL = cURL.split(re0)[0];
-
-				cURL = cURL.replace(pattern3, "$1");
-
-				cURL = protocol + cURL;
 				// end of verifying
 
 				fileReader.setURL(cURL, true);
