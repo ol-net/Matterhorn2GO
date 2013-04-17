@@ -145,6 +145,8 @@ USA
 				
 				// verifying your url 
 				var cURL:String = textinput_url.text;
+
+				var protocol:String = "http://";
 				
 				var pattern:RegExp = /http:\/\//i;
 				
@@ -158,6 +160,7 @@ USA
 				if(pattern2.test(cURL))
 				{
 					cURL = cURL.split(pattern2)[1];
+					protocol = "https://";
 				}	
 				
 				var pattern3:RegExp = /(\d+)/g;
@@ -167,7 +170,7 @@ USA
 
 				cURL = cURL.replace(pattern3, "$1");
 
-				cURL = "http://"+cURL;
+				cURL = protocol + cURL;
 				// end of verifying
 
 				fileReader.setURL(cURL, true);
