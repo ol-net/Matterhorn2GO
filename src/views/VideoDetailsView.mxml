@@ -26,20 +26,33 @@ USA
 		tabBarVisible="false"
 		viewActivate="init()"
 		backKeyPressed="loadNewView()" 
-		xmlns:business="business.*">
+		xmlns:business="business.core.*">
+	
+	<fx:Declarations>
+		<s:RadioButtonGroup id="downloadType"/>
+	</fx:Declarations>
 	
 	<fx:Script>
 		<![CDATA[
-			//import com.adobe.nativeExtensions.Networkinfo.InterfaceAddress;
-			//import com.adobe.nativeExtensions.Networkinfo.NetworkInfo;
-			//import com.adobe.nativeExtensions.Networkinfo.NetworkInterface; 
-			
+			import business.auth.dbaccess.SQLAuthViewHandler;
+			import business.core.GetVideoPathHandler;
 			import business.datahandler.SegmentDataHandler;
 			import business.datahandler.XMLHandler;
-			
-			import events.NotConnectedEvent;
-			import events.SegmentLoadedEvent;
-			import events.VideosLoadedEvent;
+			import business.datahandler.events.NotConnectedEvent;
+			import business.datahandler.events.SegmentLoadedEvent;
+			import business.datahandler.events.VideosLoadedEvent;
+			import business.dbaccess.SQLConnectionHandler;
+			import business.dbaccess.SQLHistoryEditHandler;
+			import business.dbaccess.SQLHistoryViewHandler;
+			import business.dbaccess.events.SQLHistoryLoadedEvent;
+			import business.dbaccess.events.SQLVideoInsideEvent;
+			import business.download.DownloadThumbnails;
+			import business.download.DownloadVideo;
+			import business.download.dbaccess.SQLDownloadEditHandler;
+			import business.download.dbaccess.SQLDownloadViewHandler;
+			import business.download.events.DownloadEvent;
+			import business.download.events.DownloadedVideoLoadedEvent;
+			import business.download.events.OnProgressEvent;
 			
 			import mx.collections.XMLListCollection;
 			import mx.core.UIComponent;
@@ -51,12 +64,41 @@ USA
 			
 			private var xmlList:XMLListCollection;
 			
+			private var checkVideoInside:SQLHistoryViewHandler;
+			
+			private var insertVideo:SQLHistoryEditHandler;
+			
+			private var mediapackageID:String = "";
+			private var date:String = "";
+			private var thumbnail:String = "";
+			
+			private var download:SQLDownloadViewHandler;
+			
+			private var video1:String;
+			private var video2:String;
+			
+			private var videoOneName:String = "";
+			private var videoTwoName:String = "";
+			
+			private var downLoader:DownloadThumbnails;
+			
+			private var sqlSelectAuth:SQLAuthViewHandler;
+			
+			private var sqlHistoryView:SQLHistoryViewHandler;
+			
 			//private var interfaces:Vector.<com.adobe.nativeExtensions.Networkinfo.NetworkInterface> = com.adobe.nativeExtensions.Networkinfo.NetworkInfo.networkInfo.findInterfaces();
 			
 			// The initialisation function
 			protected function init():void
-			{	
+			{					
+				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
+				sqlConnection.initConnection();
+				
 				connection.visible = false;
+				background.visible = false;
+				
+				//var loadSeekTime:SQLHistoryViewHandler = SQLHistoryViewHandler.getInstance();
+				//loadSeekTime.setSeekTime();
 				
 				/*
 				// only for iOS loop	
@@ -70,16 +112,72 @@ USA
 					}	
 				}	
 				*/
-				
 				xpathValue = new XMLHandler();
-				dataHandler = SegmentDataHandler.getInstance(xpathValue.getResult("mediapackage/@id", data));
-				dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
-				dataHandler.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				mediapackageID = xpathValue.getResult("mediapackage/@id", data);
+				
+				//loadSeekTime.getSeekTime(mediapackageID);
+				
+				sqlHistoryView = SQLHistoryViewHandler.getInstance();
+				sqlHistoryView.setSeekTime();
+				sqlHistoryView.getVideoDesc(mediapackageID);
+				sqlHistoryView.addEventListener(SQLHistoryLoadedEvent.HISTORYLOADED, getXMLListCollectionFromLocalDB);
 			}
 			
-			public function setDescription(event:SegmentLoadedEvent):void
+			public function getXMLListCollectionFromLocalDB(e:SQLHistoryLoadedEvent):void
 			{
+				sqlHistoryView.removeEventListener(SQLHistoryLoadedEvent.HISTORYLOADED, getXMLListCollectionFromLocalDB);
+
+				xmlList = sqlHistoryView.getVideoXML();
+				
+				if(xmlList.length > 0)
+				{
+					setDescFromDB();
+				}
+				else
+				{
+					dataHandler = SegmentDataHandler.getInstance();
+					dataHandler.init(mediapackageID);
+					dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollectionFromWeb);
+					dataHandler.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				}
+			}
+			
+			public function getXMLListCollectionFromWeb(event:SegmentLoadedEvent):void
+			{
+				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollectionFromWeb);
+				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
 				xmlList = dataHandler.getMediapackageListCollection();
+				
+				setDescription();
+			}
+			
+			private var localDBData:Boolean = false;
+			
+			public function setDescFromDB():void
+			{
+				download = SQLDownloadViewHandler.getInstance();
+				download.addEventListener(DownloadedVideoLoadedEvent.VIDEOLOADED, createView);
+				download.initDownloads(mediapackageID);
+				
+				title_label.text = xmlList.getItemAt(0).title;
+				author.text = xmlList.getItemAt(0).author;
+				detailDate.text = xmlList.getItemAt(0).date;
+				series_text.visible = true;
+				series.text = xmlList.getItemAt(0).series;
+				startvideo.visible = true;
+				detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
+				textAreaLabel.visible = true;
+				description.text = xmlList.getItemAt(0).desc;
+				
+				this.localDBData = true;
+			}
+						
+			public function setDescription():void
+			{
+				download = SQLDownloadViewHandler.getInstance();
+				download.addEventListener(DownloadedVideoLoadedEvent.VIDEOLOADED, createView);
+				download.initDownloads(mediapackageID);
 				
 				title_label.text = xmlList.getItemAt(0).title;
 				
@@ -97,25 +195,401 @@ USA
 				startvideo.visible = true;
 				
 				var imagePath:String = "mediapackage/attachments/attachment[1]/url";
-				detailImage.source = xpathValue.getResult(imagePath, xmlList.getItemAt(0));
+				var xmlElement:XML = xmlList.getItemAt(0) as XML;
+				
+				var thumb:String = xmlElement.attachments.attachment[1].url; 
+				
+				var imageName:String = "";
+				
+				var rex:RegExp = /\//g;
+				var re2:RegExp = /\:/g;
+				var s:String = thumb.replace(rex, "");
+				s = s.replace(re2, "");
+				
+				imageName = s.replace(re2, "");
+				imageName = "mh2go_thumb/" + imageName;
+				
+				var file:File;
+				
+				if(!File.userDirectory.resolvePath(imageName).exists) 
+				{
+					file = File.userDirectory.resolvePath(imageName);
+					downLoader = new DownloadThumbnails();
+					
+					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createImagePath);
+					
+					downLoader.download(thumb, file, "", "", 0);
+				}
+				else
+				{
+					file = File.userDirectory.resolvePath(imageName);
+					
+					buildImagePath(file.url);
+				}
 				
 				textAreaLabel.visible = true;
 				description.text = dataHandler.getDescriptionListCollection();
+				
+				this.localDBData = false;
+			}
+			
+			protected function createImagePath(e:DownloadEvent):void
+			{
+				downLoader.removeEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createImagePath);
+				
+				thumbnail = e.file.url;
+				detailImage.source = thumbnail;
+			}
+			
+			protected function buildImagePath(path:String):void
+			{
+				thumbnail = path;
+				detailImage.source = thumbnail;
+			}
+			
+			public function createView(e:DownloadedVideoLoadedEvent):void
+			{
+				if(localDBData)
+				{
+					download.removeEventListener(DownloadedVideoLoadedEvent.VIDEOLOADED, createView);
+					
+					var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+					
+					videoPath.video1Offline = false;
+					videoPath.video2Offline = false;
+					
+					videoPath.path1 = "";
+					videoPath.path2 = "";
+					
+					video1 = videoPath.getPathToDownload(xmlList.getItemAt(0))[0];
+					video2 = videoPath.getPathToDownload(xmlList.getItemAt(0))[1];
+					
+					buildView();
+				}
+				else
+				{
+					
+				}	
+				
+			}
+			
+			public function buildView():void
+			{
+				if((video1 != "" && download.getVideo() == "") && (video2 != "" && download.getVideo2() == ""))
+				{
+					presenter.visible = true;
+					presentation.visible = true;
+					download_button.visible = true;
+				}
+				else if(video1 == "" && video2 != "" && download.getVideo() == "")
+				{
+					presenter.visible = false;
+					presenter.selected = false;
+					presentation.visible = true;
+					download_button.visible = true;
+				}
+				else if(video2 == "" && video1 != "" && download.getVideo() == "")
+				{
+					presenter.visible = true;
+					presentation.visible = false;
+					presentation.selected = false;
+					download_button.visible = true;
+				}
+				else
+				{
+					presenter.visible = false;
+					presentation.visible = false;
+					download_button.visible = false;
+					delete_button.visible = true;
+					offlineLabel.visible = true;
+				}	
+				
+				var r:RegExp = /\//g;
+				var r2:RegExp = /\:/g;
+				
+				// first creation of videoname
+				if(video1 != "")
+				{
+					var video:String = video1;
+					
+					var videoName:String = "";
+					
+					if(video.search("file:///") != -1)
+					{
+						videoName = video;
+					}
+					else
+					{
+						videoName = video.replace(r, "");
+						videoName = "mh2go/"+ videoName.replace(r2, "");
+					}
+					videoOneName = videoName;
+				}
+				else 
+				{
+					videoOneName = "";
+				}
+				
+				// creation of videoname two
+				if(video2 != "")
+				{
+					var video2:String = video2;
+					var videoName2:String = "";
+					
+					if(video2.search("file:///") != -1) 
+					{
+						videoName2 = video2;
+					}
+					else
+					{
+						videoName2 = video2.replace(r, "");
+						videoName2 = "mh2go/"+ videoName2.replace(r2, "");
+					}
+					videoTwoName = videoName2;
+				}
+				else 
+				{
+					videoTwoName = "";
+				}
+				
+				if(download.getVideo() != "")
+				{
+					var dele:Boolean;
+					
+					if(download.getType() == "presenter")
+					{
+						dele = File.userDirectory.resolvePath(videoOneName).exists;
+					}
+					else if(download.getType() == "presentation")
+					{
+						dele = File.userDirectory.resolvePath(videoTwoName).exists;
+					}
+					
+					if(!dele)
+					{
+						deleteVideo();
+					}
+					else
+					{
+						var videoPath3:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+						
+						if(download.getType() == "presenter" || download.getType2() != "")
+						{
+							/*
+							if(videoOneName == "" && videoTwoName != "")
+							{
+							videoOneName = videoTwoName;
+							}
+							*/
+							
+							videoPath3.path1 = videoOneName;
+							videoPath3.video1Offline = true;
+							
+							if(videoPath3.path2 == "")
+							{
+								videoPath3.path2 = "";
+								videoPath3.video2Offline = true;
+							}
+						}
+						else if(download.getType() == "presentation" && download.getType2() == "")
+						{
+							videoPath3.path1 = videoTwoName;
+							videoPath3.video1Offline = true;
+							
+							if(videoPath3.path2 == "")
+							{
+								videoPath3.path2 = "";
+								videoPath3.video2Offline = true;
+							}
+						}
+					}
+				}
+				
+				
+				if(download.getVideo2() != "")
+				{
+					var del:Boolean = File.userDirectory.resolvePath(videoTwoName).exists;
+					
+					if(!del)
+					{
+						deleteVideo();
+					}
+					else
+					{
+						var videoPath2:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+						videoPath2.path2 = videoTwoName;
+						videoPath2.video2Offline = true;
+						
+						if(download.getVideo() == "")
+						{
+							videoPath2.path1 = "";
+							videoPath2.video1Offline = true;
+						}
+					}
+				}
 			}
 			
 			protected function loadVideoView():void
 			{
+				
+				if(download.getVideo() != "" || download.getVideo2() != "")
+				{
+					var videoPath2:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+
+					videoPath2.video1Offline = true;
+					videoPath2.video2Offline = true;
+				}
+				
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
-				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
-				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+
 				this.navigator.pushView(PlayerView, xmlList.getItemAt(0));
 				connection.visible = false;
+				
+				checkVideoInside = SQLHistoryViewHandler.getInstance();
+				checkVideoInside.addEventListener(SQLVideoInsideEvent.SELECTVIDEOCOMPLETE, insertNewVideo);
+				
+				checkVideoInside.checkVideo(mediapackageID);
+			}
+			
+			public function insertNewVideo(e:SQLVideoInsideEvent):void
+			{
+				checkVideoInside.removeEventListener(SQLVideoInsideEvent.SELECTVIDEOCOMPLETE, insertNewVideo);
+
+				insertVideo = SQLHistoryEditHandler.getInstance();
+
+				if(checkVideoInside.getVideoInsideStatus())
+				{
+					insertVideo.deleteVideo(mediapackageID);
+				}
+				
+				insertVideo.insertVideo(mediapackageID, title_label.text, author.text, detailDate.text, series.text, "", "", description.text, thumbnail);
+			}
+			
+			public function deleteVideo():void
+			{
+				var del:SQLDownloadEditHandler = SQLDownloadEditHandler.getInstance();
+				del.deleteDownload(mediapackageID);
+				
+				var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+				videoPath.video1Offline = false;
+				videoPath.video2Offline = false;
+				videoPath.path1 = "";
+				videoPath.path2 = "";
+				
+				if(videoOneName != "")
+				{			
+					if(File.userDirectory.resolvePath(videoOneName).exists)
+						File.userDirectory.resolvePath(videoOneName).deleteFileAsync();
+				}
+				
+				if(videoTwoName != "")
+				{
+					if(File.userDirectory.resolvePath(videoTwoName).exists)
+						File.userDirectory.resolvePath(videoTwoName).deleteFileAsync();
+				}
+				
+				delete_button.visible = false;
+				download_button.visible = true;
+				offlineLabel.visible = false;
+				
+				if(video1 != "")
+				{
+					presenter.visible = true;
+				}
+				
+				if(video2 != "")
+				{
+					presentation.visible = true;
+				}
+			}
+			
+			private var index:uint;
+			private var type:String;
+				
+			public function downloadVideo():void
+			{
+				background.visible = true;
+				
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;	
+				
+				if(presenter.selected && !presentation.selected)
+				{
+					index = 0;
+					type = "presenter";
+					presenter.visible = false;
+					presentation.visible = false;
+					download_button.visible = false;
+				}
+				else if(presentation.selected && !presenter.selected)
+				{
+					index = 1;
+					type = "presentation";
+					presenter.visible = false;
+					presentation.visible = false;
+					download_button.visible = false;
+				}
+				else if(presentation.selected && presenter.selected)
+				{
+					index = 2;
+					type = "both";
+					presenter.visible = false;
+					presentation.visible = false;
+					download_button.visible = false;
+				}
+				else
+				{
+					background.visible = false;
+					return;
+				}
+				
+				var videoPath:String = "";
+				
+				if(index == 0)
+				{
+					downloadFunction(videoOneName, video1, "presenter");
+				}
+				
+				if(index == 1)
+				{
+					downloadFunction(videoTwoName, video2, "presentation");
+				}
+				
+				if(index == 2)
+				{
+					downloadFunction(videoOneName, video1, "present");
+					downloadFunction(videoTwoName, video2, "presentation");
+				}
+			}
+			
+			private var downLoaderVideo:DownloadVideo;
+			
+			public function downloadFunction(videoPath:String, dL:String, t:String):void
+			{
+				var downloadLink:String = dL;
+
+				videoPath = videoPath;
+				
+				var file:File;
+				
+				if(!File.userDirectory.resolvePath(videoPath).exists) 
+				{	
+					downLoaderVideo = DownloadVideo.getInstance();
+					
+					downLoaderVideo.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, downloadComplete);
+					downLoaderVideo.addEventListener(OnProgressEvent.PROGRESS, onProgressEvent); 
+					
+					var downloadLinkTwo:String = "";
+					
+					downLoaderVideo.download(downloadLink, mediapackageID, videoPath, t);
+				}
+				else
+				{
+					background.visible = false;
+				}
 			}
 			
 			protected function popThisView():void
 			{
-				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
-				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				navigator.popView();
 				connection.visible = false;
 			}
@@ -128,8 +602,61 @@ USA
 			
 			public function notConnected(event:NotConnectedEvent):void 
 			{
+				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setDescription);
+				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
 				vgroup.visible = false;
 				connection.visible = true;
+			}
+			
+			public function onProgressEvent(e:OnProgressEvent):void
+			{
+				loader.text = "downloading... " + e.percent+ " %";
+			}
+			
+			public function downloadComplete(e:DownloadEvent):void
+			{
+				downLoader.removeEventListener(DownloadEvent.DOWNLOAD_COMPLETE, downloadComplete);
+				downLoader.removeEventListener(OnProgressEvent.PROGRESS, onProgressEvent); 
+				
+				delete_button.visible = true;
+				download_button.visible = false;
+				offlineLabel.visible = true;
+				
+				var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+				
+				var r:RegExp = /\//g;
+				var re:RegExp = /\:/g;
+
+				if(index == 0)
+				{		
+					videoPath.path1 =  videoOneName;
+					videoPath.video1Offline = true;
+					
+					videoPath.path2 = "";
+					videoPath.video2Offline = true;
+				}
+				
+				if(index == 1)
+				{
+					videoPath.path1 =  videoTwoName;
+					videoPath.video1Offline = true;
+					
+					videoPath.path2 = "";
+					videoPath.video2Offline = true;
+				}
+				
+				if(index == 2)
+				{
+					videoPath.path1 =  videoOneName;
+					videoPath.video1Offline = true;
+					
+					videoPath.path2 = videoTwoName;
+					videoPath.video2Offline = true;
+				}
+
+				background.visible = false;
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;	
 			}
 		]]>
 	</fx:Script>
@@ -150,9 +677,9 @@ USA
 	
 	<s:Group>	
 		<s:View id = "connection" visible="false"
-				backgroundColor="#861B1D" 
+				backgroundColor="black" 
 				fontFamily="_sans" 
-				alpha="0.9" 
+				alpha="0.7"  
 				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
 			<s:Group width="250" height="80">
 				<s:Label text="It seems like that you´ve lost " 
@@ -171,8 +698,11 @@ USA
 		</s:View>
 	</s:Group>
 	
-	<s:VGroup id="vgroup" paddingLeft="10" paddingTop="0">
-		<s:Scroller width="{this.navigator.width}" height="{this.navigator.height}">
+	<s:VGroup id="vgroup" 
+			  paddingLeft="10" 
+			  paddingTop="0">
+		<s:Scroller width="{this.navigator.width}" 
+					height="{this.navigator.height}">
 			<s:Group>
 				<s:HGroup x="10" y="0">
 					<s:VGroup>
@@ -207,9 +737,9 @@ USA
 				</s:HGroup>
 				
 				<s:View id = "menu" visible="false"
-						backgroundColor="#861B1D" 
+						backgroundColor="black" 
 						fontFamily="_sans" 
-						alpha="0.9" 
+						alpha="0.7" 
 						x="{navigator.width / 2 - 133.5}" 
 						y="{navigator.height / 2 - 70}">
 					<s:Group width="250" height="80">
@@ -243,22 +773,74 @@ USA
 											  buttonMode="true" 
 											  skinClass="views.skins.PlayButtonSkin"/>
 					</s:Group>
-				</s:View>
+				</s:View>        
+				
+				
+				<s:CheckBox visible="false" selected="true" 
+							id="presenter" 
+							label="presenter" 
+							x="{navigator.width / 2 - 120}" 
+							y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 130}"
+							width="150"/>
+				
+				<s:CheckBox visible="false" selected="true"
+						    id="presentation" 
+						    label="presentation"
+							x="{navigator.width / 2}" 
+							y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 130}"
+						    width="150"/>
+				
+				<s:Button id="download_button" click="downloadVideo()" visible="false"
+						  label="download video" height="35" 
+						  x="{navigator.width / 2 - 80}" 
+						  y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 180}"/>
+				
+				<s:Button id="delete_button" click="deleteVideo()" visible="false"
+						  label="delete offline mode" height="35" 
+						  x="{navigator.width / 2 - 95}" 
+						  y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 180}"/>
+				
+				<s:Label id="offlineLabel" 
+						 visible="false"
+						 text ="Offline mode active"
+						 x="{navigator.width / 2 - 80}" 
+						 y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 145}"
+						 fontFamily="_sans"/>
 				
 				<s:Label id="textAreaLabel" 
 						 visible="false"
 						 text ="Description:"
-						 x="12" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 120}"
+						 x="12" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height+ download_button.height + 190}"
 						 fontFamily="_sans"/>
 				
 				<s:Label id="description"
 						 width="{this.navigator.width - 30}" 
-						 x="12" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + textAreaLabel.height + 130}"
+						 x="12" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + textAreaLabel.height + download_button.height + 200}"
 						 fontFamily="_sans"/>
 				
-				<s:Label y="{textAreaLabel.y + 140}"/>
+				<s:Label y="{textAreaLabel.y + description.height + 80}"/>
 				
 			</s:Group>
 		</s:Scroller>
 	</s:VGroup> 
+	
+	<s:View id="background" visible="false"
+			backgroundColor="black"
+			alpha="0.7"
+			width="{navigator.width}" 
+			height="{navigator.height}">
+		
+		<s:Group width="{navigator.width}" height="50">
+			
+			<s:BusyIndicator id="bi" width="70" height="70"
+							 x="{navigator.width / 2 - 32}" 
+							 y ="100"
+							 symbolColor="white"/>
+			
+			<s:Label id="loader" color="white" 
+					 x="{navigator.width / 2 - 70}" 
+					 y ="190"/>
+			
+		</s:Group>
+	</s:View>
 </s:View>

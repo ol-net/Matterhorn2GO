@@ -19,14 +19,25 @@ USA
 */
 package business.datahandler
 {
-	import business.LoadNextEpisodes;
+	import business.download.DownloadThumbnails;
+	import business.core.LoadNextEpisodes;
+	import business.auth.Auth;
+	import business.auth.ConnectionChecker;
+	import business.auth.dbaccess.SQLAuthViewHandler;
+	import business.auth.events.AccessDeniedEvent;
+	import business.auth.events.AccessOkEvent;
+	import business.auth.events.ConnectionCheckerEvent;
+	import business.core.NamespaceRemover;
 	
-	import events.NotConnectedEvent;
-	import events.VideoAvailableEvent;
-	import events.VideoNotFoundEvent;
-	import events.VideosLoadedEvent;
+	import business.download.events.DownloadEvent;
+	import business.datahandler.events.NotConnectedEvent;
+	import business.datahandler.events.VideoAvailableEvent;
+	import business.datahandler.events.VideoNotFoundEvent;
+	import business.datahandler.events.VideosLoadedEvent;
+	import business.datahandler.events.AllVideosLoadedEvent;
 	
 	import flash.events.EventDispatcher;
+	import flash.filesystem.File;
 	
 	import mx.collections.XMLListCollection;
 	import mx.rpc.events.FaultEvent;
@@ -34,10 +45,12 @@ package business.datahandler
 	import mx.rpc.http.HTTPService;
 	import mx.utils.Base64Encoder;
 	
-	import spark.events.IndexChangeEvent;
+	import spark.events.IndexChangeEvent;	
 	
 	public class EpisodesDataHandler extends EventDispatcher 
 	{
+		private var res:ResultEvent;
+
 		private var serviceObj:HTTPService;
 		private var matterhornURL:String;
 		
@@ -53,6 +66,7 @@ package business.datahandler
 		private var oValue:String = "0";
 		
 		private var index:Number;
+		private var thumbnail_index:Number;
 		
 		private var newSearch:Boolean = false;
 		
@@ -67,6 +81,10 @@ package business.datahandler
 		private var loadNextEpisodes:LoadNextEpisodes;
 		
 		private var initLoad:Boolean = true;
+		
+		private var imageName:String = "";
+		
+		private var downloaded:Boolean = false;
 		
 		public function EpisodesDataHandler()
 		{			
@@ -83,7 +101,7 @@ package business.datahandler
 		
 		// The initialisation function
 		public function init():void
-		{
+		{		
 			if(initLoad)
 			{
 				initLoad = false;
@@ -103,6 +121,8 @@ package business.datahandler
 				}
 				else
 				{
+					//serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
+					
 					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
 					{
 						serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
@@ -112,7 +132,6 @@ package business.datahandler
 						serviceObj.url = matterhornURL+'?q='+sId+'&limit='+20+'&offset='+oValue+'&lfunk=1';
 					}
 				}
-				
 				
 				serviceObj.send();	
 			}
@@ -134,6 +153,8 @@ package business.datahandler
 				serviceObj.addEventListener(ResultEvent.RESULT, processResult);
 				serviceObj.addEventListener(FaultEvent.FAULT, notConnected);
 				
+				//serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
+
 				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
 				{
 					serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
@@ -142,7 +163,6 @@ package business.datahandler
 				{
 					serviceObj.url = matterhornURL+'?q='+sId+'&limit='+20+'&offset='+oValue;
 				}
-				
 				serviceObj.send();	
 			}
 		}
@@ -150,9 +170,42 @@ package business.datahandler
 		// The result processing function
 		public function processResult(response:ResultEvent):void
 		{
-			var videoLoaded:VideosLoadedEvent = new VideosLoadedEvent(VideosLoadedEvent.VIDEOSLOADED);
+			this.res = response;
+			
+			var xml:XMLHandler = new XMLHandler();
 			
 			var XMLResults:XML = response.result as XML;
+			
+			XMLResults = NamespaceRemover.remove(XMLResults);
+			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
+			
+			var connectionInfo:String = XMLResults.query; 
+			
+			var conChecker:ConnectionChecker = ConnectionChecker.getInstance();
+			var useAuthConnection:Boolean = conChecker.getAuthUSE();
+
+			if(useAuthConnection)
+			{
+				conChecker.addEventListener(ConnectionCheckerEvent.CONNECTIONCHECKED, connectionCheckerDone);
+				conChecker.checkConnection(connectionInfo);
+			}
+			else
+			{
+				setResponse(response);
+			}
+		}
+		
+		public function connectionCheckerDone(e:ConnectionCheckerEvent):void
+		{
+			setResponse(this.res);
+		}
+		
+		public function setResponse(response:ResultEvent):void
+		{
+			var XMLResults:XML = response.result as XML;
+			XMLResults = NamespaceRemover.remove(XMLResults);
+			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
+
 			total = XMLResults.@total;
 			limit = XMLResults.@limit;
 			offset = XMLResults.@offset;
@@ -164,34 +217,30 @@ package business.datahandler
 				var videoNotFound:VideoNotFoundEvent = new VideoNotFoundEvent(VideoNotFoundEvent.VIDEOSNOTFOUND);
 				dispatchEvent(videoNotFound);
 				
-				dispatchEvent(videoLoaded);
+				var allvideoLoaded:AllVideosLoadedEvent = new AllVideosLoadedEvent(AllVideosLoadedEvent.ALLVIDEOSLOADED);
+				dispatchEvent(allvideoLoaded);
 				
 				return;
 			}
 			
 			this.loadNextEpisodes = LoadNextEpisodes.getInstance();
-
+				
 			xmlVideos = new XMLListCollection(XMLResults.result.mediapackage);
 			
 			index = 0;
+			thumbnail_index = 0;
+
+			downloaded = true;
 			
-			//var videoPath:String = "media/track[mimetype='video/x-flv'][@type='presenter/delivery'][tags/tag[2]='medium-quality'][2]/url"; 
-			var videoPath:String = "media/track[mimetype='video/x-flv'][@type='presenter/delivery']/url"; 
-			
-			while(index < xmlVideos.length)
-			{
-				var ob:Object = xmlVideos.getItemAt(index) as Object;
-				
-				var path:String = xpathValue.getXMLResult(videoPath, ob);
-				
-				if(path != "" && path != null) 
-				{
-					createNewElement();
-				}
-				
-				index = index + 1;
-			}
-			
+			//while(index < xmlVideos.length)
+			//{
+			imageDownloader();
+			//	index = index + 1;
+		//	}
+		}
+		
+		public function updateList():void
+		{
 			if(loadNextEpisodes.getPage() < loadNextEpisodes.getMaxPages())
 			{
 				var mediapackage:Object = 
@@ -201,32 +250,79 @@ package business.datahandler
 				
 				publicVideos.addItem(xml);
 			}
-			
-			dispatchEvent(videoLoaded);
+		}
+		
+		public function imageDownloader():void 
+		{
+			if (index < xmlVideos.length)
+			{
+				var xmlElement:XML = xmlVideos.getItemAt(index) as XML;
+				
+				var thumb:String = xmlElement.attachments.attachment[1].url; 
+				
+				var r:RegExp = /\//g;
+				var r2:RegExp = /\:/g;
+				var s:String = thumb.replace(r, "");
+				s = s.replace(r, "");
+				
+				imageName = s.replace(r2, "");
+				imageName = "mh2go_thumb/" + imageName;
+				
+				var file:File;
+				
+				if(!File.userDirectory.resolvePath(imageName).exists) 
+				{
+					file = File.userDirectory.resolvePath(imageName);
+					
+					var downLoader:DownloadThumbnails = new DownloadThumbnails();
+					
+					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createNewElement);
+					
+					downLoader.download(thumb, file, "", "", index);
+				}
+				else
+				{
+					file = File.userDirectory.resolvePath(imageName);
+					buildElement(index, file.url);
+				}
+			}
+			else
+			{
+				var allxmlLoaded:AllVideosLoadedEvent = new AllVideosLoadedEvent(AllVideosLoadedEvent.ALLVIDEOSLOADED);
+				dispatchEvent(allxmlLoaded);
+			}
 		}
 		
 		public function notConnected(event:FaultEvent):void 
 		{
 			initLoad = true;
 			index = 0;
+			thumbnail_index = 0;
 			
 			var notConnected:NotConnectedEvent = new NotConnectedEvent(NotConnectedEvent.NOTCONNECTED);
 			dispatchEvent(notConnected);
 		}
 		
-		public function createNewElement():void
-		{	
-			var imagePath:String = "mediapackage/attachments/attachment[1]/url";
+		public function createNewElement(e:DownloadEvent):void
+		{
+			buildElement(e.index, e.file.url);
+		}
+		
+		public function buildElement(i:uint, path:String):void
+		{
+			var xpath:XMLHandler = new XMLHandler();
+			
+			var xml:XML = xmlVideos.getItemAt(i) as XML;
 			
 			var mediapackage:Object = 
-				"<mediapackage id='"+xmlVideos.getItemAt(index).@id+"'>" +
-				"<title>"+xmlVideos.getItemAt(index).title+"</title>" +
-				"<author>"+xmlVideos.getItemAt(index).creators.creator+"</author>" +
-				"<date>"+xmlVideos.getItemAt(index).@start+"</date>" +
-				"<thumbnail>"+xpathValue.getResult(imagePath, xmlVideos.getItemAt(index))+"</thumbnail>" +
+				"<mediapackage id='"+xml.@id+"'>" +
+					"<title>"+xmlVideos.getItemAt(i).title+"</title>" +
+					"<author>"+xmlVideos.getItemAt(i).creators.creator+"</author>" +
+					"<date>"+xmlVideos.getItemAt(i).@start+"</date>" +
+					"<thumbnail>"+path+"</thumbnail>" +
 				"</mediapackage>";
 			
-			var xml:XML = new XML(mediapackage);
+			xml = new XML(mediapackage);
 			
 			if(newSearch)
 			{
@@ -235,6 +331,20 @@ package business.datahandler
 			}
 			
 			publicVideos.addItem(xml);
+			
+			thumbnail_index = thumbnail_index + 1;
+			
+			if(thumbnail_index == xmlVideos.length)
+			{
+				updateList();
+			}
+			
+			var xmlLoaded:VideosLoadedEvent = new VideosLoadedEvent(VideosLoadedEvent.VIDEOSLOADED);
+			dispatchEvent(xmlLoaded);
+			
+			index = index + 1;
+			
+			imageDownloader();
 		}
 		
 		// search videos
@@ -254,8 +364,8 @@ package business.datahandler
 				initLoad = false;
 
 				var url:String = matterhornURL;
-				var searchurl:String;
-
+				var searchurl:String; 
+				
 				if(sId != '')
 				{	
 					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')

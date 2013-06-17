@@ -19,14 +19,25 @@ USA
 */
 package business.datahandler
 {
-	import business.LoadNextSeries;
-	import events.NotConnectedEvent;
-	import events.ThumbnailLoadedEvent;
-	import events.VideoAvailableEvent;
-	import events.VideoNotFoundEvent;
-	import events.VideosLoadedEvent;
+	import business.download.DownloadThumbnails;
+	import business.core.LoadNextSeries;
+	import business.auth.Auth;
+	import business.auth.ConnectionChecker;
+	import business.auth.dbaccess.SQLAuthViewHandler;
+	import business.auth.events.AccessDeniedEvent;
+	import business.auth.events.AccessOkEvent;
+	
+	import business.auth.events.ConnectionCheckerEvent;
+	import business.download.events.DownloadEvent;
+	import business.datahandler.events.NotConnectedEvent;
+	import business.download.events.ThumbnailLoadedEvent;
+	import business.datahandler.events.VideoAvailableEvent;
+	import business.datahandler.events.VideoNotFoundEvent;
+	import business.datahandler.events.SeriesLoadedEvent;
+	import business.datahandler.events.AllSeriesLoadedEvent;
 	
 	import flash.events.EventDispatcher;
+	import flash.filesystem.File;
 	
 	import mx.collections.XMLListCollection;
 	import mx.rpc.events.FaultEvent;
@@ -35,6 +46,8 @@ package business.datahandler
 	import mx.utils.Base64Encoder;
 	
 	import spark.events.IndexChangeEvent;
+	
+	import business.core.NamespaceRemover;	
 	
 	public class SeriesDataHandler extends EventDispatcher 
 	{
@@ -73,6 +86,10 @@ package business.datahandler
 
 		private var urlThumbnail:String;
 		
+		private var imageName:String = "";
+		
+		private var downLoader:DownloadThumbnails;
+		
 		public function SeriesDataHandler()
 		{
 			this.serviceObj = new HTTPService();
@@ -107,90 +124,158 @@ package business.datahandler
 				serviceObj2.resultFormat = 'e4x';
 				serviceObj2.method = 'GET';
 				serviceObj2.useProxy = false;
-				serviceObj2.addEventListener(ResultEvent.RESULT, processResult2);
+				serviceObj2.addEventListener(ResultEvent.RESULT, imageResultHandler);
 				//serviceObj2.url = URLClass.getInstance().getURL()+'episode.xml?q=""&limit=1&offset=1';
-				serviceObj2.send();	
+				//serviceObj2.send();	
 			}
 		}
 		
-		// The result processing function
-		public function processResult2(response:ResultEvent):void
-		{
-			initThumbnail = true;
-			var XMLResults:XML = response.result as XML;
-			
-			this.urlThumbnail = XMLResults.result.mediapackage.attachments.attachment.url[0];
-			
-			if(urlThumbnail == null)
-				this.urlThumbnail = "assets/splashscreen/nothumb.png";
-			
-			if(xmlSeries != null)
-			{
-				createNewElement();
-			}
-		}
+		private var res:ResultEvent;
 		
 		// The result processing function
 		public function processResult(response:ResultEvent):void
-		{			
+		{		
+			this.res = response;
+			
+			var xml:XMLHandler = new XMLHandler();
+			
 			var XMLResults:XML = response.result as XML;
+			XMLResults = NamespaceRemover.remove(XMLResults);
+			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
+			
+			var connectionInfo:String = XMLResults.query;//String(e.result.query);
+
+			var conChecker:ConnectionChecker = ConnectionChecker.getInstance();
+			var useAuthConnection:Boolean = conChecker.getAuthUSE();
+			
+			if(useAuthConnection)
+			{
+				conChecker.addEventListener(ConnectionCheckerEvent.CONNECTIONCHECKED, connectionCheckerDone);
+				conChecker.checkConnection(connectionInfo);
+			}
+			else
+			{
+				setResponse(response);
+			}
+		}
+		
+		public function connectionCheckerDone(e:ConnectionCheckerEvent):void
+		{
+			setResponse(this.res);
+		}
+		
+		public function setResponse(response:ResultEvent):void
+		{
+			var XMLResults:XML = response.result as XML;
+		
+			XMLResults = NamespaceRemover.remove(XMLResults);
+			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
+
 			total = XMLResults.@total;
 			limit = XMLResults.@limit;
 			offset = XMLResults.@offset;
-						
+			
 			if (total == 0)
 			{	
 				initLoad = true;
+				
 				var videoNotFound:VideoNotFoundEvent = new VideoNotFoundEvent(VideoNotFoundEvent.VIDEOSNOTFOUND);
 				dispatchEvent(videoNotFound);
-				var videoLoaded:VideosLoadedEvent = new VideosLoadedEvent(VideosLoadedEvent.VIDEOSLOADED);
-				dispatchEvent(videoLoaded);
+				
+				var allseriesLoaded:AllSeriesLoadedEvent = new AllSeriesLoadedEvent(AllSeriesLoadedEvent.ALLSERIESLOADED);
+				dispatchEvent(allseriesLoaded);
 				
 				return;
 			}
 			
 			this.loadNextSeries = LoadNextSeries.getInstance();
-
+			
 			xmlSeries = new XMLListCollection(XMLResults.result);
 			
 			index = 0;
 			
 			getImage(xmlSeries.getItemAt(index).@id);
+			//buildElement(index, "")
 		}
 		
-		public function notConnected(event:FaultEvent):void 
-		{	
-			initLoad = true;
+		// The result processing function
+		public function imageResultHandler(response:ResultEvent):void
+		{
 			initThumbnail = true;
-			index = 0;
-			xmlSeries = null;
 			
-			var notConnected:NotConnectedEvent = new NotConnectedEvent(NotConnectedEvent.NOTCONNECTED);
-			dispatchEvent(notConnected);
-		}
-		
-		public function createNewElement():void
-		{	
-			if(index < xmlSeries.length)
-			{
-			var mediapackage:Object = 
-				"<mediapackage id='"+xmlSeries.getItemAt(index).@id+"'>" +
-				"<title>"+xmlSeries.getItemAt(index).dcTitle+"</title>" +
-				"<author>"+xmlSeries.getItemAt(index).dcCreator+"</author>" +
-				"<contributer>"+xmlSeries.getItemAt(index).dcContributer+"</contributer>"+
-				"<date>"+xmlSeries.getItemAt(index).dcCreated+"</date>"+
-				"<thumbnail>"+urlThumbnail+"</thumbnail>"+
-				"</mediapackage>";
-
-			var xml:XML = new XML(mediapackage);
+			var XMLResults:XML = response.result as XML;
 			
-			if(newSearch)
+			XMLResults = NamespaceRemover.remove(XMLResults);
+			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
+			
+			this.urlThumbnail = XMLResults.result.mediapackage.attachments.attachment.url[0];
+			
+			if(urlThumbnail == null)
 			{
-				publicSeries = new XMLListCollection();
-				newSearch = false;
+				this.urlThumbnail = "assets/splashscreen/nothumb.png";
 			}
 			
-			publicSeries.addItem(xml);
+			if(xmlSeries != null)
+			{
+				//var imagePath:String = "mediapackage/attachments/attachment[1]/url";
+				
+				//var thumb:String = xmlVideos.getItemAt(thumbnail_index).thumbnail;
+				var thumb:String = this.urlThumbnail;
+				
+				var r:RegExp = /\//g;
+				var r2:RegExp = /\:/g;
+				var s:String = thumb.replace(r, "");
+				s = s.replace(r, "");
+				
+				imageName = s.replace(r2, "");
+				imageName = "mh2go_thumb/" + imageName;
+				
+				var file:File;
+				
+				if(!File.userDirectory.resolvePath(imageName).exists) 
+				{
+					downLoader = new DownloadThumbnails();
+					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createNewElement);
+					
+					file = File.userDirectory.resolvePath(imageName);
+					downLoader.download(thumb, file, "", "", index);
+				}
+				else
+				{
+					file = File.userDirectory.resolvePath(imageName);
+					buildElement(index, file.url);
+				}
+			}
+		}
+		
+		public function createNewElement(e:DownloadEvent):void
+		{
+			buildElement(e.index, e.file.url);
+		}
+	
+		public function buildElement(i:uint, path:String):void
+		{			
+			if(index < xmlSeries.length)
+			{
+				//trace(index + " " + xmlSeries.getItemAt(i).@id)
+				var mediapackage:Object = 
+					"<mediapackage id='"+xmlSeries.getItemAt(i).@id+"'>" +
+					"<title>"+xmlSeries.getItemAt(i).dcTitle+"</title>" +
+					"<author>"+xmlSeries.getItemAt(i).dcCreator+"</author>" +
+					"<contributer>"+xmlSeries.getItemAt(i).dcContributer+"</contributer>"+
+					"<date>"+xmlSeries.getItemAt(i).dcCreated+"</date>"+
+					"<thumbnail>"+path+"</thumbnail>"+
+					"</mediapackage>";
+	
+				var xml:XML = new XML(mediapackage);
+				
+				if(newSearch)
+				{
+					publicSeries = new XMLListCollection();
+					newSearch = false;
+				}
+				
+				publicSeries.addItem(xml);
 			}
 			else
 			{
@@ -202,11 +287,12 @@ package business.datahandler
 			if(index < xmlSeries.length) 
 			{
 				getImage(xmlSeries.getItemAt(index).@id);
+				
+				var seriesLoaded:SeriesLoadedEvent = new SeriesLoadedEvent(SeriesLoadedEvent.SERIESLOADED);
+				dispatchEvent(seriesLoaded);
 			}
 			else
 			{
-				var videoLoaded:VideosLoadedEvent = new VideosLoadedEvent(VideosLoadedEvent.VIDEOSLOADED);
-
 				initLoad = true;
 				
 				if(loadNextSeries.getPage() < loadNextSeries.getMaxPages())
@@ -218,7 +304,8 @@ package business.datahandler
 					
 					publicSeries.addItem(xml);
 				}
-				dispatchEvent(videoLoaded);
+				var allseriesLoaded:AllSeriesLoadedEvent = new AllSeriesLoadedEvent(AllSeriesLoadedEvent.ALLSERIESLOADED);
+				dispatchEvent(allseriesLoaded);
 			}
 		}
 		
@@ -258,9 +345,20 @@ package business.datahandler
 				{
 					serviceObj2.url =URLClass.getInstance().getURL()+'episode.xml?q='+id+'&limit=1&offset=1&lfunk=1';
 				}
-				
+
 				serviceObj2.send();	
 			}
+		}
+		
+		public function notConnected(event:FaultEvent):void 
+		{	
+			initLoad = true;
+			initThumbnail = true;
+			index = 0;
+			xmlSeries = null;
+			
+			var notConnected:NotConnectedEvent = new NotConnectedEvent(NotConnectedEvent.NOTCONNECTED);
+			dispatchEvent(notConnected);
 		}
 		
 		public function getXMLListCollection():XMLListCollection

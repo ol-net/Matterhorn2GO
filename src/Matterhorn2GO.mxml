@@ -22,7 +22,7 @@ USA
 								  xmlns:s="library://ns.adobe.com/flex/spark" 
 								  applicationComplete="onApplicationComplete(event)"
 								  applicationDPI="160" 
-								  backgroundColor="#861B1D"
+								  backgroundColor="#861B1D" 
 								  splashScreenImage="views.DynamicSplashScreen"
 								  persistNavigatorState="true">
 	
@@ -49,34 +49,91 @@ USA
 	
 	<fx:Script> 
 		<![CDATA[ 
+			import business.auth.Auth;
+			import business.auth.ConnectionChecker;
+			import business.auth.dbaccess.SQLAuthViewHandler;
+			import business.auth.events.AccessDeniedEvent;
+			import business.auth.events.AccessOkEvent;
+			import business.auth.events.AuthLoadedEvent;
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
+			import business.datahandler.URLClass;
 			import business.dbaccess.SQLConnectionHandler;
 			
-			import events.ChangeTabViewEvent;
+			import business.core.events.ChangeTabToSeriesViewEvent;
+			import business.core.events.ChangeTabViewEvent;
 			
 			import mx.events.FlexEvent;
 			
 			import spark.events.IndexChangeEvent;
+			
+			private var sqlSelectAuth:SQLAuthViewHandler
 			
 			protected function onApplicationComplete (event:FlexEvent):void
 			{ 
 				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
 				sqlConnection.initConnection();
 				
-				var e:EpisodesDataHandler = EpisodesDataHandler.getInstance();
-				e.init();
-				
-				var s:SeriesDataHandler = SeriesDataHandler.getInstance();
-				s.init();
-			
-				tabbedNavigator.addEventListener(ChangeTabViewEvent.CHANGETAB, onChange); 
+				sqlSelectAuth = SQLAuthViewHandler.getInstance();
+				sqlSelectAuth.addEventListener(AuthLoadedEvent.AUTHLOADED, handleLoader);
+				sqlSelectAuth.initSQLAuth();
 			} 
+			
+			protected function handleLoader(e:AuthLoadedEvent):void
+			{
+				var user:String = sqlSelectAuth.getUser();
+				var pass:String = sqlSelectAuth.getPass();
+				
+				if((user != "" && pass != "") && (user != null && pass != null))
+				{
+					var conValue:String = sqlSelectAuth.getConValue();
+					
+					var conChecker:ConnectionChecker = ConnectionChecker.getInstance();
+					conChecker.setAuthUSE(Boolean(conValue));
+					
+					var auth:Auth = Auth.getInstance();
+					auth.addEventListener(AccessOkEvent.ACCESSOK, loadWithAccess);
+					auth.addEventListener(AccessDeniedEvent.ACCESSDENIED, loadWithOutAccess);
+					auth.login(URLClass.getInstance().getURLNoSearch(), user, pass);
+				}
+				else
+				{
+					loadResults();
+				}
+			}
+			
+			protected function loadWithAccess(e:AccessOkEvent):void
+			{
+				loadResults();
+			}
+			
+			protected function loadWithOutAccess(e:AccessDeniedEvent):void
+			{
+				loadResults();
+			}
+			
+			protected function loadResults():void
+			{					
+				var episode:EpisodesDataHandler = EpisodesDataHandler.getInstance();
+				episode.init();
+				
+				var series:SeriesDataHandler = SeriesDataHandler.getInstance();
+				series.init();
+				
+				tabbedNavigator.addEventListener(ChangeTabViewEvent.CHANGETAB, onChange);
+				tabbedNavigator.addEventListener(ChangeTabToSeriesViewEvent.CHANGETOSERIESTAB, changeToSeriesTab);
+			
+			}
 			
 			protected function onChange(event:ChangeTabViewEvent):void 
 			{ 
 				this.tabbedNavigator.selectedIndex = 1;
 			} 
+			
+			protected function changeToSeriesTab(e:ChangeTabToSeriesViewEvent):void
+			{
+				this.tabbedNavigator.selectedIndex = 0;
+			}
 			
 		]]> </fx:Script> 
 	
@@ -93,6 +150,12 @@ USA
 						 width="100%" 
 						 height="100%" 
 						 firstView="views.EpisodeView"/> 
+		
+		<s:ViewNavigator label="History"
+						 backgroundColor="#F2F2F2"
+						 width="100%" 
+						 height="100%" 
+						 firstView="views.HistoryView"/> 
 	</s:navigators>
 
 </s:TabbedViewNavigatorApplication>

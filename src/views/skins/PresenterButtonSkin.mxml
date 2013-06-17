@@ -27,7 +27,7 @@ USA
 	<!-- host component -->
 	<fx:Metadata>
 		<![CDATA[
-			[HostComponent("business.ImageButton")]
+			[HostComponent("business.core.ImageButton")]
 		]]>
 	</fx:Metadata>
 	

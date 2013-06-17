@@ -19,7 +19,7 @@
 */
 package business.datahandler
 {	
-	import events.AnnotationLoadedEvent;
+	import business.datahandler.events.AnnotationLoadedEvent;
 	
 	import flash.events.EventDispatcher;
 	

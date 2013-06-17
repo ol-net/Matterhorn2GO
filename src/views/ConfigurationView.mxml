@@ -29,19 +29,30 @@ USA
 	
 	<fx:Script>
 		<![CDATA[
-			
-			import business.ConfigurationReader;
+			import business.core.ConfigurationReader;
+			import business.auth.Auth;
+			import business.auth.ConnectionChecker;
+			import business.auth.dbaccess.SQLAuthEditHandler;
+			import business.auth.events.AccessDeniedEvent;
+			import business.auth.events.AccessOkEvent;
+			import business.auth.events.AuthLoadedEvent;
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
 			import business.datahandler.XMLHandler;
 			import business.datahandler.did.CustomURLHandler;
 			import business.dbaccess.SQLEditHandler;
+			import business.dbaccess.SQLViewHandler;
 			
-			import events.FileReaderCompleteEvent;
+			import business.core.events.FileReaderCompleteEvent;
+			import business.dbaccess.events.SQLAdopterInsideEvent;
 			
+			import mx.collections.XMLListCollection;
 			import mx.core.UIComponent;
 			import mx.events.ResizeEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
 			
 			protected var myTimer:Timer;
 			
@@ -55,7 +66,9 @@ USA
 			
 			private var dH:EpisodesDataHandler;
 			
-			//private var url:CustomURLHandler;
+			private var aUS:SQLViewHandler;
+			
+			private var url:CustomURLHandler;
 			
 			[Bindable]
 			protected var height_num:Number = 0;
@@ -69,9 +82,16 @@ USA
 			private var url_adopter:String;
 			private var name_adopter:String;
 			
+			private var cURL:String;
+			
+			private var serviceObj:HTTPService;
+			private var adopterURL:String;
+			
 			// The initialisation function
 			protected function init():void
 			{
+				infoText.text = "";
+				
 				ok = false;
 
 				addText();
@@ -86,11 +106,21 @@ USA
 				ado = ado + "</adopters>";
 				
 				var xmlHandler:XMLHandler = new XMLHandler();
+				
 				id_adopter = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/id", ado);
 				url_adopter = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/AdopterURL", ado);
 				name_adopter = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/AdopterName", ado);
 				
 				textinput_name.text = name_adopter;
+				adopterURL = url_adopter;
+				
+				var tmp2:String = xmlHandler.getResult("adopters/adopter[AdopterURL='"+URLClass.getInstance().getURLNoSearch()+"']/ID", ado);
+				
+				if(tmp2!="")
+				{
+					textinput_url.editable = false;
+					textinput_name.editable = false;
+				}
 				
 				if(tmp != "http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py")
 				{
@@ -122,7 +152,7 @@ USA
 					"you might add here."
 				
 				titleComp = new UIComponent();
-				titleComp.y=190;
+				titleComp.y=save_button.y + 35;
 				titleComp.x=10;
 				titleComp.addChild(tit);
 				
@@ -141,10 +171,17 @@ USA
 			{
 				save_button.setFocus();
 				
-				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
-				
 				// verifying your url 
-				var cURL:String = textinput_url.text;
+				if(!textinput_url.editable)
+				{
+					cURL = adopterURL;
+				}
+				else
+				{
+					cURL = textinput_url.text;
+				}
+				
+				/*
 				
 				var pattern:RegExp = /http:\/\//i;
 				
@@ -169,48 +206,165 @@ USA
 
 				cURL = "http://"+cURL;
 				// end of verifying
+				
+				*/
+				
+				// Check if the given URL has a valid protocol.
+				// Users often omit them (stupid users).
+				// If no protocol is given, we assume that we should use HTTP.
+				var pattern:RegExp = /https{0,1}:\/\//i;
+				
+				if(!pattern.test(cURL))
+				{
+					cURL = "http://" + cURL;
+				}
+				// end of verifying
+				
 
-				fileReader.setURL(cURL, true);
+				serviceObj = new HTTPService();
+				serviceObj.resultFormat = 'e4x';
+				serviceObj.method = 'GET';
+				serviceObj.useProxy = false;
+				serviceObj.addEventListener(ResultEvent.RESULT, processResult);
+				serviceObj.addEventListener(FaultEvent.FAULT, notConnected);
+				serviceObj.url = cURL + "/search/episode.xml?limit=1";
+				serviceObj.send();	
+			}
+			
+			public function processResult(e:ResultEvent):void
+			{
+				aUS = SQLViewHandler.getInstance();
+				aUS.addEventListener(SQLAdopterInsideEvent.SELECTCOMPLETE, setNewAdopter);
 				
-				dH = EpisodesDataHandler.getInstance();
-				dH.initLoadOK();
-				dH.setOValue();
+				aUS.checkAdopter(cURL);
+			}	
+			
+			private var auth:Auth;
+			private var eventTmp:SQLAdopterInsideEvent;
+			
+			public function setNewAdopter(e:SQLAdopterInsideEvent):void
+			{
+				this.eventTmp = e;
 				
-				var sDH:SeriesDataHandler = SeriesDataHandler.getInstance();
-				sDH.setXMLSeries(null);
-				sDH.initLoadOK();
-				sDH.initThumbnailOK();
-				sDH.setOValue();
-				
-				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
-				navigator.popView();
-				
-				var aU:SQLEditHandler = SQLEditHandler.getInstance();
-
-				if(e == null) {
-					//url = CustomURLHandler.getInstance();
-					//url.setCustomURL(textinput_url.text);
-					
-					if(id_adopter != "")
-					{
-						aU.updateAdopter(id_adopter, textinput_name.text, cURL);
-					}
-					
-				 	navigator.popView();
-				} 
+				if(useAuth.selected) 
+				{
+					auth = Auth.getInstance();
+					auth.addEventListener(AccessDeniedEvent.ACCESSDENIED, authFailed);
+					auth.addEventListener(AccessOkEvent.ACCESSOK, authOK);
+					auth.login(cURL, String(textinput_user.text), String(textinput_pass.text));
+				}
 				else
 				{
-					if(!ok) 
-					{
-						ok = true;
-						//url = CustomURLHandler.getInstance();
-						//url.setCustomURL(textinput_url.text);
+					updateAdopter(this.eventTmp);
+				}
+			}
+			
+			import business.auth.dbaccess.SQLAuthViewHandler;
+			private var sqlSelectAuth:SQLAuthViewHandler;
+			
+			public function authOK(e:AccessOkEvent):void
+			{
+				auth.removeEventListener(AccessDeniedEvent.ACCESSDENIED, authFailed);
+				auth.removeEventListener(AccessOkEvent.ACCESSOK, authOK);
+				
+				sqlSelectAuth = SQLAuthViewHandler.getInstance();
+				sqlSelectAuth.addEventListener(AuthLoadedEvent.AUTHLOADED, handleLoader);
+				sqlSelectAuth.initSQLAuth();
+			}
+			
+			public function handleLoader(e:AuthLoadedEvent):void
+			{
+				sqlSelectAuth.removeEventListener(AuthLoadedEvent.AUTHLOADED, handleLoader);
+
+				var insert:SQLAuthEditHandler = SQLAuthEditHandler.getInstance();
+				
+				var user:String = sqlSelectAuth.getUser();
+				var pass:String = sqlSelectAuth.getPass();
+				
+				var conChecker:ConnectionChecker = ConnectionChecker.getInstance();
+
+				if((user != "" && pass != "") && (user != null && pass != null))
+				{
+					conChecker.setAuthUSE(true);
+					insert.updateAuth(cURL, String(textinput_user.text), String(textinput_pass.text), String(1)); 
+				}
+				else
+				{
+					conChecker.setAuthUSE(true);
+					insert.insertAuth(cURL, String(textinput_user.text), String(textinput_pass.text), String(1)); 
+				}
+				
+				updateAdopter(this.eventTmp);
+			}
+			
+			public function authFailed(e:AccessDeniedEvent):void
+			{
+				auth.removeEventListener(AccessDeniedEvent.ACCESSDENIED, authFailed);
+				auth.removeEventListener(AccessOkEvent.ACCESSOK, authOK);
+				infoText.text = "auth failed!";
+			}
+			
+			public function notConnected(e:FaultEvent):void
+			{
+				serviceObj.cancel();
+				infoText.text = "your url is invalid!";
+			}
+			
+			public function updateAdopter(e:SQLAdopterInsideEvent):void
+			{
+				if(!aUS.getAdopterInsideStatus() || (URLClass.getInstance().getURLNoSearch() == cURL))
+				{
+					var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+					
+					fileReader.setURL(cURL, true);
+					
+					dH = EpisodesDataHandler.getInstance();
+					dH.setXMLListCollection(new XMLListCollection());
+					dH.initLoadOK();
+					dH.setOValue();
+					
+					var sDH:SeriesDataHandler = SeriesDataHandler.getInstance();
+					sDH.setXMLSeries(null);
+					sDH.initLoadOK();
+					sDH.initThumbnailOK();
+					sDH.setOValue();
+					
+					aUS.removeEventListener(SQLAdopterInsideEvent.SELECTCOMPLETE, setNewAdopter);
+					
+					this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
+					navigator.popView();
+					
+					var aU:SQLEditHandler = SQLEditHandler.getInstance();
+					
+					if(e == null) {
+						url = CustomURLHandler.getInstance();
+						url.setCustomURL(textinput_url.text);
 						
 						if(id_adopter != "")
 						{
 							aU.updateAdopter(id_adopter, textinput_name.text, cURL);
 						}
+						
+						//navigator.popView();
+					} 
+					else
+					{
+						if(!ok) 
+						{
+							ok = true;
+							url = CustomURLHandler.getInstance();
+							url.setCustomURL(textinput_url.text);
+							
+							if(id_adopter != "")
+							{
+								aU.updateAdopter(id_adopter, textinput_name.text, cURL);
+							}
+						}
 					}
+				}
+				else
+				{
+					infoText.text = "url already exists!";
 				}
 			}
 			
@@ -229,6 +383,30 @@ USA
 				{
 					setURL(event);
 					stage.focus = null;
+				}
+			}
+			
+			public function loadLogin():void
+			{
+				if(!useAuth.selected)
+				{
+					user_text.visible = false;
+					textinput_user.visible = false;
+					pass_text.visible = false;
+					textinput_pass.visible = false;
+					infoText.y = 195;
+					save_button.y = 215;
+					titleComp.y=save_button.y + 35;
+				}
+				else
+				{
+					user_text.visible = true;
+					textinput_user.visible = true;
+					pass_text.visible = true;
+					textinput_pass.visible = true;
+					infoText.y = textinput_pass.y + 50;
+					save_button.y = infoText.y + 20;
+					titleComp.y=save_button.y + 35;
 				}
 			}
 		]]>
@@ -253,7 +431,7 @@ USA
 				<s:VGroup y="20">
 					<s:Group id="group">
 						
-						<s:Label text="name: " 
+						<s:Label text="Name: " 
 								 x="10" y="0"
 								 fontWeight="bold" 
 								 fontFamily="_sans"/>
@@ -266,7 +444,7 @@ USA
 									 enter="setURL(event);"
 									 width="{navigator.width - 40}"/>
 						
-						<s:Label text="url (example 'yourhost:port'): " 
+						<s:Label text="URL (example 'yourhost:port'): " 
 								 x="10" y="70"
 								 fontWeight="bold" 
 								 fontFamily="_sans"/>
@@ -279,14 +457,58 @@ USA
 									 enter="setURL(event);"
 									 width="{navigator.width - 40}"/>
 						
+						<s:CheckBox id="useAuth" 
+									y="145" click="loadLogin()"
+									x="{13}"/>
+						
+						<s:Label id="useAuthText" text="Use Authentication" 
+								 fontWeight="bold" fontFamily="_sans"
+								 y="155" 
+								 x="{55}"/>
+						
+						<s:Label id="user_text" 
+								 text="User: " visible="false"
+								 x="10" y="195"
+								 fontWeight="bold" 
+								 fontFamily="_sans"/>
+						
+						<s:TextInput id="textinput_user" visible="false"
+									 skinClass="spark.skins.mobile.TextInputSkin" 
+									 softKeyboardType="url"  
+									 needsSoftKeyboard="true"
+									 x="10" y="215"
+									 enter="setURL(event);"
+									 width="{navigator.width - 40}"/>
+						
+						<s:Label id="pass_text" 
+								 text="Password: " visible="false"
+								 x="10" y="265"
+								 fontWeight="bold" 
+								 fontFamily="_sans"/>
+						
+						<s:TextInput id="textinput_pass" visible="false" displayAsPassword="true" 
+									 skinClass="spark.skins.mobile.TextInputSkin" 
+									 softKeyboardType="url"  
+									 needsSoftKeyboard="true"
+									 x="10" y="285"
+									 enter="setURL(event);"
+									 width="{navigator.width - 40}"/>
+						
+						<s:Label id="infoText" 
+								 fontWeight="bold" 
+								 color="#861B1D"
+								 y="195" 
+								 x="{navigator.width / 2 - 74}"/>
+						
 						<s:Button id="save_button" 
 								  height="30" 
-								  y="150"
+								  y="215"
 								  x="{navigator.width / 2 - 74}"
-								  label="edit your URL"
+								  label="add your URL"
 								  click="setURL(null);"/>
 						
-						<s:Label y="290"/>	
+						<s:Label id="tmp" 
+								 y="{save_button.y + 120}"/>
 					</s:Group>
 				</s:VGroup>
 			</s:Group>

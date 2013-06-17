@@ -28,7 +28,7 @@ USA
 	<fx:Metadata>
 		<![CDATA[
 		/* @copy spark.skins.spark.ApplicationSkin#hostComponent    */
-		[HostComponent("business.ImageButton")]
+		[HostComponent("business.core.ImageButton")]
 		]]>
 	</fx:Metadata>
 	

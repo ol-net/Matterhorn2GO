@@ -20,24 +20,26 @@ USA
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
-		title="Matterhorn Endpoints"
+		title="Matterhorn Adopter"
 		backgroundColor="#F2F2F2" 
 		xmlns:views="views.*" 
-		xmlns:business="business.*"
+		xmlns:business="business.core.*"
 		tabBarVisible="false"
 		creationComplete="init()">
 
 	<fx:Script>
 		<![CDATA[
-			import business.ConfigurationReader;
+			import business.core.ConfigurationReader;
 			import business.datahandler.AdoptersDataHandler;
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
+			import business.datahandler.URLClass;
 			import business.datahandler.XMLHandler;
+			import business.dbaccess.SQLEditHandler;
 			
-			import events.AdoptersLoadedEvent;
-			import events.NotConnectedEvent;
-			import events.VideosLoadedEvent;
+			import business.datahandler.events.AdoptersLoadedEvent;
+			import business.datahandler.events.NotConnectedEvent;
+			import business.datahandler.events.VideosLoadedEvent;
 			
 			import flash.events.Event;
 			
@@ -54,15 +56,13 @@ USA
 			
 			private var dH:EpisodesDataHandler;
 			
+			private var dA:SQLEditHandler = SQLEditHandler.getInstance();
+			
 			public function init():void
 			{
-				list.visible = true;
-				
 				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
 				
 				connection.visible = false;
-
-				//var	xpathValue:XMLHandler = new XMLHandler();
 				
 				adopters = AdoptersDataHandler.getInstance();
 				adopters.init();
@@ -72,15 +72,32 @@ USA
 			
 			public function getAdopters(event:AdoptersLoadedEvent):void
 			{
-				//adoptersList = adopters.getXMLListAdopters();
-				//trace("list loadet")
-				list.dataProvider = adopters.getXMLListAdopters();
-
+				adoptersList = adopters.getXMLListAdopters();
+								
+				var xmlHandler:XMLHandler = new XMLHandler();
+				
+				var ado:Object = "<adopters>";
+				ado = ado + adoptersList;
+				ado = ado + "</adopters>";
+				
+				var tmp2:String = xmlHandler.getResult("adopters/adopter[AdopterURL='"+URLClass.getInstance().getURLNoSearch()+"']/ID", ado);
+				
+				if(tmp2=="")
+				{
+					delete_button.visible = true;
+					edit_button.visible = true;
+				}
+				else
+				{
+					//delete_button.visible = false;
+					//edit_button.visible = false;
+				}				
+				
+				list.dataProvider = adoptersList;
 			}
 			
 			public function notConnected(event:NotConnectedEvent):void 
 			{
-				list.visible = false;
 				connection.visible = true;
 			}
 			
@@ -90,19 +107,17 @@ USA
 				adopters.removeEventListener(AdoptersLoadedEvent.ADOPTERSLOADED, getAdopters);
 				adopters.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				navigator.popView();
-				list.visible = true;
 				connection.visible = false;
 			}
 			
 			public function loadAdopter():void
 			{
-				//trace()
 				var selectedItem:Object = list.selectedItem;
 				
 				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
 				
 				fileReader.setURL(selectedItem.AdopterURL, false);
-				adopters.init();
+				
 				dH = EpisodesDataHandler.getInstance();
 				dH.initLoadOK();
 				dH.setOValue();
@@ -111,6 +126,8 @@ USA
 				sDH.initLoadOK();
 				sDH.initThumbnailOK();
 				sDH.setOValue();
+				
+				adopters.init();
 			} 
 			
 			public function setSize(event:ResizeEvent):void
@@ -120,7 +137,6 @@ USA
 			public function editAdopter():void
 			{
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
-				
 				navigator.pushView(ConfigurationView, adoptersList);	
 			}
 			
@@ -133,6 +149,56 @@ USA
 			public function useAdopter():void
 			{
 				navigator.popView();
+				navigator.popView();
+			}
+			
+			public function deleteAdopter():void
+			{ 
+				var xmlHandler:XMLHandler = new XMLHandler();
+				
+				var ado:Object = "<adopters>";
+				ado = ado + adoptersList;
+				ado = ado + "</adopters>";
+				
+				var tmp2:String = xmlHandler.getResult("adopters/adopter[AdopterURL='"+URLClass.getInstance().getURLNoSearch()+"']/ID", ado);
+				
+				if(tmp2=="")
+				{
+					deleteInfo.visible = true;
+				}
+				else
+				{
+					publicInfo.visible = true;
+				}
+			}
+			
+			public function removeAdopter():void
+			{
+				var url:String = URLClass.getInstance().getURLNoSearch();
+				
+				var	xmlHandler:XMLHandler = new XMLHandler();
+				
+				var ado:Object = "<adopters>";
+				ado = ado + adoptersList;
+				ado = ado + "</adopters>";
+				
+				var id_adopter:String = xmlHandler.getResult("adopters/adopter[AdopterURL='"+url+"']/id", ado);
+				
+				dA.deleteAdopter(id_adopter);
+				
+				deleteInfo.visible = false;
+				
+				adopters.init();
+				
+				var fileReader:ConfigurationReader = ConfigurationReader.getInstance();
+				
+				fileReader.setURL(URLClass.getInstance().getDefaultURL(), true);
+			}
+			
+			public function cancelRemove():void
+			{
+				deleteInfo.visible = false;
+				publicInfo.visible = false;
 			}
 			
 		]]>
@@ -149,81 +215,205 @@ USA
 										source320dpi="assets/BackIcon88x88.png"/>
 			</s:icon>
 		</s:Button>
-	</s:actionContent>
-	
-	<s:View backgroundColor="#F2F2F2" >
-		<s:Group>	
-			<s:View id="connection" visible="false"
-					backgroundColor="#861B1D" 
-					fontFamily="_sans" 
-					alpha="0.9" 
-					x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
-				<s:Group width="250" height="80">
-					<s:Label text="It seems like that you´ve lost " 
-							 x="10" y = "14" 
-							 fontFamily="_sans" 
-							 color="white"/>
-					<s:Label text="your Internet connection. Sorry" 
-							 x="10" y = "32" 
-							 fontFamily="_sans" 
-							 color="white"/>
-					<s:Label text="Information cannot be displayed." 
-							 x="10" y = "50" 
-							 fontFamily="_sans" 
-							 color="white"/>
-				</s:Group>
-			</s:View>
-		</s:Group>
+	</s:actionContent>	
 		
-		<s:VGroup height="{this.height}">
+	<s:View backgroundColor="#F2F2F2">
+
 			<s:List id="list"
-					height="100%" 
+					height="{navigator.height - 100}" 
 					width="100%"
 					labelField="fontName"
-					itemRenderer="business.renderers.AdoptersRenderer" 
-					change="loadAdopter()"/>
+					itemRenderer="business.datahandler.renderers.AdoptersRenderer" click="loadAdopter();"/>
 			
-			<s:View id="add_url_button"
-					backgroundColor="#BDBDBD" 
-					fontFamily="_sans" 
-					x="0" 
-					y="{this.navigator.height - 130}">
+		<s:View id="connection" visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+			<s:Group width="250" height="80">
+				<s:Label text="It seems like that you´ve lost " 
+						 x="10" y = "14" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="your Internet connection. Sorry" 
+						 x="10" y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="Information cannot be displayed." 
+						 x="10" y = "50" 
+						 fontFamily="_sans" 
+						 color="white"/>
+			</s:Group>
+		</s:View>
+		
+		<s:View id="publicInfo" 
+				visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" 
+				y="{navigator.height / 2 - 90}">
+			
+			<s:Group width="250" height="100">
+				<s:Label text="You cannot delete a " 
+						 x="40" 
+						 y = "14" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="public adopter!" 
+						 x="40" 
+						 y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
 				
-				<s:Group height="45" width="{this.navigator.width}">
-					<s:Button id="add_button" width="70" 
-							  height="30" 
-							  y="7"
-							  x="{navigator.width / 2 - 155}"
-							  label="add" 
-							  click="addAdopter();">
-					</s:Button>	
-					
-					<s:Button id="delete_button" width="70" 
-							  height="30" 
-							  y="7"
-							  x="{navigator.width / 2 - 75}"
-							  label="delete" 
-							  click="">
-					</s:Button>	
-					
-					<s:Button id="edit_button" width="70" 
-							  height="30" 
-							  y="7"
-							  x="{navigator.width / 2 + 5}"
-							  label="edit" 
-							  click="editAdopter();">
-					</s:Button>	
-					
-					<s:Button id="use_button" width="70"
-							  height="30" 
-							  y="7"
-							  x="{navigator.width / 2 + 85}"
-							  label="use" 
-							  click="useAdopter();">
-					</s:Button>	
-					
-				</s:Group>
-			</s:View>
-		</s:VGroup>
+				<business:ImageButton id="public_button" 
+									  width="70" 
+									  height="30" 
+									  y="55"
+									  x="108"
+									  click="cancelRemove();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.RemoveButton"/>
+			</s:Group>
+		</s:View>
+		
+		<s:View id="deleteInfo" 
+				visible="false"
+				backgroundColor="black" 
+				fontFamily="_sans" 
+				alpha="0.7" 
+				x="{navigator.width / 2 - 122.5}" 
+				y="{navigator.height / 2 - 90}">
+			<s:Group width="250" height="100">
+				<s:Label text="Are you sure you want " 
+						 x="40" 
+						 y = "14" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<s:Label text="to remove this adopter?" 
+						 x="40" 
+						 y = "32" 
+						 fontFamily="_sans" 
+						 color="white"/>
+				<!--
+				<s:Button id="cancel_button" 
+						  width="70" 
+						  height="30" 
+						  y="55"
+						  x="30"
+						  label="cancel" 
+						  click="cancelRemove();">
+				</s:Button>	
+				-->
+				
+				<!--
+				<s:Button id="remove_button" 
+				width="70" 
+				height="30" 
+				y="55"
+				x="150"
+				label="ok" 
+				click="removeAdopter();">
+				</s:Button>	
+				-->
+				
+				<business:ImageButton id="cancel_button" 
+									  width="70" 
+									  height="30" 
+									  y="55"
+									  x="45"
+									  click="cancelRemove();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.CancelButton"/>
+				
+				<business:ImageButton id="remove_button" 
+									  width="70" 
+									  height="30" 
+									  y="55"
+									  x="160"
+									  click="removeAdopter();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.RemoveButton"/>
+			</s:Group>
+		</s:View>
+		
+		<s:View id="add_url_button"
+				backgroundColor="#BDBDBD" 
+				fontFamily="_sans" 
+				x="0" 
+				y="{this.height - 45}">
+			
+			<s:Group height="45" width="{this.navigator.width}">
+				
+				<!--
+				<s:Button id="add_button" width="70" 
+						  height="30" 
+						  y="7"
+						  x="{navigator.width / 2 - 155}"
+						  label="add" 
+						  click="addAdopter();">
+				</s:Button>	
+				
+				<s:Button id="delete_button" width="70" 
+						  height="30" 
+						  y="7"
+						  x="{navigator.width / 2 - 75}"
+						  label="delete" 
+						  click="deleteAdopter();">
+				</s:Button>	
+				
+				<s:Button id="edit_button" width="70" 
+						  height="30" 
+						  y="7"
+						  x="{navigator.width / 2 + 5}"
+						  label="edit" 
+						  click="editAdopter();">
+				</s:Button>	
+				
+				<s:Button id="use_button" width="70"
+						  height="30" 
+						  y="7"
+						  x="{navigator.width / 2 + 85}"
+						  label="use" 
+						  click="useAdopter();">
+				</s:Button>	
+				-->
+				<business:ImageButton id="add_button" width="70" 
+									  height="30" 
+									  y="4"
+									  x="{navigator.width / 2 - 140}"
+									  label="add" 
+									  click="addAdopter();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.AddNewAdopterButton"/>
+				
+				<business:ImageButton id="delete_button" width="70" 
+									  height="30" 
+									  y="4"
+									  x="{navigator.width / 2 - 60}"
+									  label="delete" 
+									  click="deleteAdopter();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.DeleteAdopterButton"/>
+				
+				<business:ImageButton id="edit_button" width="70" 
+									  height="30" 
+									  y="4"
+									  x="{navigator.width / 2 + 20}"
+									  label="edit" 
+									  click="editAdopter();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.EditAdopterButton"/>
+				
+				<business:ImageButton id="use_button" width="70"
+									  height="30" 
+									  y="4"
+									  x="{navigator.width / 2 + 100}"
+									  label="use" 
+									  click="useAdopter();"
+									  buttonMode="true" 
+									  skinClass="views.skins.adopterbuttons.UseAdopterButton"/>
+			</s:Group>
+		</s:View>
 	</s:View>
 </s:View>

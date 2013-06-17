@@ -19,8 +19,8 @@ USA
 */
 package business.datahandler
 {	
-	import events.SegmentLoadedEvent;
-	import events.NotConnectedEvent;
+	import business.datahandler.events.SegmentLoadedEvent;
+	import business.datahandler.events.NotConnectedEvent;
 	
 	import flash.events.EventDispatcher;
 	
@@ -52,10 +52,8 @@ package business.datahandler
 			serviceObj = new HTTPService();
 		}
 		
-		public static function getInstance(id:String):SegmentDataHandler{
+		public static function getInstance():SegmentDataHandler{
 			if (instance == null) instance = new SegmentDataHandler();
-			
-			instance.init(id);
 			
 			return instance;
 		}
@@ -73,9 +71,17 @@ package business.datahandler
 			serviceObj.send();
 		}
 		
+		import business.core.NamespaceRemover;
+		
 		protected function processResult(response:ResultEvent):void
 		{			
+			serviceObj.removeEventListener(ResultEvent.RESULT, processResult);	
+			serviceObj.removeEventListener(FaultEvent.FAULT, notConnected);
+			
 			var XMLResults:XML = response.result as XML;
+			
+			XMLResults = NamespaceRemover.remove(XMLResults);
+			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
 			
 			segments = new XMLListCollection(XMLResults.result.segments.children());
 		
@@ -91,6 +97,9 @@ package business.datahandler
 		
 		public function notConnected(event:FaultEvent):void 
 		{
+			serviceObj.removeEventListener(ResultEvent.RESULT, processResult);
+			//serviceObj.removeEventListener(FaultEvent.FAULT, notConnected);
+			
 			var notConnected:NotConnectedEvent = new NotConnectedEvent(NotConnectedEvent.NOTCONNECTED);
 			dispatchEvent(notConnected);
 		}

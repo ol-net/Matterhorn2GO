@@ -20,7 +20,7 @@ USA
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
-		title="Information" 
+		title="About" 
 		xmlns:views="views.*"
 		backgroundColor="#F2F2F2"
 		xmlns:business="business.*"
@@ -173,20 +173,29 @@ USA
 	</s:actionContent>
 	
 	<s:View backgroundColor="#F2F2F2">
-		<s:VGroup id="view" paddingTop="0" paddingLeft="10" paddingBottom="30">
-			<s:Scroller width="{width_num}" height="{height_num}">
+		<s:VGroup id="view" 
+				  paddingTop="0" 
+				  paddingLeft="10" 
+				  paddingBottom="30">
+			<s:Scroller width="{width_num}" 
+						height="{height_num}">
 				<s:Group>
 					<s:VGroup x="10" y="15">
 						<s:VGroup x="10" y="15">
 							<s:HGroup verticalAlign="middle">
-								<s:Image width="200" height="50" scaleMode="letterbox" smooth="true"
-										 smoothingQuality="default" source="assets/virtuos.png"  x="10"/>
+								<s:Image width="200" 
+										 height="50" 
+										 scaleMode="letterbox" 
+										 smooth="true"
+										 smoothingQuality="default" 
+										 source="assets/virtuos.png"  
+										 x="10"/>
 							</s:HGroup>
 						</s:VGroup>
 						
 						<s:VGroup verticalAlign="bottom">
 							<s:Group >
-								<s:Label text="Version: 1.1.3"
+								<s:Label text="Version: 1.1.6"
 										 fontFamily="_sans"  
 										 y="5"/>
 								<s:Label text="Markus Ketterl (mketterl@uos.de)"
@@ -225,10 +234,11 @@ USA
 								<s:Label id = "license" 
 										 text="License: " 
 										 fontFamily="_sans" 
-										 y="275"/>	
+										 y="265"/>	
 								<s:Group id="detailGroup"
 										 x="-3" y="280"/>
-								<s:Label y="330" height="20" backgroundColor="#F2F2F2"/>	
+								<s:Label y="330" height="20" 
+										 backgroundColor="#F2F2F2"/>	
 							</s:Group>
 						</s:VGroup>
 					</s:VGroup>

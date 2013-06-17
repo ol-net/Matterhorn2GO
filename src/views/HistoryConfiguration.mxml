@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="History Configuration"
+		backgroundColor="#F2F2F2" 		
+		tabBarVisible="false"		
+		xmlns:views="views.*" 
+		xmlns:business="business.*" 
+		creationComplete="init();">
+	
+	<fx:Script>
+		<![CDATA[
+			
+			import business.dbaccess.SQLHistoryEditHandler;
+			
+			private var deleteHistory:SQLHistoryEditHandler;
+						
+			public function init():void
+			{
+				deleteHistory = SQLHistoryEditHandler.getInstance();
+			}
+			
+			public function popThisView():void
+			{
+				this.navigator.popView();
+			}
+			
+			public function deleteHistoryVideos():void
+			{
+				this.deleteInfo.visible = true;
+			}
+			
+			public function removeHistory():void
+			{
+				deleteHistory.deleteVideos();
+				this.navigator.popView();
+			}
+			
+			public function cancelDelete():void
+			{
+				deleteInfo.visible = false;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		<s:Button id="back_button" 
+				  height="53"
+				  width="60"
+				  click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon40x40.png"
+										source240dpi="assets/BackIcon64x64.png"
+										source320dpi="assets/BackIcon88x88.png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:View backgroundColor="#F2F2F2">
+		<s:Group height="{this.navigator.height}" 
+				 width="{this.navigator.width}">
+			
+			<s:Button id="adopter" width="150" 
+					  height="30" 
+					  y="20"
+					  x="{navigator.width / 2 - 70}"
+					  label="delete History" 
+					  click="deleteHistoryVideos();">
+			</s:Button>	
+			
+		</s:Group>
+	</s:View>
+	
+	<s:View id="deleteInfo" 
+			visible="false"
+			backgroundColor="black" 
+			fontFamily="_sans" 
+			alpha="0.7" 
+			x="{navigator.width / 2 - 122.5}" 
+			y="{navigator.height / 2 - 90}">
+		<s:Group width="250" height="100">
+			<s:Label text="Are you sure you want " 
+					 x="30" 
+					 y = "14" 
+					 fontFamily="_sans" 
+					 color="white"/>
+			<s:Label text="to remove this adopter?" 
+					 x="30" 
+					 y = "32" 
+					 fontFamily="_sans" 
+					 color="white"/>
+			
+			<business:ImageButton id="cancel_button" 
+								  width="70" 
+								  height="30" 
+								  y="55"
+								  x="30"
+								  click="cancelDelete();"
+								  buttonMode="true" 
+								  skinClass="views.skins.adopterbuttons.DeleteAdopterButton"/>
+			
+			<business:ImageButton id="remove_button" 
+								  width="70" 
+								  height="30" 
+								  y="55"
+								  x="150"
+								  click="removeHistory();"
+								  buttonMode="true" 
+								  skinClass="views.skins.adopterbuttons.UseAdopterButton"/>
+		</s:Group>
+	</s:View>
+	
+</s:View>

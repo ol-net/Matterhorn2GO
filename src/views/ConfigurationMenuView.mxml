@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		title="Configuration" 		
+		backgroundColor="#F2F2F2"
+		xmlns:views="views.*" 
+		xmlns:business="business.core.*" 
+		tabBarVisible="false" creationComplete="init();">
+	
+	<fx:Script>
+		<![CDATA[
+			import business.dbaccess.SQLHistoryEditHandler;
+			
+			import mx.collections.XMLListCollection;
+			
+			private var deleteHistory:SQLHistoryEditHandler;
+			
+			private var config:XMLListCollection;
+			
+			public function init():void
+			{
+				deleteHistory = SQLHistoryEditHandler.getInstance();
+				
+				var configAdopter:Object = "<title>Config Adopter</title>";
+				
+				var removeHistory:Object = "<title>Clear History</title>";
+				
+				var aboutApp:Object = "<title>About</title>";
+				
+				config = new XMLListCollection();
+				
+				config.addItem(new XML(configAdopter));
+				
+				config.addItem(new XML(removeHistory));
+				
+				config.addItem(new XML(aboutApp));	
+				
+				list.dataProvider = config;
+			}
+			
+			public function deleteHistoryVideos():void
+			{
+				this.deleteInfo.visible = true;
+			}
+			
+			public function removeHistory():void
+			{
+				deleteHistory.deleteVideos();
+				this.navigator.popView();
+			}
+			
+			public function cancelDelete():void
+			{
+				deleteInfo.visible = false;
+				this.navigator.popView();
+			}
+			
+			public function popThisView():void
+			{
+				this.navigator.popView();
+			}
+			
+			public function showInfo():void
+			{
+				this.navigator.pushView(InfoView, data);
+			}
+			
+			public function configAdopter():void
+			{
+				this.navigator.pushView(AdoptersView, data);
+			}
+			
+			public function loadConfigItem():void
+			{
+				switch(list.selectedIndex)
+				{
+					case 0: configAdopter();
+					break;
+					case 1: deleteHistoryVideos();
+					break;
+					case 2: showInfo();
+					break;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		<s:Button id="back_button" 
+				  height="53"
+				  width="60"
+				  click="popThisView();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/BackIcon40x40.png"
+										source240dpi="assets/BackIcon64x64.png"
+										source320dpi="assets/BackIcon88x88.png"/>
+			</s:icon>
+		</s:Button>
+	</s:actionContent>
+	
+	<s:View backgroundColor="#F2F2F2">
+		<s:Group height="{this.navigator.height}" 
+				 width="{this.navigator.width}">
+
+			<s:List id="list"
+					height="100%" 
+					width="100%"
+					labelField="fontName"
+					itemRenderer="business.datahandler.renderers.ConfigurationItemRenderer" click="loadConfigItem()"/>
+			
+			<!--
+			
+			<s:Button id="adopter" width="150" 
+					  height="30" 
+					  y="40"
+					  x="{navigator.width / 2 - 70}"
+					  label="config Adopter" 
+					  click="configAdopter();">
+			</s:Button>	
+			
+			<s:Button id="history" width="150" 
+					  height="30" 
+					  y="100"
+					  x="{navigator.width / 2 - 70}"
+					  label="clean History" 
+					  click="deleteHistoryVideos();">
+			</s:Button>	
+			
+			<s:Button id="info" width="150" 
+					  height="30" 
+					  y="160"
+					  x="{navigator.width / 2 - 70}"
+					  label="About" 
+					  click="showInfo();">
+			</s:Button>	
+			-->
+		</s:Group>
+	</s:View>
+	
+	<s:View id="deleteInfo" 
+			visible="false"
+			backgroundColor="black" 
+			fontFamily="_sans" 
+			alpha="0.7" 
+			x="{navigator.width / 2 - 122.5}" 
+			y="{navigator.height / 2 - 90}">
+		<s:Group width="250" height="100">
+			<s:Label text="Are you sure you want " 
+					 x="47" 
+					 y = "14" 
+					 fontFamily="_sans" 
+					 color="white"/>
+			<s:Label text="to clean your History?" 
+					 x="47" 
+					 y = "32" 
+					 fontFamily="_sans" 
+					 color="white"/>
+			
+			<business:ImageButton id="cancel_button" 
+								  width="70" 
+								  height="30" 
+								  y="55"
+								  x="45"
+								  click="cancelDelete();"
+								  buttonMode="true" 
+								  skinClass="views.skins.adopterbuttons.CancelButton"/>
+			
+			<business:ImageButton id="remove_button" 
+								  width="70" 
+								  height="30" 
+								  y="55"
+								  x="160"
+								  click="removeHistory();"
+								  buttonMode="true" 
+								  skinClass="views.skins.adopterbuttons.RemoveButton"/>
+		</s:Group>
+	</s:View>
+</s:View>

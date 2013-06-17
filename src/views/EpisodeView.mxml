@@ -23,25 +23,27 @@ USA
 		xmlns:views="views.*"
 		backgroundColor="#F2F2F2" 
 		xmlns:events="events.*" 
-		creationComplete="init()"
-		xmlns:business="business.*" 
+		creationComplete="init()" 
+		backKeyPressed="backKeyPressedHandler(event)"
+		xmlns:business="business.core.*" 
 		tabBarVisible="true">
 	
 	<fx:Script>
 		<![CDATA[
-			import business.LoadNextEpisodes;
-			import business.SeekPosition;
-			import business.ToolTipReader;
+			import business.core.LoadNextEpisodes;
+			import business.core.ToolTipReader;
+			import business.core.events.ChangeTabToSeriesViewEvent;
 			import business.datahandler.AdoptersDataHandler;
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
 			import business.datahandler.did.DeviceInfoReader;
-			
-			import events.BusyIndicatorEventEpisode;
-			import events.NotConnectedEvent;
-			import events.VideoNotFoundEvent;
-			import events.VideosLoadedEvent;
+			import business.datahandler.events.AllVideosLoadedEvent;
+			import business.datahandler.events.BusyIndicatorEventEpisode;
+			import business.datahandler.events.NotConnectedEvent;
+			import business.datahandler.events.VideoNotFoundEvent;
+			import business.datahandler.events.VideosLoadedEvent;
+			import business.player.SeekPosition;
 			
 			import flash.events.Event;
 			
@@ -85,6 +87,8 @@ USA
 			private var heightDownC:int = 0;
 			
 			protected var myTimer:Timer;
+			
+			private var closeTextfield:Boolean = true;
 		
 			public function init():void
 			{	
@@ -151,11 +155,46 @@ USA
 				xmlData.getTotal();
 				
 				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(AllVideosLoadedEvent.ALLVIDEOSLOADED, allVideosLoaded);
 				xmlData.addEventListener(VideoNotFoundEvent.VIDEOSNOTFOUND, videoNotFound);
 				
 				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				
 				textinput_search.addEventListener(FlexEvent.ENTER, getVideo);
+				
+				if(textinput_search.text != "")
+					setTextLabel();
+			}
+			
+			public function setTextLabel():void
+			{
+				if(this.navigator != null)
+				{
+					if(this.navigator.width > this.navigator.height)
+					{
+						if(textinput_search.text.length > 24)
+						{
+							var tmp:String = "  " + textinput_search.text;
+							searchtext_result.text = "  " + tmp.substr(0, 24) + "...";
+						}
+						else
+						{
+							searchtext_result.text = "  " + textinput_search.text;
+						}
+					}
+					else
+					{
+						if(textinput_search.text.length > 14)
+						{
+							var tmp2:String = "  " + textinput_search.text;
+							searchtext_result.text = "  " + tmp2.substr(0, 14) + "...";
+						}
+						else
+						{
+							searchtext_result.text = "  " + textinput_search.text;
+						}
+					}
+				}
 			}
 			
 			public function notConnected(event:NotConnectedEvent):void 
@@ -218,6 +257,14 @@ USA
 			
 			public function resize(event:ResizeEvent): void 
 			{
+				if(this.navigator.width < this.navigator.height)
+				{
+					if(searchtext_result.text.length > 14)
+					{
+						searchtext_result.text = searchtext_result.text.substr(0, 14) + "...";
+					}
+				}
+				
 				setPosition();
 			}
 			
@@ -238,48 +285,67 @@ USA
 				}
 			}
 			
-			public function getXMLListCollection(event:VideosLoadedEvent):void
-			{	
-				videos = xmlData.getXMLListCollection();
-				
+			public function allVideosLoaded(e:AllVideosLoadedEvent):void
+			{
 				loadNextEpisodes = LoadNextEpisodes.getInstance();
 				
 				textinput_search.text  = xmlData.getText();
 				
 				footer_text = loadNextEpisodes.getFooter();
-
+				
+				btnSortVisible();
+				
 				if(bi.visible == true)
 				{
 					indicatormenu.visible = false;
 					bi.visible = false;
 				}
 				
-				btnSortVisible();
-				
 				if(videos.length == 0)
 					videoNotFound(null);
 			}
 			
+			public function getXMLListCollection(event:VideosLoadedEvent):void
+			{	
+				videos = xmlData.getXMLListCollection();
+			}
+			
 			public function getVideo(event:FlexEvent):void
 			{
-				dummy_button.setFocus();
-				textinput_search.visible = false;
-				vNotFound.visible = false;
-				list.visible = true;
-				connection.visible = false;
-				indicatormenu.visible = true;
-				bi.visible = true;
-				
-				var s:SeriesDataHandler = SeriesDataHandler.getInstance();
-				s.setOValue();
-				s.setNewSearch();
-				s.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
-				
-				xmlData.setOValue();
-				xmlData.setNewSearch();
-				xmlData.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
-				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
-				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				if(closeTextfield)
+				{	
+					dummy_button.setFocus();
+					textinput_search.visible = false;
+					btn_clear.visible = false;
+					vNotFound.visible = false;
+					list.visible = true;
+					connection.visible = false;
+					indicatormenu.visible = true;
+					bi.visible = true;
+					
+					var tmp:String = textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, '');
+					
+					import business.dbaccess.SQLHistoryViewHandler;
+					
+					var selectVideos:SQLHistoryViewHandler = SQLHistoryViewHandler.getInstance();
+					
+					selectVideos.selectSQLViewVideos(tmp, tmp);
+					
+					setTextLabel();
+					
+					var s:SeriesDataHandler = SeriesDataHandler.getInstance();
+					s.setOValue();
+					s.setNewSearch();
+					s.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
+					
+					xmlData.setOValue();
+					xmlData.setNewSearch();
+					xmlData.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
+					xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+					xmlData.addEventListener(AllVideosLoadedEvent.ALLVIDEOSLOADED, allVideosLoaded);
+					xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				}
+				closeTextfield = true;
 			}
 			
 			public function loadNewView():void
@@ -287,6 +353,7 @@ USA
 				list.visible = true;
 				
 				xmlData.removeEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.removeEventListener(AllVideosLoadedEvent.ALLVIDEOSLOADED, allVideosLoaded);
 				xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				
 				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
@@ -303,6 +370,7 @@ USA
 				connection.visible = false;
 				
 				xmlData.removeEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.removeEventListener(AllVideosLoadedEvent.ALLVIDEOSLOADED, allVideosLoaded);
 				xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				
 				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
@@ -347,20 +415,30 @@ USA
 				}		
 				
 				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(AllVideosLoadedEvent.ALLVIDEOSLOADED, allVideosLoaded);
 				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 			}
 			
 			public function loadMenu():void
 			{
-				mx.core.FlexGlobals.topLevelApplication.viewMenuOpen = true;
+				list.visible = true;
+				connection.visible = false;
+				navigator.pushView(ConfigurationMenuView, data);
+				//mx.core.FlexGlobals.topLevelApplication.viewMenuOpen = true;
+			}
+			
+			public function changeTab(e:TimerEvent):void
+			{
+				var changeTab:ChangeTabToSeriesViewEvent = new ChangeTabToSeriesViewEvent(ChangeTabToSeriesViewEvent.CHANGETOSERIESTAB);
+				dispatchEvent(changeTab);	
 			}
 			
 			// Event handler to handle hardware keyboard keys.
 			protected function handleButtons(event:KeyboardEvent):void
 			{
-				if (event.keyCode == Keyboard.BACK) 
+				if (event.keyCode == Keyboard.MENU) 
 				{
-					applicationExit();
+					loadMenu();
 				}
 				
 				if(event.keyCode == 13)
@@ -384,6 +462,10 @@ USA
 			
 			public function openTextField():void
 			{
+				closeTextfield = true;
+			
+				searchtext_result.text = "";
+				
 				if(textinput_search.visible)
 				{
 					if(tooltip.visible) 
@@ -403,6 +485,7 @@ USA
 				{
 					btn_sort.visible = false;
 					textinput_search.visible = true;
+					btn_clear.visible = true;
 					textinput_search.setFocus();
 				}
 			}
@@ -462,7 +545,7 @@ USA
 				var ok:Boolean = false;
 				
 				if(loadNextEpisodes != null)
-				{
+				{					
 					if(loadNextEpisodes.getMaxPages() == loadNextEpisodes.getPage())
 					{
 						ok = true;
@@ -489,6 +572,39 @@ USA
 					}
 				}
 			}
+			
+			public function clearTextfield():void
+			{				
+				if(textinput_search.text == "")
+				{
+					closeTextField(null);
+				}
+				else
+				{
+					closeTextfield = false;
+					textinput_search.text = "";
+					textinput_search.setFocus();
+				}
+			}
+			
+			protected function backKeyPressedHandler(event:FlexEvent):void
+			{
+				event.stopImmediatePropagation();
+					
+				if(textinput_search.text == "")
+				{
+					myTimer = new Timer(200, 1); 
+					myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, changeTab);
+					myTimer.start();
+				}
+				else
+				{
+					textinput_search.text = "";
+					searchtext_result.text = "";
+				}
+				this.navigator.pushView(SeriesView);					
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -520,16 +636,27 @@ USA
 	</s:actionContent>
 
 	<s:titleContent>
+		
+		<!-- iOS 148 -->
+		<!-- android 175 -->
+		
 		<s:TextInput id="textinput_search" x="13" 
 					 visible="false"
 					 skinClass="spark.skins.mobile.TextInputSkin"
 					 softKeyboardType="default"
 					 needsSoftKeyboard="true" 
-					 width="{navigator.width - 146}" 
+					 width="{navigator.width - 175}" 
 					 height="35"
 					 enabled="true" 
 					 text="" 
 					 enter="closeKeyBoardAndGetVideos(event)"/>
+		
+		<business:ImageButton id="btn_clear"
+								   visible="false"
+								   height = "42"
+								   click="clearTextfield();"
+								   buttonMode="true" 
+								   skinClass="views.skins.adopterbuttons.CancelButton"/>
 	</s:titleContent>
 	
 	<s:navigationContent>
@@ -545,6 +672,11 @@ USA
 			</s:icon>
 		</s:Button>
 		
+		<s:Label id="searchtext_result" 
+				 text=""
+				 color="white"
+				 visible="true"/>
+		
 	</s:navigationContent>	
 	
 	<s:View backgroundColor="#F2F2F2">
@@ -552,7 +684,7 @@ USA
 				width="100%" 
 				height="{navigator.height - 50}"
 				dataProvider="{videos}"
-				itemRenderer="business.renderers.VideosItemRenderer"
+				itemRenderer="business.datahandler.renderers.VideosItemRenderer"
 				change="loadNewView()"/>
 		
 		<s:View id="sort_menu" visible="false"
@@ -650,9 +782,9 @@ USA
 		
 		<s:Group>	
 			<s:View id = "connection" visible="false"
-					backgroundColor="#861B1D" 
+					backgroundColor="black" 
 					fontFamily="_sans" 
-					alpha="0.9" 
+					alpha="0.7" 
 					x="{navigator.width / 2 - 127.5}" y="{navigator.height / 2 - 70}">
 				<s:Group width="260" height="95">
 					<s:Label text="It seems like that you´ve lost " 
@@ -677,9 +809,9 @@ USA
 		
 		<s:Group>	
 			<s:View id = "vNotFound" visible="false"
-					backgroundColor="#861B1D" 
+					backgroundColor="black" 
 					fontFamily="_sans" 
-					alpha="1" 
+					alpha="0.7" 
 					x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
 				<s:Group width="250" height="80">
 					<s:Label text="Video not found!" 
@@ -710,6 +842,7 @@ USA
 							  buttonMode="true"
 							  skinClass="views.skins.SaveButtonSkin"/>	
 	</s:View>
+	<!--
 
 		<s:viewMenuItems>		
 			<s:ViewMenuItem label="Config"
@@ -732,4 +865,5 @@ USA
 				</s:icon>
 			</s:ViewMenuItem>
 		</s:viewMenuItems>
+	-->
 </s:View>

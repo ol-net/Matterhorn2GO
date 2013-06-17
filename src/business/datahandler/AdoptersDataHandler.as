@@ -24,9 +24,9 @@ package business.datahandler
 	import business.datahandler.XMLHandler;
 	import business.dbaccess.SQLViewHandler;
 	
-	import events.AdoptersLoadedEvent;
-	import events.NotConnectedEvent;
-	import events.SQLConnectionIsOpen;
+	import business.datahandler.events.AdoptersLoadedEvent;
+	import business.datahandler.events.NotConnectedEvent;
+	import business.dbaccess.events.SQLConnectionIsOpen;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -98,22 +98,17 @@ package business.datahandler
 		protected function processResult(response:ResultEvent):void
 		{			
 			var XMLResults:XML = response.result as XML;	
+
 			adopters = new XMLListCollection(XMLResults.children());
 			var tmp:String = URLClass.getInstance().getURLNoSearch();
-
+			
 			var xmlHandler:XMLHandler = new XMLHandler();
 			var tmp2:String = xmlHandler.getResult("adopters/adopter[AdopterURL='"+tmp+"']/AdopterURL", XMLResults);
 			useFilterFlag = tmp2;
-			//if(tmp != tmp2)
-		//	{
-				//var ad:Object = "<adopter><AdopterURL>"+tmp+"</AdopterURL><AdopterName>Your Custom URL</AdopterName></adopter>";
-				
-				//var xml:XML = new XML(ad);
+
 			xmlAdopters = SQLViewHandler.getInstance();
 			xmlAdopters.addEventListener(SQLConnectionIsOpen.READERCOMPLETE, xmlComplete);
 			xmlAdopters.initSQLViewAdopters(adopters);
-			    //adopters.addItem(xml);
-		//	}
 		}
 		
 		public function xmlComplete(event:SQLConnectionIsOpen):void

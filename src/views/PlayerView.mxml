@@ -23,28 +23,32 @@ USA
 		xmlns:views="views.*"	
 		creationComplete="init()"
 		tabBarVisible="false"
-		backKeyPressed="popThisView()" 
+		backKeyPressed="popThisViewBackKey()" 
 		backgroundColor="black" 
 		actionBarVisible="false" 
 		xmlns:mx="library://ns.adobe.com/flex/mx" 
-		xmlns:business="business.*">
+		xmlns:business="business.core.*">
 	
 	<fx:Script>
 		<![CDATA[
 			
-			//import com.adobe.nativeExtensions.Networkinfo.InterfaceAddress;
-			//import com.adobe.nativeExtensions.Networkinfo.NetworkInfo;
-			//import com.adobe.nativeExtensions.Networkinfo.NetworkInterface;
+			/*
+			import com.adobe.nativeExtensions.Networkinfo.InterfaceAddress;
+			import com.adobe.nativeExtensions.Networkinfo.NetworkInfo;
+			import com.adobe.nativeExtensions.Networkinfo.NetworkInterface;
+			*/
 			
-			import business.OSMFPlayer;
-			import business.SeekPosition;
 			import business.datahandler.SegmentDataHandler;
 			import business.datahandler.URLClass;
 			import business.datahandler.XMLHandler;
+			import business.dbaccess.SQLHistoryEditHandler;
+			import business.dbaccess.SQLHistoryViewHandler;
+			import business.player.OSMFPlayer;
+			import business.player.SeekPosition;
 			
-			import events.NotConnectedEvent;
-			import events.SegmentLoadedEvent;
-			import events.VideosLoadedEvent;
+			import business.datahandler.events.NotConnectedEvent;
+			import business.datahandler.events.SegmentLoadedEvent;
+			import business.datahandler.events.VideosLoadedEvent;
 			
 			import flash.events.TimerEvent;
 			import flash.utils.Timer;
@@ -117,34 +121,60 @@ USA
 			
 			private var timerCounterForView:Timer;
 			
-			private var rightTimer:Boolean = false;  
+			private var rightTimer:Boolean = false; 
+			
+			private var editTime:SQLHistoryEditHandler;
+			
+			private var selectTime:SQLHistoryViewHandler;
+			
+			private var seekTimeFromDB:String = "";
+			
+			private var mediapackageID:String;
 			
 			//private var interfaces:Vector.<com.adobe.nativeExtensions.Networkinfo.NetworkInterface> = com.adobe.nativeExtensions.Networkinfo.NetworkInfo.networkInfo.findInterfaces();
 			
 			protected function init():void
-			{					
+			{	
+				selectTime = SQLHistoryViewHandler.getInstance();
+				editTime = SQLHistoryEditHandler.getInstance();
+				
+				seekTimeFromDB = selectTime.returnSeekTime();
+				
+				if(seekTimeFromDB != "")
+				{
+					var tmp2:Number = Number(seekTimeFromDB);
+					seekPosition = tmp2 * 1000;
+				}
+				else
+				{
+					seekPosition = SeekPosition.getInstance().getPosition() * 60000;
+				}
+				
+				mediapackageID = data.@id;
+				
+				//editTime.updateVideoTime(mediapackageID, "144");
 				/*
 				// only for iOS loop					
 				for each (var interfaceObj:com.adobe.nativeExtensions.Networkinfo.NetworkInterface in interfaces)
 				{
 					if(interfaceObj.name == "en0" && interfaceObj.active == false)
 					{
-						menu.visible = true;
+						//menu.visible = true;
 						//osmfplayer.player.stop();
 						//pause_button.visible = false;
 						//play_button.visible = true;
 						if(osmfplayer != null)
 						{ 
 							if(osmfplayer.player.paused || osmfplayer.player.playing)
-								osmfplayer.player.stop();
+							osmfplayer.player.stop();
 						}
 						
 						popThisView();
+						
 						return;
 					}	
 				}
 				*/
-				
 				menu.visible = false;
 				
 				presenter_button.setVisible(false);
@@ -172,13 +202,14 @@ USA
 				if(segmentArray.length == 2)
 				{
 					seekPosition = segmentArray[1];
-					mediapackage = SegmentDataHandler.getInstance(segmentArray[0]);
+					mediapackage = SegmentDataHandler.getInstance();
 					mediapackage.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, setData);
+					mediapackage.init(segmentArray[0]);
 				}
 				else
 				{
-					seekPosition = SeekPosition.getInstance().getPosition() * 60000;
-					videoSize();
+					//seekPosition = SeekPosition.getInstance().getPosition() * 60000;
+					initPlayer();
 				}
 				
 				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
@@ -191,16 +222,16 @@ USA
 				
 				var	xpathValue:XMLHandler = new XMLHandler();
 				
-				segment_xml = SegmentDataHandler.getInstance(xpathValue.getResult("mediapackage/@id", data));
+				segment_xml = SegmentDataHandler.getInstance();
 				segment_xml.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
 				segment_xml.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
-				
+				segment_xml.init(xpathValue.getResult("mediapackage/@id", data));
 			}
 			
 			public function getXMLListCollection(event:SegmentLoadedEvent):void
 			{
 				videos = segment_xml.getSegmentAsXML();
-
+				
 				var xmlHandler:XMLHandler = new XMLHandler();
 				
 				var x:String = xmlHandler.getResult("count(//segments/segment)", videos); 
@@ -226,7 +257,7 @@ USA
 				
 				this.data = xpathValue.getResult("mediapackage", data);
 				
-				videoSize();
+				initPlayer();
 			}
 			
 			private function updateTime(e:MouseEvent):void
@@ -249,7 +280,7 @@ USA
 						if(osmfplayer != null)
 						{ 
 							if(osmfplayer.player.paused || osmfplayer.player.playing)
-								osmfplayer.player.stop();
+							osmfplayer.player.stop();
 						}
 						
 						popThisView();
@@ -257,48 +288,62 @@ USA
 					}	
 				}
 				*/
-				if(isNaN(osmfplayer.player.currentTime)) 
-				{
-					osmfplayer.player.stop();
-					notConnected(null);
-				}
-
-				if(osmfplayer.player.currentTime == osmfplayer.player.duration) // || osmfplayer.player.currentTime == 0)
-				{						
-					osmfplayer.player.seek(0);
-					seekBar.value = 0;
-
-					pause_button.visible = false;
-					play_button.visible = true;
-					
-					//osmfplayer.player.stop();
-					return;
-				}
 				
-				if(updateSeekBar && !isNaN(osmfplayer.player.currentTime))
+				if(osmfplayer.player != null)
 				{
-					if(seekPosition != 0)
+					if(isNaN(osmfplayer.player.currentTime)) 
 					{
-						if(osmfplayer.player.playing || osmfplayer.player.paused) {
-							osmfplayer.player.seek(seekPosition / 1000);
+						//osmfplayer.player.stop();
+						notConnected(null);
+					}
+					
+					var tmp:Number = osmfplayer.player.currentTime;
+					var tmp2:Number = osmfplayer.player.duration;
+					
+					var cT:Number = Math.round(tmp);
+					var dT:Number = Math.round(tmp2);
+					
+					var seekT:String = String(osmfplayer.player.currentTime);
+					
+					if(cT >= dT)
+					{				
+						duration_text == "00:00:00";
+						osmfplayer.player.seek(0);
+						seekBar.value = 0;
+						editTime.updateVideoTime(mediapackageID, "0");
+						pause_button.visible = false;
+						play_button.visible = true;
+						
+						osmfplayer.player.stop();
+						return;
+					}
+					
+					if(updateSeekBar && !isNaN(osmfplayer.player.currentTime))
+					{
+						if(seekPosition != 0)
+						{   
+							if(osmfplayer.player.playing || osmfplayer.player.paused) {
+								osmfplayer.player.seek(seekPosition / 1000);
+							}
 						}
+						else
+						{
+							seekBar.value = e.time / 60;
+						}
+						
+						if(seekT != "0")
+							editTime.updateVideoTime(mediapackageID, seekT);
+						
+						time_text = timerend(e.time * 1000);
 					}
-					else
+					
+					seekPosition = 0;
+					
+					if(duration_text == "00:00:00")
 					{
-						seekBar.value = e.time / 60;
+						duration_text = timerend(osmfplayer.player.duration * 1000);
+						maxsize = osmfplayer.player.duration / 60;
 					}
-					
-					var tmp:Number = seekBar.value;
-					
-					time_text = timerend(e.time * 1000);
-				}
-					
-				seekPosition = 0;
-				
-				if(duration_text == "00:00:00")
-				{
-					duration_text = timerend(osmfplayer.player.duration * 1000);
-					maxsize = osmfplayer.player.duration / 60;
 				}
 			}
 			
@@ -319,7 +364,7 @@ USA
 					temp = (tmp%60);
 					tmp = (tmp/60);
 					
-					while (tmp>60) 
+					while (tmp>=60) 
 					{
 						tmp-=60;
 						hour++;
@@ -361,81 +406,160 @@ USA
 				height_num = navigator.height - 120;
 				width_num = navigator.width - 80;
 				
-				video_one.removeAllElements();
-				video_two.removeAllElements();
-				
 				videoSize();
+				
 				seekBar.width = navigator.width - 50;
 			}
 			
-			public function videoSize():void
-			{	
-				var videoPath:String = "mediapackage/media/track[mimetype='video/x-flv'][@type='presenter/delivery'][tags/tag[2]='medium-quality'][2]/url"; 
-				var videoPathTwo:String = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][tags/tag[2]='medium-quality'][2]/url";
+			import business.core.GetVideoPathHandler;
+			import business.player.events.PlayerLoadedEvent;
+	
+			private var videoPath:String;
+			private var videoPathTwo:String;
+			
+			public function initPlayer():void
+			{
+				var getVideo:GetVideoPathHandler = GetVideoPathHandler.getInstance();
 				
-				if(xpathValue.getResult(videoPath, data) == "")
+				videoPath = getVideo.getPath(data)[0];
+				videoPathTwo = getVideo.getPath(data)[1];
+				
+				if(videoPath == "" && videoPathTwo != "")
 				{
-					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='presenter/delivery'][2]/url"; 
-					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][2]/url";
+					videoPath = videoPathTwo;
+					videoPathTwo = "";
 				}
 				
-				if(xpathValue.getResult(videoPath, data) == "")
-				{
-					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='presenter/delivery'][1]/url"; 
-					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='presentation/delivery'][1]/url";
-				}
-				
-				if(xpathValue.getResult(videoPath, data) != "")
+				if(videoPath != "")
 				{
 					if(osmfplayer == null)
-					{
-						//trace(xpathValue.getResult(videoPath, data))
-						//trace(xpathValue.getResult(videoPathTwo, data))
-						osmfplayer = new OSMFPlayer(xpathValue.getResult(videoPath, data), xpathValue.getResult(videoPathTwo, data));  
-						osmfplayer.setSize(navigator.height, navigator.width);
-					}
-					
-					if(osmfplayer.player != null)
-					{
+					{						
+						osmfplayer = new OSMFPlayer(videoPath, videoPathTwo);  
+						videoSize();
 						osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 					}
-					
-					if(xpathValue.getResult(videoPathTwo, data) != "" && parallelViewState)
-					{
-						presenter_button.setVisible(true);
-						presentation_button.setVisible(true);
-						parallel_button.setVisible(true);						
-						
-						loadParallelView();
-					}
-					else if(presenterViewState)
-					{
-						osmfplayer.setContainerOneSize(navigator.width, navigator.height);
-						
-						video_one.addElement(osmfplayer.getContainerOne());
-						
-						video_one.x = 0;
-						video_one.y = 0;
-					}
-					else if(presentationViewState)
-					{
-						osmfplayer.setContainerTwoSize(navigator.width, navigator.height);
-						
-						video_two.addElement(osmfplayer.getContainerTwo());
-						
-						video_two.x = 0;
-						video_two.y = 0;
-					}	
-					else
-					{
-						osmfplayer.setContainerOneSize(navigator.width, navigator.height);
-						
-						video_one.addElement(osmfplayer.getContainerOne());
-						
-						video_one.x = 0;
-						video_one.y = 0;
-					}
 				}
+			}
+
+			public function videoSize():void
+			{	
+				if(videoPathTwo != "" && parallelViewState)
+				{
+					presenter_button.setVisible(true);
+					presentation_button.setVisible(true);
+					parallel_button.setVisible(true);						
+					
+					loadParallelView();
+				}
+				else if(presenterViewState)
+				{
+					osmfplayer.setContainerOneSize(this.navigator.width, this.navigator.height);
+					
+					video_one.addElement(osmfplayer.getContainerOne());
+					
+					video_one.x = 0;
+					video_one.y = 0;
+				}
+				else if(presentationViewState)
+				{
+					osmfplayer.setContainerTwoSize(this.navigator.width, this.navigator.height);
+					
+					video_two.addElement(osmfplayer.getContainerTwo());
+					
+					video_two.x = 0;
+					video_two.y = 0;
+				}	
+				else
+				{
+					osmfplayer.setContainerOneSize(this.navigator.width, this.navigator.height);
+					
+					video_one.addElement(osmfplayer.getContainerOne());
+					
+					video_one.x = 0;
+					video_one.y = 0;
+				}
+			}	
+			
+			public function loadParallelView():void
+			{
+				//video_one.removeAllElements();
+				//video_two.removeAllElements();
+				
+			//	if(osmfplayer.player != null)
+			//		osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
+				
+				var h:Number;
+				var w:Number;
+				
+				if(navigator.height > navigator.width)
+				{
+					h = navigator.height / 2;
+					w = navigator.width;
+					
+					video_two.x = 0;
+					video_two.y = navigator.height / 2;
+				}
+				else
+				{
+					h = navigator.height;
+					w = navigator.width / 2;
+					
+					video_two.x = navigator.width / 2;
+					video_two.y = 0;
+				}
+				
+				osmfplayer.setContainerOneSize(w, h);
+				video_one.addElement(osmfplayer.getContainerOne());
+				
+				osmfplayer.setContainerTwoSize(w, h);
+				video_two.addElement(osmfplayer.getContainerTwo());
+			}
+			
+			public function setPresenterView():void
+			{
+				presenterViewState = true;
+				presentationViewState = false;
+				parallelViewState = false;
+				
+				//video_one.removeAllElements();
+				//video_two.removeAllElements();
+				
+				osmfplayer.setContainerOneSize(navigator.width, navigator.height);
+				video_one.addElement(osmfplayer.getContainerOne());
+				
+				video_one.setVisible(true);
+				video_two.setVisible(false);
+			}
+			
+			public function setPresentationView():void
+			{
+				presenterViewState = false;
+				presentationViewState = true;
+				parallelViewState = false;
+				
+				//video_one.removeAllElements();
+				//video_two.removeAllElements();
+				
+				video_two.x = 0;
+				video_two.y = 0;
+				
+				osmfplayer.setContainerTwoSize(navigator.width, navigator.height);
+				video_two.addElement(osmfplayer.getContainerTwo());
+				
+				video_one.setVisible(false);
+				video_two.setVisible(true);				
+			}
+			
+			public function setParallelView():void
+			{
+				presenterViewState = false;
+				presentationViewState = false;
+				parallelViewState =true;
+				
+				loadParallelView();
+				
+				video_one.setVisible(true);
+				video_two.setVisible(true);
 			}	
 			
 			public function playFW():void
@@ -445,7 +569,7 @@ USA
 					if(osmfplayer.player != null)
 					{
 						if(osmfplayer.player.playing || osmfplayer.player.paused)
-						osmfplayer.player.seek(seekBar.value * 60 + 10);
+							osmfplayer.player.seek(seekBar.value * 60 + 10);
 					}
 				}
 			}
@@ -544,38 +668,6 @@ USA
 				}
 			}
 			
-			public function loadParallelView():void
-			{
-				if(osmfplayer.player != null)
-					osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
-				
-				var h:Number;
-				var w:Number;
-				
-				if(navigator.height > navigator.width)
-				{
-					h = navigator.height / 2;
-					w = navigator.width;
-					
-					video_two.x = 0;
-					video_two.y = navigator.height / 2;
-				}
-				else
-				{
-					h = navigator.height;
-					w = navigator.width / 2;
-					
-					video_two.x = navigator.width / 2;
-					video_two.y = 0;
-				}
-				
-				osmfplayer.setContainerOneSize(w, h);
-				video_one.addElement(osmfplayer.getContainerOne());
-				
-				osmfplayer.setContainerTwoSize(w, h);
-				video_two.addElement(osmfplayer.getContainerTwo());	
-			}
-			
 			public function showSegment():void
 			{
 				if(osmfplayer != null)
@@ -660,6 +752,8 @@ USA
 			
 			public function timer(event:TimerEvent):void
 			{
+				myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
+
 				if(showButtons)
 				{
 					buttonPanel.visible = false;
@@ -671,7 +765,7 @@ USA
 				if(myTimer.running)
 					myTimer.reset();
 				
-				myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
+				//myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
 				
 				if(showButtons)
 				{
@@ -719,52 +813,11 @@ USA
 				}
 			}
 			
-			public function setPresenterView():void
+			public function popThisViewBackKey():void
 			{
-				presenterViewState = true;
-				presentationViewState = false;
-				parallelViewState = false;
-				
-				video_one.removeAllElements();
-				video_two.removeAllElements();
-				
-				osmfplayer.setContainerOneSize(navigator.width, navigator.height);
-				video_one.addElement(osmfplayer.getContainerOne());
-				
-				video_one.setVisible(true);
-				video_two.setVisible(false);
+				popThisView();
+				navigator.pushView(VideoDetailsView, data);
 			}
-			
-			public function setPresentationView():void
-			{
-				presenterViewState = false;
-				presentationViewState = true;
-				parallelViewState = false;
-				
-				video_one.removeAllElements();
-				video_two.removeAllElements();
-				
-				video_two.x = 0;
-				video_two.y = 0;
-				
-				osmfplayer.setContainerTwoSize(navigator.width, navigator.height);
-				video_two.addElement(osmfplayer.getContainerTwo());
-				
-				video_one.setVisible(false);
-				video_two.setVisible(true);				
-			}
-			
-			public function setParallelView():void
-			{
-				presenterViewState = false;
-				presentationViewState = false;
-				parallelViewState =true;
-				
-				loadParallelView();
-				
-				video_one.setVisible(true);
-				video_two.setVisible(true);
-			}	
 			
 			protected function popThisView():void
 			{
@@ -774,11 +827,15 @@ USA
 					{
 						if(osmfplayer.player.playing || osmfplayer.player.paused)
 						{
+							osmfplayer.player.pause();
 							osmfplayer.player.stop();
-							osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
+							//osmfplayer.removeAll();
+							//osmfplayer.player.stop();
+							//osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 						}
 					}
 				}
+				myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
 				
 				seekBar.removeEventListener(MouseEvent.MOUSE_DOWN, stopUpdate);
 				seekBar.removeEventListener(MouseEvent.MOUSE_UP, startUpdate);
@@ -791,8 +848,9 @@ USA
 				this.navigator.removeEventListener(MouseEvent.CLICK, getButtonPanel);
 				
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
-				
-				navigator.popView();
+
+
+				this.navigator.popView();
 			}
 			
 			public function notConnected(event:NotConnectedEvent):void 
@@ -822,7 +880,8 @@ USA
 	
 	<s:Group id="buttonPanel" visible="true">
 		
-		<s:View id = "menu" visible="false"
+		<s:View id = "menu" 
+				visible="false"
 				backgroundColor="black" 
 				fontFamily="_sans" 
 				alpha="0.7" 
@@ -849,7 +908,9 @@ USA
 			<s:Group>
 				<s:View backgroundColor="black" 
 						fontFamily="_sans" 
-						alpha="0.5" x="0" y="0">
+						alpha="0.5" 
+						x="0" 
+						y="0">
 					<s:Group width="150" height="19">
 						<s:Label id="timer_label"  
 								 text="{time_text + ' of ' + duration_text}"
@@ -890,11 +951,16 @@ USA
 			<s:Group>
 				<s:VGroup width="{navigator.width - 77.5}">
 					
-					<s:HSlider id="seekBar" width="100%" height="100%" alpha="0.7"
-							   liveDragging="true"
-							   minimum="0" maximum="{maxsize}" 
-							   showDataTip="false"
-							   stepSize="0.01" snapInterval="0.01"/>
+					    <s:HSlider id="seekBar"			
+								   width="100%" 
+								   height="100%" 
+								   alpha="0.7"
+								   liveDragging="true"
+								   minimum="0" 
+								   maximum="{maxsize}" 
+								   showDataTip="false"
+								   stepSize="0.01"
+								   snapInterval="0.01"/>
 				</s:VGroup>
 			</s:Group>
 			

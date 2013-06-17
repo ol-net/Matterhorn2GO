@@ -1,0 +1,901 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		xmlns:views="views.*"
+		backgroundColor="#F2F2F2" 
+		backKeyPressed="backKeyPressedHandler(event)"
+		xmlns:events="events.*"
+		creationComplete="init()"
+		xmlns:business="business.core.*" 
+		tabBarVisible="true">
+	
+	<fx:Script>
+		<![CDATA[
+			import business.core.LoadNextSeries;
+			import business.player.SeekPosition;
+			import business.core.ToolTipReader;
+			import business.datahandler.AdoptersDataHandler;
+			import business.datahandler.EpisodesDataHandler;
+			import business.datahandler.SeriesDataHandler;
+			import business.datahandler.URLClass;
+			import business.datahandler.did.DeviceInfoReader;
+			import business.dbaccess.SQLHistoryViewHandler;
+			
+			import business.datahandler.events.BusyIndicatorEventSeries;
+			import business.core.events.ChangeTabToSeriesViewEvent;
+			import business.datahandler.events.NotConnectedEvent;
+			import business.dbaccess.events.SQLHistoryLoadedEvent;
+			import business.dbaccess.SQLConnectionHandler;
+			import business.datahandler.events.VideoNotFoundEvent;
+			import business.datahandler.events.VideosLoadedEvent;
+			
+			import flash.events.Event;
+			
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.collections.XMLListCollection;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			
+			[Bindable]
+			public var videos:XMLListCollection;
+			//private var xmlData:SeriesDataHandler;
+			private var loadNextSeries:LoadNextSeries;
+			private var text_result:String = "Results: ";
+			
+			[Bindable]
+			private var search_result:String;
+			
+			[Bindable]
+			private var footer_text:String;
+			
+			//private var adoptersInit:AdoptersDataHandler = AdoptersDataHandler.getInstance();
+			
+			private var tTip:ToolTipReader = ToolTipReader.getInstance();
+			
+			private var dInfo:DeviceInfoReader = DeviceInfoReader.getInstance();
+			
+			[Bindable]
+			private var xTooltip:int;
+			
+			[Bindable]
+			private var yTooltip:int;
+			
+			private var widthUpR:int = 0;
+			private var widthUpL:int = 0;
+			private var widthDownC:int = 0;
+			
+			private var heightUpR:int = 0;
+			private var heightUpL:int = 0;
+			private var heightDownC:int = 0;
+			
+			protected var myTimer:Timer;
+			
+			private var selectVideos:SQLHistoryViewHandler;
+			
+			private var closeTextfield:Boolean = true;
+			
+			public function init():void
+			{	
+				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
+				//sqlConnection.initConnection();
+				
+				btn_sort.visible = true;
+				
+				selectVideos = SQLHistoryViewHandler.getInstance();
+				selectVideos.addEventListener(SQLHistoryLoadedEvent.HISTORYLOADED, getXMLListCollection);
+				selectVideos.initSQLViewVideos();
+				
+				textinput_search.addEventListener(FocusEvent.FOCUS_OUT, handleFocusOut);	
+				
+				tTip.setDisplay(String(this.navigator.width), String(this.navigator.height));
+				dInfo.setDisplay(String(this.navigator.width), String(this.navigator.height));
+				
+				setPosition();
+				
+				tTip.readFile();
+				dInfo.readFile();
+				
+				if(tTip.getStatus() == true)
+				{
+					//btn_sort.visible = false;
+					tooltip.visible = false;
+				}
+				else
+				{
+					//btn_sort.visible = true;
+					tooltip.visible = true;	
+				}
+				
+				if(dInfo.getStatus() != true)
+				{
+					dInfo.setFile();
+				}
+				
+				this.addEventListener(KeyboardEvent.KEY_DOWN, handleButtons, false, 0, true);
+				this.addEventListener(KeyboardEvent.KEY_UP, handleButtons, false, 0, true);
+				
+				var xmlData:SeriesDataHandler = SeriesDataHandler.getInstance();
+				
+				textinput_search.text = xmlData.getText();
+				videos = new XMLListCollection();
+				
+				//videos = xmlData.getXMLListCollection();
+				/*
+				if(videos.length == 0 || xmlData.getURL() != URLClass.getInstance().getURL())
+				{	
+					btnSortVisible();
+					
+					adoptersInit.initGetFilter();
+					
+					indicatormenu.visible = true;
+					bi.visible = true;
+					xmlData.init();
+				}
+				else
+				{
+					btnSortVisible();
+					indicatormenu.visible = false;
+					bi.visible = false;
+				}
+				
+				xmlData.getTotal();
+				
+				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(VideoNotFoundEvent.VIDEOSNOTFOUND, videoNotFound);
+				
+				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				textinput_search.addEventListener(FlexEvent.ENTER, getVideo);
+				
+				this.addEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
+				this.addEventListener(ResizeEvent.RESIZE, resize);
+				*/
+				if(textinput_search.text != "")
+					setTextLabel();
+			}
+			
+			public function setTextLabel():void
+			{
+				if(this.navigator != null)
+				{
+					if(this.navigator.width > this.navigator.height)
+					{
+						if(textinput_search.text.length > 24)
+						{
+							var tmp:String = "  " + textinput_search.text;
+							searchtext_result.text = "  " + tmp.substr(0, 24) + "...";
+						}
+						else
+						{
+							searchtext_result.text = "  " + textinput_search.text;
+						}
+					}
+					else
+					{
+						if(textinput_search.text.length > 14)
+						{
+							var tmp2:String = "  " + textinput_search.text;
+							searchtext_result.text = "  " + tmp2.substr(0, 14) + "...";
+						}
+						else
+						{
+							searchtext_result.text = "  " + textinput_search.text;
+						}
+					}
+				}
+			}
+			
+			public function notConnected(event:NotConnectedEvent):void 
+			{
+				//xmlData.setXMLListCollection(new XMLListCollection());
+				list.visible = false;
+				connection.visible = true;
+				indicatormenu.visible = false;
+				bi.visible = false;
+			}
+			
+			public function videoNotFound(event:VideoNotFoundEvent):void 
+			{	
+				//xmlData.setXMLListCollection(new XMLListCollection());
+				//xmlData.setOValue();
+				vNotFound.visible = true;
+				btn_sort.visible = false;
+			}
+			
+			public function setPosition():void 
+			{
+				if(widthUpL == 0) 
+				{
+					widthUpL = up_left.width;
+					heightUpL = up_left.height;
+					
+					widthUpR = up_right.width;
+					heightUpR = up_right.height;
+					
+					widthDownC = down_center.width;
+					heightDownC = down_center.height;
+				}
+				
+				up_left.x = 10;
+				up_left.y = 40;
+				
+				up_left.width =	widthUpL / 2; 
+				up_left.height = heightUpL / 2;
+				
+				up_right.x = this.navigator.width - 180;
+				up_right.y = 40;
+				
+				up_right.width = widthUpR / 2; 
+				up_right.height = heightUpR / 2;
+				
+				down_center.width = widthDownC / 2.3; 
+				down_center.height = heightDownC / 2.3;
+				
+				if(this.navigator.height < this.navigator.width)
+				{
+					down_center.x = navigator.width / 2 - 90;
+					down_center.y = navigator.height - 170;
+				}
+				else
+				{
+					down_center.x = navigator.width / 2 - 90;
+					down_center.y = navigator.height - 180;
+				}
+			}
+			
+			public function resize(event:ResizeEvent): void 
+			{
+				if(this.navigator.width < this.navigator.height)
+				{
+					if(searchtext_result.text.length > 14)
+					{
+						searchtext_result.text = searchtext_result.text.substr(0, 14) + "...";
+					}
+				}
+				
+				setPosition();
+			}
+			
+			/*
+			public function loadIndicator(event:BusyIndicatorEventSeries):void
+			{
+				if(loadNextSeries != null)
+				{
+					if(loadNextSeries.getTotal() > videos.length)
+					{
+						indicatormenu.visible = true;
+						bi.visible = true;
+					}
+				}
+				else
+				{
+					indicatormenu.visible = true;
+					bi.visible = true;
+				}
+				
+			}
+			*/
+			
+			public function getXMLListCollection(event:SQLHistoryLoadedEvent):void
+			{		
+				getVideoReload(null);
+				
+				videos = selectVideos.getVideoXML(); //xmlData.getXMLListCollection();
+				
+				//loadNextSeries = LoadNextSeries.getInstance();
+				
+				//textinput_search.text  = xmlData.getText();
+				
+				//footer_text = loadNextSeries.getFooter();
+				
+				/*
+				if(bi.visible == true)
+				{
+					indicatormenu.visible = false;
+					bi.visible = false;
+				}
+				*/
+				
+				//btnSortVisible();
+
+				if(videos.length == 0 && !selectVideos.getHistoryEmptyStatus())
+				{	
+					videoNotFound(null);
+				}
+			}
+			
+			public function getVideo(event:FlexEvent):void
+			{
+				if(closeTextfield)
+				{
+					dummy_button.setFocus();
+					textinput_search.visible = false;
+					btn_sort.visible = true;
+					btn_clear.visible = false;
+					vNotFound.visible = false;
+					list.visible = true;
+					connection.visible = false;
+					
+					var tmp:String = textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, '');
+					
+					selectVideos.selectSQLViewVideos(tmp, tmp);
+					
+					setTextLabel();
+
+					//indicatormenu.visible = true;
+					//bi.visible = true;
+					
+					var e:EpisodesDataHandler = EpisodesDataHandler.getInstance();
+					e.setNewSearch();
+					e.setOValue();
+					
+					var s:SeriesDataHandler = SeriesDataHandler.getInstance();
+					s.setOValue();
+					s.setNewSearch();
+					
+					//if(e.getText() == "" && s.getText() != "")
+					//{
+						e.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
+						s.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
+					//}
+				}
+				closeTextfield = true;
+				/*
+				xmlData.setOValue();
+				xmlData.setNewSearch();
+				xmlData.search(textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, ''), String(0));
+				xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				*/
+			}
+			
+			public function getVideoReload(event:FlexEvent):void
+			{
+				if(closeTextfield)
+				{
+					dummy_button.setFocus();
+					textinput_search.visible = false;
+					btn_clear.visible = false;
+					btn_sort.visible = true;
+					vNotFound.visible = false;
+					list.visible = true;
+					connection.visible = false;
+					
+					var tmp:String = textinput_search.text.replace(/^[\s|\t|\n]+|[\s|\t|\n]+$/gs, '');
+					
+					selectVideos.selectSQLViewVideos(tmp, tmp);
+					
+					setTextLabel();
+				}
+				closeTextfield = false;
+			}
+			
+			
+			public function loadNewView():void
+			{
+				list.visible = true;
+				
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
+				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
+				this.removeEventListener(ResizeEvent.RESIZE, resize);
+				SeekPosition.getInstance().setPosition(0);
+				navigator.pushView(VideoDetailsView, list.selectedItem);
+			}
+			
+			public function changeTab(e:TimerEvent):void
+			{
+				var changeTab:ChangeTabToSeriesViewEvent = new ChangeTabToSeriesViewEvent(ChangeTabToSeriesViewEvent.CHANGETOSERIESTAB);
+				dispatchEvent(changeTab);	
+			}
+			
+			public function applicationExit():void 
+			{	
+				list.visible = true;
+				connection.visible = false;
+				
+				//xmlData.removeEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				//xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
+				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
+				//this.removeEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
+				this.removeEventListener(ResizeEvent.RESIZE, resize);
+				
+				var exitingEvent:Event = new Event(Event.EXITING, false, true);
+				
+				NativeApplication.nativeApplication.dispatchEvent(exitingEvent);
+				if (!exitingEvent.isDefaultPrevented()) {
+					NativeApplication.nativeApplication.exit();
+				}
+			}
+			
+			public function showInfo():void 
+			{   
+				list.visible = true;
+				connection.visible = false;
+				//this.removeEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
+				this.removeEventListener(KeyboardEvent.KEY_DOWN, handleButtons);
+				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
+				navigator.pushView(InfoView, data);
+			}
+			
+			public function showConfig():void 
+			{
+				list.visible = true;
+				connection.visible = false;
+				navigator.pushView(AdoptersView, data);
+			}
+			
+			/*
+			public function backPage():void
+			{
+				if(videos != null)
+				{
+					indicatormenu.visible = !indicatormenu.visible ;
+					bi.visible = !bi.visible;
+					loadNextSeries.backPage(textinput_search.text);
+				}
+			}
+			
+			public function nextPage():void
+			{	
+				if(videos != null)
+				{
+					indicatormenu.visible = true;
+					bi.visible = true;
+					loadNextSeries.nextPage(textinput_search.text);
+				}		
+				
+				//xmlData.addEventListener(VideosLoadedEvent.VIDEOSLOADED, getXMLListCollection);
+				//xmlData.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+			}
+			*/
+			
+			public function loadMenu():void
+			{
+				list.visible = true;
+				connection.visible = false;
+				navigator.pushView(ConfigurationMenuView, data);
+				//mx.core.FlexGlobals.topLevelApplication.viewMenuOpen = true;
+			}
+			
+			// Event handler to handle hardware keyboard keys.
+			protected function handleButtons(event:KeyboardEvent):void
+			{
+				if (event.keyCode == Keyboard.MENU) 
+				{
+					loadMenu();
+				}
+				
+				if(event.keyCode == 13)
+				{
+					getVideo(null);
+					stage.focus = null;
+				}
+			}
+			
+			public function closeToolTip():void 
+			{	
+				tooltip.visible = false;
+				tTip.setFile();
+				//btnSortVisible();
+			}
+			
+			public function closeKeyBoardAndGetVideos(e:Event):void
+			{	
+				getVideo(null);
+			}
+			
+			public function openTextField():void
+			{
+				closeTextfield = true;
+				
+				searchtext_result.text = "";
+				
+				if(textinput_search.visible)
+				{
+					/*
+					if(tooltip.visible) 
+					{
+						btn_sort.visible = true;
+					}
+					else
+					{
+						btnSortVisible();
+					}		
+					*/
+					textinput_search.visible = false;
+					btn_clear.visible = false;
+					
+					stage.focus = null;
+					
+					getVideo(null);
+				} 
+				else
+				{
+					btn_sort.visible = false;
+					textinput_search.visible = true;
+					btn_clear.visible = true;
+					textinput_search.setFocus();
+				}
+			}
+			
+			public function handleFocusOut(e:FocusEvent):void
+			{
+				myTimer = new Timer(200, 1); 
+				myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, closeTextField);
+				myTimer.start();
+			}
+			
+			public function closeTextField(e:TimerEvent):void
+			{
+				
+				if(tooltip.visible) 
+				{
+					btn_sort.visible = true;
+				}
+				
+				getVideo(null);
+			}
+			
+			public function sortSeries(typ:String):void
+			{
+				var mySort:Sort = new Sort();
+				var sortField:SortField = new SortField(typ);
+				
+				if(desc_sort.selected == true)
+					sortField.descending = true;
+				
+				mySort.fields = [sortField];
+				videos.sort = mySort;
+				
+				videos.refresh();
+				
+				sort_menu.visible = false;
+			}
+			
+			
+			public function openSortMenu():void
+			{
+				if(sort_menu.visible)
+				{
+					sort_menu.visible = false;
+				}
+				else
+				{
+					sort_menu.visible = true;
+				}
+			}	
+			
+			public function clearTextfield():void
+			{
+				if(textinput_search.text == "")
+				{
+					closeTextField(null);
+				}
+				else
+				{
+					textinput_search.text = "";
+					closeTextfield = false;
+					textinput_search.setFocus();
+				}
+			}
+			
+			/*
+			
+			public function btnSortVisible():void
+			{
+				loadNextSeries = LoadNextSeries.getInstance();
+				
+				var ok:Boolean = false;
+				
+				if(loadNextSeries != null)
+				{
+					if(loadNextSeries.getMaxPages() == loadNextSeries.getPage())
+					{
+						ok = true;
+					}
+					else
+					{
+						ok = false;
+					}
+				}
+				
+				if (tooltip.visible && !textinput_search.visible) 
+				{
+					btn_sort.visible = true;
+				}
+				else
+				{
+					if(!ok  || textinput_search.visible)
+					{
+						btn_sort.visible = false;
+					}
+					else
+					{
+						btn_sort.visible = true;
+					}
+				}
+			
+			}
+			*/
+			
+			protected function backKeyPressedHandler(event:FlexEvent):void
+			{
+				event.stopImmediatePropagation();
+				
+				if(textinput_search.text == "")
+				{
+					myTimer = new Timer(200, 1); 
+					myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, changeTab);
+					myTimer.start();
+				}
+				else
+				{
+					textinput_search.text = "";
+				}			
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:actionContent>
+		
+		<s:Button id="btn_sort"
+				  click="openSortMenu()"
+				  height="53" 
+				  width="60">
+			
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/sort40.png"
+										source240dpi="assets/sort64.png"
+										source320dpi="assets/sort88.png"/>
+			</s:icon>
+		</s:Button>
+		
+		<s:Button id="btn_search" 
+				  height="53"
+				  width="60"
+				  click="openTextField();">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/search40.png"
+										source240dpi="assets/search64.png"
+										source320dpi="assets/search88.png"/>
+			</s:icon>
+		</s:Button>
+		
+	</s:actionContent>
+	
+	<s:titleContent>
+		
+		<!-- iOS 148 -->
+		<!-- android 175 -->
+		
+		<s:TextInput id="textinput_search" x="13" 
+					 visible="false"
+					 skinClass="spark.skins.mobile.TextInputSkin"
+					 softKeyboardType="default"
+					 needsSoftKeyboard="true" 
+					 width="{navigator.width - 175}" 
+					 height="35"
+					 enabled="true" 
+					 text="" 
+					 enter="closeKeyBoardAndGetVideos(event)"/>
+		
+		<business:ImageButton id="btn_clear"
+							  visible="false"
+							  height = "42"
+							  click="clearTextfield();"
+							  buttonMode="true" 
+							  skinClass="views.skins.adopterbuttons.CancelButton"/>
+	</s:titleContent>
+	
+	<s:navigationContent>
+		
+		<s:Button id="menu_button" 
+				  click="loadMenu()" 
+				  height="53" 
+				  width="60">
+			<s:icon>
+				<s:MultiDPIBitmapSource source160dpi="assets/logo40.png"
+										source240dpi="assets/logo64.png"
+										source320dpi="assets/logo88.png"/>
+			</s:icon>
+		</s:Button>
+		
+		<s:Label id="searchtext_result" 
+				 text=""
+				 color="white"
+				 visible="true"/>
+		
+	</s:navigationContent>	
+	
+	<s:View backgroundColor="#F2F2F2">
+		
+		<s:List id="list" y="36"
+				width="100%" 
+				height="{navigator.height - 50}"
+				dataProvider="{videos}"
+				itemRenderer="business.datahandler.renderers.SeriesItemRenderer"
+				change="loadNewView()"/>
+		
+		<s:View id="sort_menu" visible="false"
+				backgroundColor="black"
+				alpha="0.7"
+				width="{navigator.width}" 
+				height="100">
+			
+			<s:Group>
+				<s:RadioButton groupName="sortgroup_kind" visible="false"
+							   selected="true"
+							   fontWeight="bold"
+							   color="white"
+							   y="60" x="{navigator.width/2-80}"
+							   id="asc_sort"
+							   label="asc" 
+							   width="150"/>
+				<s:RadioButton groupName="sortgroup_kind" visible="false" 
+							   fontWeight="bold"
+							   color="white"
+							   y="60" x="{navigator.width/2+45}"
+							   id="desc_sort"
+							   label="desc" 
+							   width="150"/>
+				
+				<s:RadioButton groupName="sortgroup"
+							   click="sortSeries('date')"
+							   fontWeight="bold"
+							   color="white"
+							   x="{navigator.width/2-120}" y="50"
+							   id="date_sort"
+							   label="Date" 
+							   width="150"/>
+				
+				<s:RadioButton groupName="sortgroup" 
+							   click="sortSeries('title')"
+							   fontWeight="bold"
+							   color="white"
+							   x="{navigator.width/2-30}" y="50"
+							   id="title_sort"
+							   label="Title" 
+							   width="150"/>
+				
+				<s:RadioButton groupName="sortgroup" 
+							   click="sortSeries('author')"
+							   fontWeight="bold"
+							   color="white"
+							   x="{navigator.width/2+50}" y="50"
+							   id="author_sort"
+							   label="Author" 
+							   width="150"/>   
+			</s:Group>
+		</s:View>
+		
+		<s:View id="tooltip" visible="false"
+				backgroundColor="black"
+				alpha="0.7"
+				width="{navigator.width}" 
+				height="{navigator.height}">
+			
+			<s:Group>	
+				<s:BitmapImage scaleMode="letterbox" 
+							   id="up_left">
+					<s:source>
+						<s:MultiDPIBitmapSource
+							source160dpi="@Embed('assets/tooltip/top_left_350x268.png')"
+							source240dpi="@Embed('assets/tooltip/top_left_450x344.png')"
+							source320dpi="@Embed('assets/tooltip/top_left_550x421.png')"/>
+					</s:source>
+				</s:BitmapImage>
+				
+				<s:BitmapImage scaleMode="letterbox" 
+							   id="up_right">
+					<s:source>
+						<s:MultiDPIBitmapSource
+							source160dpi="@Embed('assets/tooltip/top_right_350x268.png')"
+							source240dpi="@Embed('assets/tooltip/top_right_450x344.png')"
+							source320dpi="@Embed('assets/tooltip/top_right_550x421.png')"/>
+					</s:source>
+				</s:BitmapImage>
+				
+				<s:Image scaleMode="letterbox" 
+						 id="down_center"
+						 click="closeToolTip()">
+					<s:source>
+						<s:MultiDPIBitmapSource
+							source160dpi="@Embed('assets/tooltip/bottom_500x293.png')"
+							source240dpi="@Embed('assets/tooltip/bottom_600x351.png')"
+							source320dpi="@Embed('assets/tooltip/bottom_700x410.png')"/>
+					</s:source>
+				</s:Image>
+				
+			</s:Group>
+			
+		</s:View>
+		
+		<s:Group>	
+			<s:View id = "connection" 
+					visible="false"
+					backgroundColor="black" 
+					fontFamily="_sans" 
+					alpha="0.7"
+					x="{navigator.width / 2 - 127.5}" 
+					y="{navigator.height / 2 - 70}">
+				<s:Group width="260" height="95">
+					<s:Label text="It seems like that you´ve lost " 
+							 x="10" y = "14" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="your Internet connection or you are" 
+							 x="10" y = "32" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="using the wrong Endpoint. Sorry" 
+							 x="10" y = "50" 
+							 fontFamily="_sans" 
+							 color="white"/>
+					<s:Label text="Information cannot be displayed." 
+							 x="10" y = "68" 
+							 fontFamily="_sans" 
+							 color="white"/>
+				</s:Group>
+			</s:View>
+		</s:Group>
+		
+		<s:Group>	
+			<s:View id = "vNotFound" visible="false"
+					backgroundColor="black" 
+					fontFamily="_sans" 
+					alpha="0.7" 
+					x="{navigator.width / 2 - 122.5}" y="{navigator.height / 2 - 70}">
+				<s:Group width="250" height="80">
+					<s:Label text="Video not found!" 
+							 x="65" y = "32" 
+							 fontFamily="_sans" 
+							 color="white"/>
+				</s:Group>
+			</s:View>
+		</s:Group>
+		
+		<s:View id = "indicatormenu" visible="false"
+				backgroundColor="white" 
+				fontFamily="_sans" 
+				alpha="0.9" 
+				x="0" y="{navigator.height - 65}">
+			
+			<s:Group width="{navigator.width}" height="50">
+				
+				<s:BusyIndicator id="bi" width="35" height="35" 
+								 visible="true"
+								 x="{navigator.width / 2 - 18}" 
+								 y ="8"
+								 symbolColor="#861B1D"/>
+			</s:Group>
+		</s:View>
+		
+		<business:ImageButton id="dummy_button" visible="false"
+							  buttonMode="true"
+							  skinClass="views.skins.SaveButtonSkin"/>	
+	</s:View>
+</s:View>

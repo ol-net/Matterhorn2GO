@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The Matterhorn2Go Project
+Copyright (C) 2011  University of Osnabrück; Part of the Opencast Matterhorn Project
+
+This project is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
+USA 
+-->
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+			 xmlns:s="library://ns.adobe.com/flex/spark"
+			 xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+			 minWidth="48" 
+			 minHeight="48"
+			 alpha.disabled="0.5">
+	
+	<!-- host component -->
+	<fx:Metadata>
+		<![CDATA[
+		/* @copy spark.skins.spark.ApplicationSkin#hostComponent    */
+		[HostComponent("business.core.ImageButton")]
+		]]>
+	</fx:Metadata>
+	
+	<!-- states -->
+	<s:states>
+		<s:State name="up" />
+		<s:State name="over" />
+		<s:State name="down" />
+		<s:State name="disabled" />
+	</s:states>
+	
+	<s:Rect left="0" right="0" top="0" bottom="0" >
+		<s:fill>
+			<s:SolidColor alpha="0" />
+		</s:fill>
+	</s:Rect>
+	
+	<s:BitmapImage id="image_up" includeIn="up, disabled">
+		<s:source>
+			<s:MultiDPIBitmapSource
+				source160dpi="@Embed('assets/adopter/accept_36.png')"
+				source240dpi="@Embed('assets/adopter/accept_60.png')"
+				source320dpi="@Embed('assets/adopter/accept_84.png')"/>
+		</s:source>
+	</s:BitmapImage>
+	<s:BitmapImage id="image_over" includeIn="over">
+		<s:source>
+			<s:MultiDPIBitmapSource
+				source160dpi="@Embed('assets/adopter/accept_36-active.png')"
+				source240dpi="@Embed('assets/adopter/accept_60-active.png')"
+				source320dpi="@Embed('assets/adopter/accept_84-active.png')"/>
+		</s:source>
+	</s:BitmapImage>
+	<s:BitmapImage id="image_down" includeIn="down">
+		<s:source>
+			<s:MultiDPIBitmapSource
+				source160dpi="@Embed('assets/adopter/accept_36-active.png')"
+				source240dpi="@Embed('assets/adopter/accept_60-active.png')"
+				source320dpi="@Embed('assets/adopter/accept_84-active.png')"/>
+		</s:source>
+	</s:BitmapImage>
+</s:SparkSkin>
