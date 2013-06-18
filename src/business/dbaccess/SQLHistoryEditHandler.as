@@ -29,7 +29,7 @@ package business.dbaccess
 			return instance;
 		}
 		
-		public function insertVideo(m:String, t:String, a:String, d:String, s:String, pre:String, presen:String, desc:String, th:String, preDown:String, presenDown:String, downloadState:String):void
+		public function insertVideo(m:String, t:String, a:String, d:String, s:String, pre:String, presen:String, desc:String, th:String, preDown:String, presenDown:String, downloadState:String, seek:String):void
 		{
 			con = SQLConnectionHandler.getInstance();
 			
@@ -50,7 +50,7 @@ package business.dbaccess
 			insertStatement.parameters[":presenterDownload"] = preDown;
 			insertStatement.parameters[":presentationDownload"] = presenDown;
 			insertStatement.parameters[":thumbnail"] = th;
-			insertStatement.parameters[":seektime"] = "";
+			insertStatement.parameters[":seektime"] = seek;
 			insertStatement.parameters[":download"] = downloadState;
 			insertStatement.parameters[":adopter"] = URLClass.getInstance().getURLNoSearch();
 			insertStatement.execute();

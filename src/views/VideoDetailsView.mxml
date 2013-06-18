@@ -145,6 +145,8 @@ USA
 				}
 			}
 			
+			private var seektime:String = "0"; 
+			
 			public function setDescFromDB():void
 			{
 				title_label.text = xmlList.getItemAt(0).title;
@@ -156,6 +158,8 @@ USA
 				
 				thumbnail = xmlList.getItemAt(0).thumbnail;
 				detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
+				
+				seektime = xmlList.getItemAt(0).seektime;
 				
 				textAreaLabel.visible = true;
 				if(xmlList.getItemAt(0).desc != "null")
@@ -383,7 +387,7 @@ USA
 					insertVideo.deleteVideo(mediapackageID);
 				}
 				
-				insertVideo.insertVideo(mediapackageID, title_label.text, author.text, detailDate.text, series.text, video1, video2, description.text, thumbnail, video1Download, video2Download, downloadState);
+				insertVideo.insertVideo(mediapackageID, title_label.text, author.text, detailDate.text, series.text, video1, video2, description.text, thumbnail, video1Download, video2Download, downloadState, seektime);
 			}
 			
 			public function updateLocalDBWithNewVideoPath(e:SegmentLoadedEvent):void

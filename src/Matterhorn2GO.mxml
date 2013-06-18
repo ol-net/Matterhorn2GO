@@ -114,11 +114,11 @@ USA
 			
 			protected function loadResults():void
 			{					
-				var episode:EpisodesDataHandler = EpisodesDataHandler.getInstance();
-				episode.init();
+				//var episode:EpisodesDataHandler = EpisodesDataHandler.getInstance();
+				//episode.init();
 				
-				var series:SeriesDataHandler = SeriesDataHandler.getInstance();
-				series.init();
+				//var series:SeriesDataHandler = SeriesDataHandler.getInstance();
+				//series.init();
 				
 				tabbedNavigator.addEventListener(ChangeTabViewEvent.CHANGETAB, onChange);
 				tabbedNavigator.addEventListener(ChangeTabToSeriesViewEvent.CHANGETOSERIESTAB, changeToSeriesTab);

@@ -286,7 +286,7 @@ USA
 				this.removeEventListener(KeyboardEvent.KEY_UP, handleButtons);
 				this.removeEventListener(BusyIndicatorEventSeries.INDICATORLOADEDS, loadIndicator);
 				this.removeEventListener(ResizeEvent.RESIZE, resize);
-				SeekPosition.getInstance().setPosition(0);
+				//SeekPosition.getInstance().setPosition(0);
 				
 				var xml:XML = list.selectedItem as XML;
 				

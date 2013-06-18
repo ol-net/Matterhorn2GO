@@ -155,6 +155,7 @@ package business.dbaccess
 					var presenterDownload:String = row.presenterDownload;
 					var presentationDownload:String = row.presentationDownload;
 					var desc:String = row.disc;
+					var seektime:String = row.seektime;
 					
 					var download:String = row.download;
 					var thumbnail:String = row.thumbnail;
@@ -169,6 +170,7 @@ package business.dbaccess
 						"<presenterDownload>"+presenterDownload+"</presenterDownload>" +
 						"<presentationDownload>"+presentationDownload+"</presentationDownload>" +
 						"<download>"+download+"</download>" +
+						"<seektime>"+seektime+"</seektime>" +
 						"<thumbnail>"+thumbnail+"</thumbnail>" +
 						"</mediapackage>";
 					videos.addItem(new XML(ad));
@@ -274,6 +276,7 @@ package business.dbaccess
 					var presenterDownload:String = row.presenterDownload;
 					var presentationDownload:String = row.presentationDownload;
 					var desc:String = row.disc;
+					var seektime:String = row.seektime;
 					
 					var download:String = row.download;
 					var thumbnail:String = row.thumbnail;
@@ -289,6 +292,7 @@ package business.dbaccess
 						"<presentationDownload>"+presentationDownload+"</presentationDownload>" +
 						"<download>"+download+"</download>" +
 						"<thumbnail>"+thumbnail+"</thumbnail>" +
+						"<seektime>"+seektime+"</seektime>" +
 						"</mediapackage>";
 					videos.addItem(new XML(ad));
 				} 
