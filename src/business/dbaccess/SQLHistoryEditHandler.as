@@ -29,15 +29,15 @@ package business.dbaccess
 			return instance;
 		}
 		
-		public function insertVideo(m:String, t:String, a:String, d:String, s:String, desc:String, pre:String, presen:String, th:String):void
+		public function insertVideo(m:String, t:String, a:String, d:String, s:String, pre:String, presen:String, desc:String, th:String, preDown:String, presenDown:String, downloadState:String):void
 		{
 			con = SQLConnectionHandler.getInstance();
 			
 			insertStatement = new SQLStatement();	
 			insertStatement.sqlConnection = con.getSQLConncection();
 			
-			insertStatement.text = "insert into mh2goHistory (mpid, title, author, date, series, desc, presenter, presentation, thumbnail, seektime, download, adopter) " +
-				"values (:mpid, :title, :author, :date, :series, :desc, :presenter, :presentation, :thumbnail, :seektime, :download, :adopter)";
+			insertStatement.text = "insert into mh2goHistory (mpid, title, author, date, series, desc, presenter, presentation, presenterDownload, presentationDownload, thumbnail, seektime, download, adopter) " +
+				"values (:mpid, :title, :author, :date, :series, :desc, :presenter, :presentation, :presenterDownload, :presentationDownload, :thumbnail, :seektime, :download, :adopter)";
 			
 			insertStatement.parameters[":mpid"] = m;
 			insertStatement.parameters[":title"] = t;
@@ -47,9 +47,11 @@ package business.dbaccess
 			insertStatement.parameters[":desc"] = desc;
 			insertStatement.parameters[":presenter"] = pre;
 			insertStatement.parameters[":presentation"] = presen;
+			insertStatement.parameters[":presenterDownload"] = preDown;
+			insertStatement.parameters[":presentationDownload"] = presenDown;
 			insertStatement.parameters[":thumbnail"] = th;
 			insertStatement.parameters[":seektime"] = "";
-			insertStatement.parameters[":download"] = "false";
+			insertStatement.parameters[":download"] = downloadState;
 			insertStatement.parameters[":adopter"] = URLClass.getInstance().getURLNoSearch();
 			insertStatement.execute();
 		}
@@ -69,16 +71,18 @@ package business.dbaccess
 			updateStatement.execute();
 		}
 		
-		public function updateDownload(id:String, download:String):void
+		public function updateDownload(id:String, download:String, presenter:String, presentation:String):void
 		{
 			con = SQLConnectionHandler.getInstance();
 			
 			updateStatement = new SQLStatement();	
 			updateStatement.sqlConnection = con.getSQLConncection();
 			
-			updateStatement.text = "update mh2goHistory set download = :download where mpid = :mpid";
+			updateStatement.text = "update mh2goHistory set download = :download, presenter = :presenter, presentation = :presentation where mpid = :mpid";
 			
 			updateStatement.parameters[":mpid"] = id;
+			updateStatement.parameters[":presenter"] = presenter;
+			updateStatement.parameters[":presentation"] = presentation;
 			updateStatement.parameters[":download"] = download;
 			
 			updateStatement.execute();

@@ -1,6 +1,5 @@
 package business.download
 {	
-	import business.download.dbaccess.SQLDownloadEditHandler;
 	import business.download.events.DownloadEvent;
 	import business.download.events.OnProgressEvent;
 	
@@ -81,7 +80,6 @@ package business.download
 				"</download>";
 			
 			xml = new XML(download);
-			
 			xmlList.addItem(xml);
 			
 			if(downloadingProcess)
@@ -89,7 +87,6 @@ package business.download
 				downloading();
 				downloadingProcess = false;
 			}
-
 		}
 		
 		private function downloading():void
@@ -123,13 +120,10 @@ package business.download
 			
 			writer.writeBytes(bytes);
 			writer.close();
-			
-			//if(vName != "" && tPath != "")
-			//{
+
 			var pro:OnProgressEvent = new OnProgressEvent(OnProgressEvent.PROGRESS);
 			pro.percent = String(uint(event.bytesLoaded/event.bytesTotal * 100));
 			dispatchEvent(pro);
-			//}
 		}
 		
 		private function onCompleteEvent(event:Event):void 
@@ -137,25 +131,19 @@ package business.download
 			urlStream.removeEventListener(Event.COMPLETE, onCompleteEvent);
 			urlStream.removeEventListener(ProgressEvent.PROGRESS, onProgressEvent);
 			
-			//dispatchEvent(event.clone());
-			
-			// dispatch additional DownloadEvent
-			dispatchEvent(new DownloadEvent(DownloadEvent.DOWNLOAD_COMPLETE, url, file, 0));
-			
-			//if(vName != "" && tPath != "")
-			//{
-			var addVideo:SQLDownloadEditHandler = SQLDownloadEditHandler.getInstance();
-			
-			addVideo.insertDownload(vName, vType, vID);
-				
-			//addVideo.insertVideo(vName, tPath);
-			//}
 			urlStream.close();
 			
 			xmlList.removeItemAt(0);
 			
 			if(xmlList.length > 0)
+			{
 					downloading();
+			}
+			else
+			{
+				// dispatch additional DownloadEvent
+				dispatchEvent(new DownloadEvent(DownloadEvent.DOWNLOAD_COMPLETE, url, file, 0));
+			}
 		
 			downloadingProcess = true;
 		}

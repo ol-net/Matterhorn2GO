@@ -48,8 +48,6 @@ USA
 			import business.dbaccess.events.SQLVideoInsideEvent;
 			import business.download.DownloadThumbnails;
 			import business.download.DownloadVideo;
-			import business.download.dbaccess.SQLDownloadEditHandler;
-			import business.download.dbaccess.SQLDownloadViewHandler;
 			import business.download.events.DownloadEvent;
 			import business.download.events.DownloadedVideoLoadedEvent;
 			import business.download.events.OnProgressEvent;
@@ -72,10 +70,11 @@ USA
 			private var date:String = "";
 			private var thumbnail:String = "";
 			
-			private var download:SQLDownloadViewHandler;
-			
 			private var video1:String;
 			private var video2:String;
+			
+			private var video1Download:String;
+			private var video2Download:String;
 			
 			private var videoOneName:String = "";
 			private var videoTwoName:String = "";
@@ -86,16 +85,22 @@ USA
 			
 			private var sqlHistoryView:SQLHistoryViewHandler;
 			
+			private var localDBData:Boolean = false;
+			
+			private var downloadState:String;
+			
 			//private var interfaces:Vector.<com.adobe.nativeExtensions.Networkinfo.NetworkInterface> = com.adobe.nativeExtensions.Networkinfo.NetworkInfo.networkInfo.findInterfaces();
 			
 			// The initialisation function
 			protected function init():void
 			{					
 				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
-				sqlConnection.initConnection();
+				
+				if(sqlConnection.getSQLConncection() == null)
+					sqlConnection.initConnection();
 				
 				connection.visible = false;
-				background.visible = false;
+				busycontainer.visible = false;
 				
 				//var loadSeekTime:SQLHistoryViewHandler = SQLHistoryViewHandler.getInstance();
 				//loadSeekTime.setSeekTime();
@@ -113,9 +118,7 @@ USA
 				}	
 				*/
 				xpathValue = new XMLHandler();
-				mediapackageID = xpathValue.getResult("mediapackage/@id", data);
-				
-				//loadSeekTime.getSeekTime(mediapackageID);
+				this.mediapackageID = xpathValue.getResult("mediapackage/@id", data);
 				
 				sqlHistoryView = SQLHistoryViewHandler.getInstance();
 				sqlHistoryView.setSeekTime();
@@ -142,6 +145,33 @@ USA
 				}
 			}
 			
+			public function setDescFromDB():void
+			{
+				title_label.text = xmlList.getItemAt(0).title;
+				author.text = xmlList.getItemAt(0).author;
+				detailDate.text = xmlList.getItemAt(0).date;
+				series_text.visible = true;
+				series.text = xmlList.getItemAt(0).series;
+				startvideo.visible = true;
+				
+				thumbnail = xmlList.getItemAt(0).thumbnail;
+				detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
+				
+				textAreaLabel.visible = true;
+				if(xmlList.getItemAt(0).desc != "null")
+				{
+					description.text = xmlList.getItemAt(0).desc;
+				}
+				else
+				{
+					textAreaLabel.visible = false;
+				}
+				
+				this.localDBData = true;
+				
+				createView();
+			}
+			
 			public function getXMLListCollectionFromWeb(event:SegmentLoadedEvent):void
 			{
 				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollectionFromWeb);
@@ -151,34 +181,9 @@ USA
 				
 				setDescription();
 			}
-			
-			private var localDBData:Boolean = false;
-			
-			public function setDescFromDB():void
-			{
-				download = SQLDownloadViewHandler.getInstance();
-				download.addEventListener(DownloadedVideoLoadedEvent.VIDEOLOADED, createView);
-				download.initDownloads(mediapackageID);
-				
-				title_label.text = xmlList.getItemAt(0).title;
-				author.text = xmlList.getItemAt(0).author;
-				detailDate.text = xmlList.getItemAt(0).date;
-				series_text.visible = true;
-				series.text = xmlList.getItemAt(0).series;
-				startvideo.visible = true;
-				detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
-				textAreaLabel.visible = true;
-				description.text = xmlList.getItemAt(0).desc;
-				
-				this.localDBData = true;
-			}
 						
 			public function setDescription():void
 			{
-				download = SQLDownloadViewHandler.getInstance();
-				download.addEventListener(DownloadedVideoLoadedEvent.VIDEOLOADED, createView);
-				download.initDownloads(mediapackageID);
-				
 				title_label.text = xmlList.getItemAt(0).title;
 				
 				author.text = xmlList.getItemAt(0).creators.creator;
@@ -227,10 +232,14 @@ USA
 					buildImagePath(file.url);
 				}
 				
-				textAreaLabel.visible = true;
 				description.text = dataHandler.getDescriptionListCollection();
 				
+				if(description.text != "")
+					textAreaLabel.visible = true;
+				
 				this.localDBData = false;
+				
+				createView();
 			}
 			
 			protected function createImagePath(e:DownloadEvent):void
@@ -247,203 +256,51 @@ USA
 				detailImage.source = thumbnail;
 			}
 			
-			public function createView(e:DownloadedVideoLoadedEvent):void
+			public function createView():void
 			{
-				if(localDBData)
+				var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+				
+				videoPath.video1Offline = false;
+				videoPath.video2Offline = false;
+				
+				videoPath.path1 = "";
+				videoPath.path2 = "";
+				
+				if(!localDBData)
 				{
-					download.removeEventListener(DownloadedVideoLoadedEvent.VIDEOLOADED, createView);
+					video1 = videoPath.getPath(xmlList.getItemAt(0))[0];
+					video2 = videoPath.getPath(xmlList.getItemAt(0))[1];
 					
-					var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+					video1Download = videoPath.getPathToDownload(xmlList.getItemAt(0))[0];
+					video2Download = videoPath.getPathToDownload(xmlList.getItemAt(0))[1];
 					
-					videoPath.video1Offline = false;
-					videoPath.video2Offline = false;
-					
-					videoPath.path1 = "";
-					videoPath.path2 = "";
-					
-					video1 = videoPath.getPathToDownload(xmlList.getItemAt(0))[0];
-					video2 = videoPath.getPathToDownload(xmlList.getItemAt(0))[1];
-					
-					buildView();
+					downloadState = "false";
 				}
 				else
 				{
+					video1 = xmlList.getItemAt(0).presenter;
+					video2 = xmlList.getItemAt(0).presentation;
+
+					video1Download = xmlList.getItemAt(0).presenterDownload;
+					video2Download = xmlList.getItemAt(0).presentationDownload;
 					
+					downloadState = xmlList.getItemAt(0).download;
 				}	
 				
-			}
-			
-			public function buildView():void
-			{
-				if((video1 != "" && download.getVideo() == "") && (video2 != "" && download.getVideo2() == ""))
-				{
-					presenter.visible = true;
-					presentation.visible = true;
-					download_button.visible = true;
-				}
-				else if(video1 == "" && video2 != "" && download.getVideo() == "")
-				{
-					presenter.visible = false;
-					presenter.selected = false;
-					presentation.visible = true;
-					download_button.visible = true;
-				}
-				else if(video2 == "" && video1 != "" && download.getVideo() == "")
-				{
-					presenter.visible = true;
-					presentation.visible = false;
-					presentation.selected = false;
-					download_button.visible = true;
-				}
-				else
-				{
-					presenter.visible = false;
-					presentation.visible = false;
-					download_button.visible = false;
-					delete_button.visible = true;
-					offlineLabel.visible = true;
-				}	
-				
-				var r:RegExp = /\//g;
-				var r2:RegExp = /\:/g;
-				
-				// first creation of videoname
 				if(video1 != "")
 				{
-					var video:String = video1;
-					
-					var videoName:String = "";
-					
-					if(video.search("file:///") != -1)
-					{
-						videoName = video;
-					}
-					else
-					{
-						videoName = video.replace(r, "");
-						videoName = "mh2go/"+ videoName.replace(r2, "");
-					}
-					videoOneName = videoName;
-				}
-				else 
-				{
-					videoOneName = "";
+					videoPath.video1Offline = true;
 				}
 				
-				// creation of videoname two
 				if(video2 != "")
 				{
-					var video2:String = video2;
-					var videoName2:String = "";
-					
-					if(video2.search("file:///") != -1) 
-					{
-						videoName2 = video2;
-					}
-					else
-					{
-						videoName2 = video2.replace(r, "");
-						videoName2 = "mh2go/"+ videoName2.replace(r2, "");
-					}
-					videoTwoName = videoName2;
+					videoPath.video2Offline = true;
 				}
-				else 
-				{
-					videoTwoName = "";
-				}
-				
-				if(download.getVideo() != "")
-				{
-					var dele:Boolean;
-					
-					if(download.getType() == "presenter")
-					{
-						dele = File.userDirectory.resolvePath(videoOneName).exists;
-					}
-					else if(download.getType() == "presentation")
-					{
-						dele = File.userDirectory.resolvePath(videoTwoName).exists;
-					}
-					
-					if(!dele)
-					{
-						deleteVideo();
-					}
-					else
-					{
-						var videoPath3:GetVideoPathHandler = GetVideoPathHandler.getInstance();
-						
-						if(download.getType() == "presenter" || download.getType2() != "")
-						{
-							/*
-							if(videoOneName == "" && videoTwoName != "")
-							{
-							videoOneName = videoTwoName;
-							}
-							*/
-							
-							videoPath3.path1 = videoOneName;
-							videoPath3.video1Offline = true;
-							
-							if(videoPath3.path2 == "")
-							{
-								videoPath3.path2 = "";
-								videoPath3.video2Offline = true;
-							}
-						}
-						else if(download.getType() == "presentation" && download.getType2() == "")
-						{
-							videoPath3.path1 = videoTwoName;
-							videoPath3.video1Offline = true;
-							
-							if(videoPath3.path2 == "")
-							{
-								videoPath3.path2 = "";
-								videoPath3.video2Offline = true;
-							}
-						}
-					}
-				}
-				
-				
-				if(download.getVideo2() != "")
-				{
-					var del:Boolean = File.userDirectory.resolvePath(videoTwoName).exists;
-					
-					if(!del)
-					{
-						deleteVideo();
-					}
-					else
-					{
-						var videoPath2:GetVideoPathHandler = GetVideoPathHandler.getInstance();
-						videoPath2.path2 = videoTwoName;
-						videoPath2.video2Offline = true;
-						
-						if(download.getVideo() == "")
-						{
-							videoPath2.path1 = "";
-							videoPath2.video1Offline = true;
-						}
-					}
-				}
-			}
-			
-			protected function loadVideoView():void
-			{
-				
-				if(download.getVideo() != "" || download.getVideo2() != "")
-				{
-					var videoPath2:GetVideoPathHandler = GetVideoPathHandler.getInstance();
 
-					videoPath2.video1Offline = true;
-					videoPath2.video2Offline = true;
-				}
+				videoPath.path1 = video1;
+				videoPath.path2 = video2;
 				
-				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
-
-				this.navigator.pushView(PlayerView, xmlList.getItemAt(0));
-				connection.visible = false;
+				buildView();
 				
 				checkVideoInside = SQLHistoryViewHandler.getInstance();
 				checkVideoInside.addEventListener(SQLVideoInsideEvent.SELECTVIDEOCOMPLETE, insertNewVideo);
@@ -451,10 +308,74 @@ USA
 				checkVideoInside.checkVideo(mediapackageID);
 			}
 			
+			public function downloadView():void
+			{
+				if(video1 != "" && video2 != "")
+				{
+					presenter.visible = true;
+					presentation.visible = true;
+					
+					presenter.selected = true;
+					presentation.selected = true;
+					
+					download_button.visible = true;
+					delete_button.visible = false;
+					offlineLabel.visible = false;
+				}
+				else if(video1 != "" && video2 == "")
+				{
+					presenter.visible = true;
+					presentation.visible = false;
+					
+					presenter.selected = true;
+					presentation.selected = false;
+					
+					download_button.visible = true;
+					delete_button.visible = false;
+					offlineLabel.visible = false;
+				}
+				else if(video1 == "" && video2 != "")
+				{
+					presenter.visible = false;
+					presentation.visible = true;
+					
+					presenter.selected = false;
+					presentation.selected = true;
+					
+					download_button.visible = true;
+					delete_button.visible = false;
+					offlineLabel.visible = false;
+				}
+			}
+			
+			public function buildView():void
+			{
+				if(xmlList.getItemAt(0).download == "true")
+				{
+					presenter.visible = false;
+					presentation.visible = false;
+					download_button.visible = false;
+					delete_button.visible = true;
+					offlineLabel.visible = true;
+				}
+				else
+				{
+					downloadView();
+				}
+			}
+			
+			protected function loadVideoView():void
+			{
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				
+				this.navigator.pushView(PlayerView, xmlList.getItemAt(0));
+				
+				connection.visible = false;
+			}
+			
 			public function insertNewVideo(e:SQLVideoInsideEvent):void
 			{
 				checkVideoInside.removeEventListener(SQLVideoInsideEvent.SELECTVIDEOCOMPLETE, insertNewVideo);
-
 				insertVideo = SQLHistoryEditHandler.getInstance();
 
 				if(checkVideoInside.getVideoInsideStatus())
@@ -462,45 +383,83 @@ USA
 					insertVideo.deleteVideo(mediapackageID);
 				}
 				
-				insertVideo.insertVideo(mediapackageID, title_label.text, author.text, detailDate.text, series.text, "", "", description.text, thumbnail);
+				insertVideo.insertVideo(mediapackageID, title_label.text, author.text, detailDate.text, series.text, video1, video2, description.text, thumbnail, video1Download, video2Download, downloadState);
 			}
 			
-			public function deleteVideo():void
+			public function updateLocalDBWithNewVideoPath(e:SegmentLoadedEvent):void
 			{
-				var del:SQLDownloadEditHandler = SQLDownloadEditHandler.getInstance();
-				del.deleteDownload(mediapackageID);
+				dataHandler.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollectionFromWeb);
+				dataHandler.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				
+				var xmlCList:XMLListCollection = dataHandler.getMediapackageListCollection();
 				
 				var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+				
 				videoPath.video1Offline = false;
 				videoPath.video2Offline = false;
+				
 				videoPath.path1 = "";
 				videoPath.path2 = "";
+	
+				video1 = videoPath.getPath(xmlCList.getItemAt(0))[0];
+				video2 = videoPath.getPath(xmlCList.getItemAt(0))[1];
+				
+				// insert new path in db
+				insertVideo = SQLHistoryEditHandler.getInstance();
+				insertVideo.updateDownload(mediapackageID, "false", video1, video2);
 				
 				if(videoOneName != "")
 				{			
-					if(File.userDirectory.resolvePath(videoOneName).exists)
-						File.userDirectory.resolvePath(videoOneName).deleteFileAsync();
+					//if(File.userDirectory.resolvePath(videoOneName).exists)
+					//	File.userDirectory.resolvePath(videoOneName).deleteFile();
+					var file:File = File.desktopDirectory.resolvePath(videoOneName);
+					
+					if(file.exists)
+						file.deleteFile();
 				}
 				
 				if(videoTwoName != "")
 				{
-					if(File.userDirectory.resolvePath(videoTwoName).exists)
-						File.userDirectory.resolvePath(videoTwoName).deleteFileAsync();
+					var file2:File = File.desktopDirectory.resolvePath(videoOneName);
+					
+					if(file2.exists)
+						file2.deleteFile();
+					
+					//if(File.userDirectory.resolvePath(videoTwoName).exists)
+					//	File.userDirectory.resolvePath(videoTwoName).deleteFile();
 				}
+
 				
-				delete_button.visible = false;
-				download_button.visible = true;
-				offlineLabel.visible = false;
+				videoPath.video2Offline = false;
+				
+				videoPath.path1 = "";
+				videoPath.path2 = "";
 				
 				if(video1 != "")
 				{
 					presenter.visible = true;
+					videoPath.video1Offline = true;
+					videoPath.path1 = video1;
 				}
 				
 				if(video2 != "")
 				{
 					presentation.visible = true;
+					videoPath.video2Offline = true;
+					videoPath.path2 = video2;
 				}
+				
+				delete_button.visible = false;
+				download_button.visible = true;
+				offlineLabel.visible = false;
+			}
+			
+			public function deleteVideo():void
+			{
+				dataHandler = SegmentDataHandler.getInstance();
+				dataHandler.init(mediapackageID);
+				dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, updateLocalDBWithNewVideoPath);
+				dataHandler.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 			}
 			
 			private var index:uint;
@@ -508,9 +467,13 @@ USA
 				
 			public function downloadVideo():void
 			{
-				background.visible = true;
+				busycontainer.visible = true;
 				
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;	
+				
+				var r:RegExp = /\//g;
+				var r2:RegExp = /\:/g;
+				var konst:String = "mh2go/";
 				
 				if(presenter.selected && !presentation.selected)
 				{
@@ -519,6 +482,10 @@ USA
 					presenter.visible = false;
 					presentation.visible = false;
 					download_button.visible = false;
+					
+					videoOneName = "";
+					videoOneName = video1Download.replace(r, "");
+					videoOneName = konst + videoOneName.replace(r2, "");
 				}
 				else if(presentation.selected && !presenter.selected)
 				{
@@ -527,6 +494,10 @@ USA
 					presenter.visible = false;
 					presentation.visible = false;
 					download_button.visible = false;
+					
+					videoTwoName = "";
+					videoTwoName = video2Download.replace(r, "");
+					videoTwoName = konst + videoTwoName.replace(r2, "");
 				}
 				else if(presentation.selected && presenter.selected)
 				{
@@ -535,29 +506,35 @@ USA
 					presenter.visible = false;
 					presentation.visible = false;
 					download_button.visible = false;
+					
+					videoOneName = "";
+					videoOneName = video1Download.replace(r, "");
+					videoOneName = konst + videoOneName.replace(r2, "");
+					
+					videoTwoName = "";
+					videoTwoName = video2Download.replace(r, "");
+					videoTwoName = konst + videoTwoName.replace(r2, "");
 				}
 				else
 				{
-					background.visible = false;
+					busycontainer.visible = false;
 					return;
 				}
 				
-				var videoPath:String = "";
-				
 				if(index == 0)
 				{
-					downloadFunction(videoOneName, video1, "presenter");
+					downloadFunction(videoOneName, video1Download, "presenter");
 				}
 				
 				if(index == 1)
 				{
-					downloadFunction(videoTwoName, video2, "presentation");
+					downloadFunction(videoTwoName, video2Download, "presentation");
 				}
 				
 				if(index == 2)
 				{
-					downloadFunction(videoOneName, video1, "present");
-					downloadFunction(videoTwoName, video2, "presentation");
+					downloadFunction(videoOneName, video1Download, "present");
+					downloadFunction(videoTwoName, video2Download, "presentation");
 				}
 			}
 			
@@ -565,6 +542,8 @@ USA
 			
 			public function downloadFunction(videoPath:String, dL:String, t:String):void
 			{
+				imagecontainer.visible = false;
+
 				var downloadLink:String = dL;
 
 				videoPath = videoPath;
@@ -584,12 +563,12 @@ USA
 				}
 				else
 				{
-					background.visible = false;
+					busycontainer.visible = false;
 				}
 			}
 			
 			protected function popThisView():void
-			{
+			{	
 				navigator.popView();
 				connection.visible = false;
 			}
@@ -616,17 +595,14 @@ USA
 			
 			public function downloadComplete(e:DownloadEvent):void
 			{
-				downLoader.removeEventListener(DownloadEvent.DOWNLOAD_COMPLETE, downloadComplete);
-				downLoader.removeEventListener(OnProgressEvent.PROGRESS, onProgressEvent); 
+				//downLoader.removeEventListener(DownloadEvent.DOWNLOAD_COMPLETE, downloadComplete);
+				//downLoader.removeEventListener(OnProgressEvent.PROGRESS, onProgressEvent); 
 				
 				delete_button.visible = true;
 				download_button.visible = false;
 				offlineLabel.visible = true;
 				
 				var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
-				
-				var r:RegExp = /\//g;
-				var re:RegExp = /\:/g;
 
 				if(index == 0)
 				{		
@@ -654,8 +630,14 @@ USA
 					videoPath.path2 = videoTwoName;
 					videoPath.video2Offline = true;
 				}
+				
+				imagecontainer.visible = true;
+				
+				// insert new path in db
+				insertVideo = SQLHistoryEditHandler.getInstance();
+				insertVideo.updateDownload(mediapackageID, "true", videoPath.path1, videoPath.path2);
 
-				background.visible = false;
+				busycontainer.visible = false;
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;	
 			}
 		]]>
@@ -762,7 +744,7 @@ USA
 						backgroundColor="#BDBDBD" 
 						fontFamily="_sans" 
 						x="10" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + 110}">
-					<s:Group width="{navigator.width - 40}" height="{detailImage.height + 20}">
+					<s:Group id="imagecontainer" width="{navigator.width - 40}" height="{detailImage.height + 20}">
 						<s:Image id="detailImage"
 								 x="{navigator.width / 2 - 120}" y="10" 
 								 height="150" width="200"
@@ -772,6 +754,18 @@ USA
 											  click="loadVideoView();"
 											  buttonMode="true" 
 											  skinClass="views.skins.PlayButtonSkin"/>
+					</s:Group>
+					
+					<s:Group id="busycontainer" visible="false" width="{navigator.width - 40}" height="{detailImage.height + 20}">
+						
+						<s:BusyIndicator id="bi" width="70" height="70"
+										 x="{navigator.width / 2 - 53}" 
+										 y ="40"
+										 symbolColor="black"/>
+						
+						<s:Label id="loader" color="black" 
+								 x="{navigator.width / 2 - 90}" 
+								 y ="130"/>
 					</s:Group>
 				</s:View>        
 				
@@ -796,14 +790,14 @@ USA
 						  y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 180}"/>
 				
 				<s:Button id="delete_button" click="deleteVideo()" visible="false"
-						  label="delete offline mode" height="35" 
-						  x="{navigator.width / 2 - 95}" 
+						  label="use streaming" height="35" 
+						  x="{navigator.width / 2 - 75}" 
 						  y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 180}"/>
 				
 				<s:Label id="offlineLabel" 
 						 visible="false"
-						 text ="Offline mode active"
-						 x="{navigator.width / 2 - 80}" 
+						 text ="offline mode"
+						 x="{navigator.width / 2 - 53}" 
 						 y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 145}"
 						 fontFamily="_sans"/>
 				
@@ -823,7 +817,7 @@ USA
 			</s:Group>
 		</s:Scroller>
 	</s:VGroup> 
-	
+	<!--
 	<s:View id="background" visible="false"
 			backgroundColor="black"
 			alpha="0.7"
@@ -843,4 +837,5 @@ USA
 			
 		</s:Group>
 	</s:View>
+	-->
 </s:View>

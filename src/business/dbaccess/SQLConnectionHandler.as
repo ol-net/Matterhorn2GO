@@ -30,7 +30,7 @@ package business.dbaccess
 		import flash.events.SQLErrorEvent;
 		import flash.filesystem.File;
 		
-		private var aConn:SQLConnection;
+		private var aConn:SQLConnection = null;
 		private var sqlStatement:SQLStatement;
 		private var dbFile:File;
 		
@@ -78,6 +78,7 @@ package business.dbaccess
 					"author TEXT NOT NULL, date TEXT NOT NULL, " +
 					"series TEXT NOT NULL, desc TEXT NOT NULL, " +
 					"presenter TEXT NOT NULL, presentation TEXT NOT NULL, " +
+					"presenterDownload TEXT NOT NULL, presentationDownload TEXT NOT NULL, " +
 					"thumbnail TEXT NOT NULL, seektime TEXT NOT NULL, " +
 					"download TEXT NOT NULL, adopter TEXT NOT NULL)";
 				

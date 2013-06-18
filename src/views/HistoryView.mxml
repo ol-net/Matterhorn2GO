@@ -98,7 +98,9 @@ USA
 			public function init():void
 			{	
 				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
-				//sqlConnection.initConnection();
+				
+				if(sqlConnection.getSQLConncection() == null)
+					sqlConnection.initConnection();
 				
 				btn_sort.visible = true;
 				

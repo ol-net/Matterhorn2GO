@@ -19,7 +19,7 @@ USA
 */
 package business.datahandler
 {
-	import business.download.DownloadThumbnails;
+	import business.download.DownloadEpisodeThumbnails;
 	import business.core.LoadNextEpisodes;
 	import business.auth.Auth;
 	import business.auth.ConnectionChecker;
@@ -29,7 +29,7 @@ package business.datahandler
 	import business.auth.events.ConnectionCheckerEvent;
 	import business.core.NamespaceRemover;
 	
-	import business.download.events.DownloadEvent;
+	import business.download.events.EpisodeThumbnailLoadedEvent;
 	import business.datahandler.events.NotConnectedEvent;
 	import business.datahandler.events.VideoAvailableEvent;
 	import business.datahandler.events.VideoNotFoundEvent;
@@ -85,6 +85,9 @@ package business.datahandler
 		private var imageName:String = "";
 		
 		private var downloaded:Boolean = false;
+		
+		private var downLoader:DownloadEpisodeThumbnails;
+
 		
 		public function EpisodesDataHandler()
 		{			
@@ -234,9 +237,11 @@ package business.datahandler
 			
 			//while(index < xmlVideos.length)
 			//{
+				//imageDownloader();
+				//index = index + 1;
 			imageDownloader();
-			//	index = index + 1;
-		//	}
+
+			//}
 		}
 		
 		public function updateList():void
@@ -251,7 +256,7 @@ package business.datahandler
 				publicVideos.addItem(xml);
 			}
 		}
-		
+				
 		public function imageDownloader():void 
 		{
 			if (index < xmlVideos.length)
@@ -274,9 +279,9 @@ package business.datahandler
 				{
 					file = File.userDirectory.resolvePath(imageName);
 					
-					var downLoader:DownloadThumbnails = new DownloadThumbnails();
+					downLoader = new DownloadEpisodeThumbnails();
 					
-					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createNewElement);
+					downLoader.addEventListener(EpisodeThumbnailLoadedEvent.DOWNLOAD_COMPLETE, createNewElement);
 					
 					downLoader.download(thumb, file, "", "", index);
 				}
@@ -303,8 +308,10 @@ package business.datahandler
 			dispatchEvent(notConnected);
 		}
 		
-		public function createNewElement(e:DownloadEvent):void
+		public function createNewElement(e:EpisodeThumbnailLoadedEvent):void
 		{
+			downLoader.removeEventListener(EpisodeThumbnailLoadedEvent.DOWNLOAD_COMPLETE, createNewElement);
+
 			buildElement(e.index, e.file.url);
 		}
 		

@@ -24,6 +24,8 @@ package business.player
 	
 	import flash.events.EventDispatcher;
 	
+	import flash.filesystem.File;
+	
 	import business.player.events.PlayerLoadedEvent;
 	
 	//Sets the size of the SWF
@@ -93,20 +95,19 @@ package business.player
 			//var nett:RTMPDynamicStreamingNetLoader = new RTMPDynamicStreamingNetLoader();
 			//var url:DynamicStreamingResource = new DynamicStreamingResource(progressive_path);
 			
-			firstElement = new VideoElement(new URLResource(progressive_path), net);
-
-			//firstElement.resource = new StreamingURLResource(progressive_path);
-
-			/*
-			if(progressive_path.search("file:///") != -1) 
+			//firstElement = new VideoElement(new URLResource(progressive_path));
+						
+			if(progressive_path.search("mh2go") != -1) 
 			{
-				firstElement = new VideoElement(new URLResource( progressive_path ));
+				var _url:String = File.userDirectory.resolvePath(progressive_path).nativePath;   
+				_url = "file:///" + _url;
+				firstElement = new VideoElement(new URLResource( _url ), net);
 			}
 			else
 			{ 
 				firstElement = new VideoElement(new URLResource( progressive_path ), net);
 			}
-			*/
+			
 			//mediaFactory = new DefaultMediaFactory();
 			//firstElement = mediaFactory.createMediaElement( new URLResource( progressive_path ));
 			
@@ -167,14 +168,18 @@ package business.player
 			//var secoundVideoElement:MediaElement = mediaFactory.createMediaElement( new URLResource( progressive_path_two ));
 			
 			var net2:NetLoader = new NetLoader();
-			// Set the stream reconnect properties
-			//net2.reconnectTimeout = 2; // in seconds
 			
-			secondElement = new VideoElement(new URLResource(progressive_path2), net2);
+			if(progressive_path2.search("mh2go") != -1) 
+			{
+				var _url:String = File.userDirectory.resolvePath(progressive_path2).nativePath;   
+				_url = "file:///" + _url;
+				secondElement = new VideoElement(new URLResource(_url), net2);
+			}
+			else
+			{ 
+				secondElement = new VideoElement(new URLResource( progressive_path2 ), net2);
+			}
 			
-			//secondElement = mediaFactory.createMediaElement(new URLResource(progressive_path2));
-
-
 			oProxyElementTwo = new OProxyElement(secondElement);
 			
 			// Create the ParallelElement and add the left and right

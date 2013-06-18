@@ -47,8 +47,6 @@ package business.core
 			var videoPath:String = object[0];
 			var videoPathTwo:String = object[1];
 			
-			//trace(videoPath)
-			
 			if(xpathValue.getResult(videoPath, data) == "")
 			{
 				object = getVideoPath("presentation/delivery", "presenter/delivery", data);

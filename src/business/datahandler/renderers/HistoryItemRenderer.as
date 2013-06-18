@@ -27,6 +27,7 @@ package business.datahandler.renderers
 	import flash.text.TextFormat;
 	
 	import mx.collections.XMLListCollection;
+	import flash.filesystem.File;
 	
 	import spark.primitives.BitmapImage;
 	import spark.primitives.Graphic;
@@ -201,7 +202,8 @@ package business.datahandler.renderers
 		{			
 			titleField.text = String(data.title);
 			nameField.text = String(data.author);
-			avatar.source = String(data.thumbnail);
+			avatar.source = File.userDirectory.resolvePath(String(data.thumbnail));
+			trace(String(data.thumbnail))
 		}
 		
 		override protected function updateSkin():void

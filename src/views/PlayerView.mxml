@@ -110,8 +110,8 @@ USA
 			[Bindable]
 			private var duration_text:String = "00:00:00";
 			
-			private var videos:XML;
-			private var segment_xml:SegmentDataHandler;
+			//private var videos:XML;
+			//private var segment_xml:SegmentDataHandler;
 			
 			private var minSegmentIndex:int = 0;
 			private var maxSegmentIndex:int;
@@ -151,6 +151,7 @@ USA
 				}
 				
 				mediapackageID = data.@id;
+			
 				
 				//editTime.updateVideoTime(mediapackageID, "144");
 				/*
@@ -181,12 +182,14 @@ USA
 				presentation_button.setVisible(false);
 				parallel_button.setVisible(false);
 				
+				/*
 				if(URLClass.getCommentSupport()){
 					annotation_button.setVisible(true);
 				}
 				else{
 					annotation_button.setVisible(false);
 				}
+				*/
 				
 				seekBar.addEventListener(MouseEvent.MOUSE_DOWN, stopUpdate);
 				seekBar.addEventListener(MouseEvent.MOUSE_UP, startUpdate);
@@ -197,6 +200,8 @@ USA
 				
 				seekBar.width = navigator.width - 50;
 				
+				
+				/*
 				var segmentArray:Array = String(data).split(" ");;		
 				
 				if(segmentArray.length == 2)
@@ -211,23 +216,29 @@ USA
 					//seekPosition = SeekPosition.getInstance().getPosition() * 60000;
 					initPlayer();
 				}
+				*/
+				
+				setTimer();
+				
+				initPlayer();
 				
 				this.navigator.addEventListener(ResizeEvent.RESIZE, setSize);
 				this.navigator.addEventListener(MouseEvent.CLICK, getButtonPanel);
 				
 				this.addEventListener("keyDown", handleButtons, false, 1);
 				this.addEventListener("keyUp", handleButtons, false, 1);
+								
+				//var	xpathValue:XMLHandler = new XMLHandler();
 				
-				setTimer();
-				
-				var	xpathValue:XMLHandler = new XMLHandler();
-				
+				/*
 				segment_xml = SegmentDataHandler.getInstance();
 				segment_xml.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
 				segment_xml.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				segment_xml.init(xpathValue.getResult("mediapackage/@id", data));
+				*/
 			}
 			
+			/*
 			public function getXMLListCollection(event:SegmentLoadedEvent):void
 			{
 				videos = segment_xml.getSegmentAsXML();
@@ -247,6 +258,7 @@ USA
 				}	
 			}
 			
+			
 			public function setData(e:SegmentLoadedEvent):void
 			{
 				mediapackage.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setData);
@@ -259,6 +271,8 @@ USA
 				
 				initPlayer();
 			}
+			
+			*/
 			
 			private function updateTime(e:MouseEvent):void
 			{
@@ -421,8 +435,8 @@ USA
 			{
 				var getVideo:GetVideoPathHandler = GetVideoPathHandler.getInstance();
 				
-				videoPath = getVideo.getPath(data)[0];
-				videoPathTwo = getVideo.getPath(data)[1];
+				videoPath = getVideo.path1;
+				videoPathTwo = getVideo.path2;
 				
 				if(videoPath == "" && videoPathTwo != "")
 				{
@@ -586,6 +600,8 @@ USA
 				}
 			}
 			
+			/*
+			
 			public function segmentPlayFW():void
 			{
 				if(osmfplayer != null)
@@ -710,6 +726,8 @@ USA
 					navigator.pushView(AnnotationView, data);
 				}
 			}
+			
+			*/
 			
 			private function stopUpdate(e:MouseEvent):void
 			{
@@ -841,8 +859,8 @@ USA
 				seekBar.removeEventListener(MouseEvent.MOUSE_UP, startUpdate);
 				seekBar.removeEventListener(MouseEvent.MOUSE_MOVE, updateTime);
 				
-				segment_xml.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
-				segment_xml.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+				//segment_xml.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
+				//segment_xml.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
 				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				this.navigator.removeEventListener(MouseEvent.CLICK, getButtonPanel);
@@ -981,23 +999,24 @@ USA
 										  y = "0" />
 					
 					<business:ImageButton id="backw_button" click="playBW()" 
-										  buttonMode="true" visible="false"
+										  buttonMode="true" visible="true"
 										  skinClass="views.skins.BackwardsButtonSkin"
 										  x = "{navigator.width / 2 - 110.5}"
 										  y = "0" />
-					
+					<!--
 					<business:ImageButton id="segment_backw_button" click="segmentPlayBW()" 
 										  buttonMode="true" 
 										  skinClass="views.skins.SegmentBackwardsSkin"
 										  x = "{navigator.width / 2 - 110.5}"
 										  y = "0" />
-					
+					-->
 					<business:ImageButton id="forw_button" click="playFW()"
-										  buttonMode="true" visible="false"
+										  buttonMode="true" visible="true"
 										  skinClass="views.skins.ForwardsButtonSkin"
 										  x = "{navigator.width / 2 + 10.5}"
 										  y = "0" />
 					
+					<!--
 					<business:ImageButton id="segment_forw_button" click="segmentPlayFW()"
 										  buttonMode="true" 
 										  skinClass="views.skins.SegmentForwardsSkin"
@@ -1009,6 +1028,8 @@ USA
 										  buttonMode="true" 
 										  skinClass="views.skins.CommentButtonSkin"
 										  x = "{navigator.width / 2 + 62.5}" y = "0" />
+					
+					-->
 				</s:Group>
 			</s:HGroup>
 			

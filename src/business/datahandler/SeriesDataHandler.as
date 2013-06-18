@@ -19,7 +19,7 @@ USA
 */
 package business.datahandler
 {
-	import business.download.DownloadThumbnails;
+	import business.download.DownloadSeriesThumbnails;
 	import business.core.LoadNextSeries;
 	import business.auth.Auth;
 	import business.auth.ConnectionChecker;
@@ -30,7 +30,7 @@ package business.datahandler
 	import business.auth.events.ConnectionCheckerEvent;
 	import business.download.events.DownloadEvent;
 	import business.datahandler.events.NotConnectedEvent;
-	import business.download.events.ThumbnailLoadedEvent;
+	import business.download.events.SeriesThumbnailLoadedEvent;
 	import business.datahandler.events.VideoAvailableEvent;
 	import business.datahandler.events.VideoNotFoundEvent;
 	import business.datahandler.events.SeriesLoadedEvent;
@@ -88,7 +88,7 @@ package business.datahandler
 		
 		private var imageName:String = "";
 		
-		private var downLoader:DownloadThumbnails;
+		private var downLoader:DownloadSeriesThumbnails;
 		
 		public function SeriesDataHandler()
 		{
@@ -234,8 +234,8 @@ package business.datahandler
 				
 				if(!File.userDirectory.resolvePath(imageName).exists) 
 				{
-					downLoader = new DownloadThumbnails();
-					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createNewElement);
+					downLoader = new DownloadSeriesThumbnails();
+					downLoader.addEventListener(SeriesThumbnailLoadedEvent.DOWNLOAD_COMPLETE, createNewElement);
 					
 					file = File.userDirectory.resolvePath(imageName);
 					downLoader.download(thumb, file, "", "", index);
@@ -248,8 +248,10 @@ package business.datahandler
 			}
 		}
 		
-		public function createNewElement(e:DownloadEvent):void
+		public function createNewElement(e:SeriesThumbnailLoadedEvent):void
 		{
+			downLoader.removeEventListener(SeriesThumbnailLoadedEvent.DOWNLOAD_COMPLETE, createNewElement);
+
 			buildElement(e.index, e.file.url);
 		}
 	

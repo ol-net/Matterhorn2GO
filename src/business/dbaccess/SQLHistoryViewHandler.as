@@ -150,7 +150,13 @@ package business.dbaccess
 					var author:String = row.author;
 					var date:String = row.date;
 					var series:String = row.series;
+					var presenter:String = row.presenter;
+					var presentation:String = row.presentation;
+					var presenterDownload:String = row.presenterDownload;
+					var presentationDownload:String = row.presentationDownload;
 					var desc:String = row.disc;
+					
+					var download:String = row.download;
 					var thumbnail:String = row.thumbnail;
 					ad = "<mediapackage id='"+mpid+"'>" +
 						"<title>"+title+"</title>" +
@@ -158,6 +164,11 @@ package business.dbaccess
 						"<date>"+date+"</date>" +
 						"<series>"+series+"</series>" +
 						"<desc>"+desc+"</desc>" +
+						"<presenter>"+presenter+"</presenter>" +
+						"<presentation>"+presentation+"</presentation>" +
+						"<presenterDownload>"+presenterDownload+"</presenterDownload>" +
+						"<presentationDownload>"+presentationDownload+"</presentationDownload>" +
+						"<download>"+download+"</download>" +
 						"<thumbnail>"+thumbnail+"</thumbnail>" +
 						"</mediapackage>";
 					videos.addItem(new XML(ad));
@@ -253,16 +264,31 @@ package business.dbaccess
 				for (var i:int = 0; i < numResults; i++) 
 				{ 
 					var row:Object = result.data[i]; 
-					var mpid:String = row.mpid;
+					var mpid:String = String(row.mpid);
 					var title:String = row.title;
 					var author:String = row.author;
 					var date:String = row.date;
+					var series:String = row.series;
+					var presenter:String = row.presenter;
+					var presentation:String = row.presentation;
+					var presenterDownload:String = row.presenterDownload;
+					var presentationDownload:String = row.presentationDownload;
+					var desc:String = row.disc;
+					
+					var download:String = row.download;
 					var thumbnail:String = row.thumbnail;
 					ad = "<mediapackage id='"+mpid+"'>" +
-							"<title>"+title+"</title>" +
-							"<author>"+author+"</author>" +
-							"<date>"+date+"</date>" +
-							"<thumbnail>"+thumbnail+"</thumbnail>" +
+						"<title>"+title+"</title>" +
+						"<author>"+author+"</author>" +
+						"<date>"+date+"</date>" +
+						"<series>"+series+"</series>" +
+						"<desc>"+desc+"</desc>" +
+						"<presenter>"+presenter+"</presenter>" +
+						"<presentation>"+presentation+"</presentation>" +
+						"<presenterDownload>"+presenterDownload+"</presenterDownload>" +
+						"<presentationDownload>"+presentationDownload+"</presentationDownload>" +
+						"<download>"+download+"</download>" +
+						"<thumbnail>"+thumbnail+"</thumbnail>" +
 						"</mediapackage>";
 					videos.addItem(new XML(ad));
 				} 
