@@ -388,6 +388,8 @@ USA
 				}
 				
 				insertVideo.insertVideo(mediapackageID, title_label.text, author.text, detailDate.text, series.text, video1, video2, description.text, thumbnail, video1Download, video2Download, downloadState, seektime);
+				
+				System.gc();
 			}
 			
 			public function updateLocalDBWithNewVideoPath(e:SegmentLoadedEvent):void
@@ -525,6 +527,22 @@ USA
 					return;
 				}
 				
+				if(videoOneName != "")
+				{			
+					var file:File = File.desktopDirectory.resolvePath(videoOneName);
+					
+					if(file.exists)
+						file.deleteFile();
+				}
+				
+				if(videoTwoName != "")
+				{
+					var file2:File = File.desktopDirectory.resolvePath(videoOneName);
+					
+					if(file2.exists)
+						file2.deleteFile();
+				}
+				
 				if(index == 0)
 				{
 					downloadFunction(videoOneName, video1Download, "presenter");
@@ -643,6 +661,8 @@ USA
 
 				busycontainer.visible = false;
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;	
+				
+				System.gc();
 			}
 		]]>
 	</fx:Script>

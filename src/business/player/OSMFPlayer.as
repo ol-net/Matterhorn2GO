@@ -2,6 +2,10 @@ package business.player
 {
 	import business.player.OProxyElement;
 	import business.player.StrobeMediaContainer;
+	import business.player.events.PlayerLoadedEvent;
+	
+	import flash.events.EventDispatcher;
+	import flash.filesystem.File;
 	
 	import mx.core.FlexSprite;
 	import mx.core.UIComponent;
@@ -14,19 +18,13 @@ package business.player
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaPlayer;
 	import org.osmf.net.DynamicStreamingResource;
-	import org.osmf.net.NetLoader;
 	import org.osmf.net.MulticastNetLoader;
+	import org.osmf.net.NetLoader;
 	import org.osmf.net.StreamType;
 	import org.osmf.net.StreamingURLResource;
 	import org.osmf.net.rtmpstreaming.RTMPDynamicStreamingNetLoader;
 	import org.osmf.traits.LoadTrait;
 	import org.osmf.traits.MediaTraitType;
-	
-	import flash.events.EventDispatcher;
-	
-	import flash.filesystem.File;
-	
-	import business.player.events.PlayerLoadedEvent;
 	
 	//Sets the size of the SWF
 	public class OSMFPlayer extends EventDispatcher
@@ -55,8 +53,11 @@ package business.player
 		protected var height_size:Number = 0;
 		protected var width_size:Number = 0;
 		
-		private var firstElement:VideoElement;
-		private var secondElement:VideoElement;
+		//private var firstElement:VideoElement;
+		//private var secondElement:VideoElement;
+		
+		private var firstElement:MediaElement;
+		private var secondElement:MediaElement;
 		
 		private var track:FlexSprite;
 		private var progress:FlexSprite;
@@ -78,19 +79,20 @@ package business.player
 			this.progressive_path2 = video2;
 			
 			// Create a mediafactory instance
-			//mediaFactory = new DefaultMediaFactory();
+			mediaFactory = new DefaultMediaFactory();
 			
 			// Create the left upper Media Element to play the presenter
 			// and apply the meta-data
-			//firstElement = mediaFactory.createMediaElement(new URLResource(progressive_path));
 			//firstElement.addEventListener(MediaElementEvent.METADATA_ADD, loadFirstElement);
 
 			//var resource:URLResource = new URLResource(progressive_path);
 			//var mediaElement:VideoElement = mediaFactory.createMediaElement(resource);
 			
-			var net:NetLoader = new NetLoader();
+			//var net:NetLoader = new NetLoader();
 			// Set the stream reconnect properties
 			//net.reconnectTimeout = 2;
+			
+			//var net:MulticastNetLoader = new MulticastNetLoader();
 		
 			//var nett:RTMPDynamicStreamingNetLoader = new RTMPDynamicStreamingNetLoader();
 			//var url:DynamicStreamingResource = new DynamicStreamingResource(progressive_path);
@@ -101,11 +103,14 @@ package business.player
 			{
 				var _url:String = File.userDirectory.resolvePath(progressive_path).nativePath;   
 				_url = "file:///" + _url;
-				firstElement = new VideoElement(new URLResource( _url ), net);
+				firstElement = mediaFactory.createMediaElement(new URLResource(_url));
+
+				//firstElement = new VideoElement(new URLResource( _url ), net);
 			}
 			else
 			{ 
-				firstElement = new VideoElement(new URLResource( progressive_path ), net);
+				firstElement = mediaFactory.createMediaElement(new URLResource(progressive_path));
+				//firstElement = new VideoElement(new URLResource( progressive_path ), net);
 			}
 			
 			//mediaFactory = new DefaultMediaFactory();
@@ -167,17 +172,21 @@ package business.player
 			// presentation and apply the meta-data		
 			//var secoundVideoElement:MediaElement = mediaFactory.createMediaElement( new URLResource( progressive_path_two ));
 			
-			var net2:NetLoader = new NetLoader();
+			//var net2:NetLoader = new NetLoader();
+			
+			var net2:MulticastNetLoader = new MulticastNetLoader();
 			
 			if(progressive_path2.search("mh2go") != -1) 
 			{
 				var _url:String = File.userDirectory.resolvePath(progressive_path2).nativePath;   
 				_url = "file:///" + _url;
-				secondElement = new VideoElement(new URLResource(_url), net2);
+				//secondElement = new VideoElement(new URLResource(_url), net2);
+				secondElement = mediaFactory.createMediaElement(new URLResource(_url));
+
 			}
 			else
 			{ 
-				secondElement = new VideoElement(new URLResource( progressive_path2 ), net2);
+				secondElement = mediaFactory.createMediaElement(new URLResource( progressive_path2 ));
 			}
 			
 			oProxyElementTwo = new OProxyElement(secondElement);

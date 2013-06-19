@@ -140,6 +140,9 @@ USA
 				
 				seekTimeFromDB = selectTime.returnSeekTime();
 				
+				if(seekTimeFromDB == "0")
+					seekTimeFromDB == "0.00001";
+				
 				if(seekTimeFromDB != "")
 				{
 					var tmp2:Number = Number(seekTimeFromDB);
@@ -867,6 +870,7 @@ USA
 				
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 
+				System.gc();
 
 				this.navigator.popView();
 			}
