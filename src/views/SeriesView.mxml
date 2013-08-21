@@ -274,10 +274,6 @@ USA
 			
 			public function loadNewView():void
 			{
-				myTimer = new Timer(200, 1); 
-				myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, changeTab);
-				myTimer.start();
-				
 				xmlData.removeEventListener(SeriesLoadedEvent.SERIESLOADED, getXMLListCollection);
 				xmlData.removeEventListener(AllSeriesLoadedEvent.ALLSERIESLOADED, allSeriesLoaded);
 				xmlData.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
@@ -298,7 +294,9 @@ USA
 				d.setSearchText(xml.title);
 				d.initID();
 				
-
+				myTimer = new Timer(50, 1); 
+				myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, changeTab);
+				myTimer.start();
 			}
 			
 			public function changeTab(e:TimerEvent):void

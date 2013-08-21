@@ -66,15 +66,12 @@ package business.player
 		
 		private var oProxyElementTwo:OProxyElement;
 		
-		public function OSMFPlayer(video:String, video2:String)
+		public function OSMFPlayer(video:String, video2:String, h:Number, w:Number)
 		{
 			//stage.scaleMode = StageScaleMode.NO_SCALE;
 			//stage.align = StageAlign.TOP_LEFT;
 			//NativeApplication.nativeApplication.addEventListener(Event.DEACTIVATE, handleDeactivate, false, 0, true);
 
-			//this.height_size = h;
-			//this.width_size = w;
-			
 			this.progressive_path = video;
 			this.progressive_path2 = video2;
 			
@@ -122,10 +119,24 @@ package business.player
 			
 			if(progressive_path2 != "")
 			{
+				if(h > w)
+				{
+					this.height_size = h / 2;
+					this.width_size = w;
+				}
+				else
+				{
+					this.height_size = h;
+					this.width_size = w / 2;
+				}
+				
 				addParallelElementToContainer();
 			}
 			else
 			{
+				this.height_size = h;
+				this.width_size = w;
+				
 				addSingleElementToContainer();
 			}
 		}
@@ -137,17 +148,17 @@ package business.player
 			//the container for managing display and layout
 			container_one = new StrobeMediaContainer();
 			container_one.addMediaElement(firstElement);
+			
 			component = new UIComponent();
 			component.addChild(container_one);	
 			
 			container_two = new StrobeMediaContainer();
 			container_two.addMediaElement(oProxyElementTwo);
+			
 			component2 = new UIComponent();
 			component2.addChild(container_two);	
 			
-			//the simplified api controller for media
-			player = new MediaPlayer();
-			player.media =  parallelElement;
+			loadPlayer();
 		}
 		
 		public function addSingleElementToContainer():void
@@ -162,8 +173,17 @@ package business.player
 			component = new UIComponent();
 			component.addChild(container_one);
 			
+			parallelElement = new ParallelElement();
+			parallelElement.addChild(firstElement);
+			
+			loadPlayer();
+		}
+		
+		public function loadPlayer():void
+		{
+			//the simplified api controller for media
 			player = new MediaPlayer();
-			player.media =  firstElement;
+			player.media =  parallelElement;
 		}
 		
 		public function createParallelElement():void
@@ -209,7 +229,7 @@ package business.player
 		*/
 		
 		public function setContainerOneSize(width_size:Number, height_size:Number):void
-		{
+		{			
 			container_one.width = width_size;
 			container_one.height = height_size;	
 		}
@@ -232,6 +252,17 @@ package business.player
 		
 		public function removeAll():void
 		{
+			// Und nun wieder entladen		
+			if(progressive_path2 != "")
+			{
+				var loadTrait2:LoadTrait = parallelElement.getTrait(MediaTraitType.LOAD) as LoadTrait;
+				loadTrait2.unload();
+			}
+			else
+			{
+				var loadTrait:LoadTrait = firstElement.getTrait(MediaTraitType.LOAD) as LoadTrait;
+				loadTrait.unload();
+			}
 			// Und nun wieder entladen		
 			//var loadTrait:LoadTrait = firstElement.getTrait(MediaTraitType.LOAD) as LoadTrait;
 			//loadTrait.unload();

@@ -206,6 +206,7 @@ package business.datahandler
 		public function setResponse(response:ResultEvent):void
 		{
 			var XMLResults:XML = response.result as XML;
+			
 			XMLResults = NamespaceRemover.remove(XMLResults);
 			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
 

@@ -58,6 +58,7 @@ package business.dbaccess
 		
 		public function updateVideoTime(id:String, time:String):void
 		{
+			trace(time)
 			con = SQLConnectionHandler.getInstance();
 			
 			updateStatement = new SQLStatement();	

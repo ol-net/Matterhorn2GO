@@ -140,6 +140,9 @@ USA
 				
 				seekTimeFromDB = selectTime.returnSeekTime();
 				
+				
+				trace("SEEKTIME "+ seekTimeFromDB)
+				
 				if(seekTimeFromDB == "0")
 					seekTimeFromDB == "0.00001";
 				
@@ -327,11 +330,12 @@ USA
 						duration_text == "00:00:00";
 						osmfplayer.player.seek(0);
 						seekBar.value = 0;
-						editTime.updateVideoTime(mediapackageID, "0");
+						//if(seekT != "0")
+							//editTime.updateVideoTime(mediapackageID, "0");
 						pause_button.visible = false;
 						play_button.visible = true;
 						
-						osmfplayer.player.stop();
+						//osmfplayer.player.stop();
 						return;
 					}
 					
@@ -350,7 +354,7 @@ USA
 						
 						if(seekT != "0")
 							editTime.updateVideoTime(mediapackageID, seekT);
-						
+
 						time_text = timerend(e.time * 1000);
 					}
 					
@@ -451,7 +455,7 @@ USA
 				{
 					if(osmfplayer == null)
 					{						
-						osmfplayer = new OSMFPlayer(videoPath, videoPathTwo);  
+						osmfplayer = new OSMFPlayer(videoPath, videoPathTwo, this.navigator.height, this.navigator.width);  
 						videoSize();
 						osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 					}
@@ -499,8 +503,8 @@ USA
 			
 			public function loadParallelView():void
 			{
-				//video_one.removeAllElements();
-				//video_two.removeAllElements();
+				video_one.removeAllElements();
+				video_two.removeAllElements();
 				
 			//	if(osmfplayer.player != null)
 			//		osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler );
@@ -538,8 +542,8 @@ USA
 				presentationViewState = false;
 				parallelViewState = false;
 				
-				//video_one.removeAllElements();
-				//video_two.removeAllElements();
+				video_one.removeAllElements();
+				video_two.removeAllElements();
 				
 				osmfplayer.setContainerOneSize(navigator.width, navigator.height);
 				video_one.addElement(osmfplayer.getContainerOne());
@@ -554,8 +558,8 @@ USA
 				presentationViewState = true;
 				parallelViewState = false;
 				
-				//video_one.removeAllElements();
-				//video_two.removeAllElements();
+				video_one.removeAllElements();
+				video_two.removeAllElements();
 				
 				video_two.x = 0;
 				video_two.y = 0;
@@ -849,8 +853,8 @@ USA
 						if(osmfplayer.player.playing || osmfplayer.player.paused)
 						{
 							osmfplayer.player.pause();
-							osmfplayer.player.stop();
-							//osmfplayer.removeAll();
+							osmfplayer.removeAll();
+							//osmfplayer.player.stop();
 							//osmfplayer.player.stop();
 							//osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 						}
