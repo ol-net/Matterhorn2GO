@@ -228,7 +228,8 @@ package business.datahandler
 				s = s.replace(r, "");
 				
 				imageName = s.replace(r2, "");
-				imageName = "mh2go_thumb/" + imageName;
+				 imageName = "mh2go_thumb/" + imageName;
+				
 				
 				var file:File;
 				
@@ -237,12 +238,14 @@ package business.datahandler
 					downLoader = new DownloadSeriesThumbnails();
 					downLoader.addEventListener(SeriesThumbnailLoadedEvent.DOWNLOAD_COMPLETE, createNewElement);
 					
-					file = File.userDirectory.resolvePath(imageName);
+					//file = File.userDirectory.resolvePath(imageName);
+					file = File.documentsDirectory.resolvePath(imageName);
 					downLoader.download(thumb, file, "", "", index);
 				}
 				else
 				{
-					file = File.userDirectory.resolvePath(imageName);
+					//file = File.userDirectory.resolvePath(imageName);
+					file = File.documentsDirectory.resolvePath(imageName);
 					buildElement(index, file.url);
 				}
 			}

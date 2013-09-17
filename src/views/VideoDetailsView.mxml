@@ -157,7 +157,12 @@ USA
 				startvideo.visible = true;
 				
 				thumbnail = xmlList.getItemAt(0).thumbnail;
-				detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
+				
+				//detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
+
+				trace(xmlList.getItemAt(0))
+				
+				detailImage.source = File.documentsDirectory.resolvePath(xmlList.getItemAt(0).thumbnail);
 				
 				seektime = xmlList.getItemAt(0).seektime;
 				
@@ -216,13 +221,17 @@ USA
 				s = s.replace(re2, "");
 				
 				imageName = s.replace(re2, "");
+				
 				imageName = "mh2go_thumb/" + imageName;
 				
 				var file:File;
 				
-				if(!File.userDirectory.resolvePath(imageName).exists) 
+				if(!File.documentsDirectory.resolvePath(imageName).exists) 
+				//if(!File.userDirectory.resolvePath(imageName).exists) 
 				{
-					file = File.userDirectory.resolvePath(imageName);
+					//file = File.userDirectory.resolvePath(imageName);
+					file = File.documentsDirectory.resolvePath(imageName);
+
 					downLoader = new DownloadThumbnails();
 					
 					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createImagePath);
@@ -231,8 +240,9 @@ USA
 				}
 				else
 				{
-					file = File.userDirectory.resolvePath(imageName);
-					
+					//file = File.userDirectory.resolvePath(imageName);
+					file = File.documentsDirectory.resolvePath(imageName);
+
 					buildImagePath(file.url);
 				}
 				
@@ -418,7 +428,8 @@ USA
 				{			
 					//if(File.userDirectory.resolvePath(videoOneName).exists)
 					//	File.userDirectory.resolvePath(videoOneName).deleteFile();
-					var file:File = File.desktopDirectory.resolvePath(videoOneName);
+					//var file:File = File.desktopDirectory.resolvePath(videoOneName);
+					var file:File = File.documentsDirectory.resolvePath(videoOneName);
 					
 					if(file.exists)
 						file.deleteFile();
@@ -426,7 +437,8 @@ USA
 				
 				if(videoTwoName != "")
 				{
-					var file2:File = File.desktopDirectory.resolvePath(videoOneName);
+					//var file2:File = File.desktopDirectory.resolvePath(videoOneName);
+					var file2:File = File.documentsDirectory.resolvePath(videoOneName);
 					
 					if(file2.exists)
 						file2.deleteFile();
@@ -529,7 +541,8 @@ USA
 				
 				if(videoOneName != "")
 				{			
-					var file:File = File.desktopDirectory.resolvePath(videoOneName);
+					//var file:File = File.desktopDirectory.resolvePath(videoOneName);
+					var file:File = File.documentsDirectory.resolvePath(videoOneName);
 					
 					if(file.exists)
 						file.deleteFile();
@@ -537,7 +550,8 @@ USA
 				
 				if(videoTwoName != "")
 				{
-					var file2:File = File.desktopDirectory.resolvePath(videoOneName);
+					//var file2:File = File.desktopDirectory.resolvePath(videoOneName);
+					var file2:File = File.documentsDirectory.resolvePath(videoOneName);
 					
 					if(file2.exists)
 						file2.deleteFile();
@@ -572,7 +586,8 @@ USA
 				
 				var file:File;
 				
-				if(!File.userDirectory.resolvePath(videoPath).exists) 
+				//if(!File.userDirectory.resolvePath(videoPath).exists) 
+				if(!File.documentsDirectory.resolvePath(videoPath).exists) 
 				{	
 					downLoaderVideo = DownloadVideo.getInstance();
 					
@@ -637,7 +652,7 @@ USA
 				
 				if(index == 1)
 				{
-					videoPath.path1 =  videoTwoName;
+					videoPath.path1 = videoTwoName;
 					videoPath.video1Offline = true;
 					
 					videoPath.path2 = "";
@@ -646,7 +661,7 @@ USA
 				
 				if(index == 2)
 				{
-					videoPath.path1 =  videoOneName;
+					videoPath.path1 = videoOneName;
 					videoPath.video1Offline = true;
 					
 					videoPath.path2 = videoTwoName;

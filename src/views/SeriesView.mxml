@@ -294,6 +294,8 @@ USA
 				d.setSearchText(xml.title);
 				d.initID();
 				
+				//this.tabbedNavigator.selectedIndex = 1;
+				
 				myTimer = new Timer(50, 1); 
 				myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, changeTab);
 				myTimer.start();

@@ -71,6 +71,9 @@ USA
 			
 			protected function onApplicationComplete (event:FlexEvent):void
 			{ 
+				tabbedNavigator.addEventListener(ChangeTabViewEvent.CHANGETAB, onChange);
+				tabbedNavigator.addEventListener(ChangeTabToSeriesViewEvent.CHANGETOSERIESTAB, changeToSeriesTab);
+				
 				var sqlConnection:SQLConnectionHandler = SQLConnectionHandler.getInstance();
 				sqlConnection.initConnection();
 				
@@ -98,18 +101,18 @@ USA
 				}
 				else
 				{
-					loadResults();
+					//loadResults();
 				}
 			}
 			
 			protected function loadWithAccess(e:AccessOkEvent):void
 			{
-				loadResults();
+				//loadResults();
 			}
 			
 			protected function loadWithOutAccess(e:AccessDeniedEvent):void
 			{
-				loadResults();
+				//loadResults();
 			}
 			
 			protected function loadResults():void

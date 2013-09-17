@@ -101,7 +101,8 @@ package business.download
 			this.vName = xmlList.getItemAt(0).video;//videoName;
 			this.vType = xmlList.getItemAt(0).type;//vType; 
 			
-			this.file = File.userDirectory.resolvePath(vName);
+			//this.file = File.userDirectory.resolvePath(vName);
+			this.file = File.documentsDirectory.resolvePath(vName);
 			
 			urlStream.load(new URLRequest(url));
 		}

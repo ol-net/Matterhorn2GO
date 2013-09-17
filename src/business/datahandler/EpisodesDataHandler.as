@@ -278,7 +278,8 @@ package business.datahandler
 				
 				if(!File.userDirectory.resolvePath(imageName).exists) 
 				{
-					file = File.userDirectory.resolvePath(imageName);
+					//file = File.userDirectory.resolvePath(imageName);
+					file = File.documentsDirectory.resolvePath(imageName);
 					
 					downLoader = new DownloadEpisodeThumbnails();
 					
@@ -288,7 +289,10 @@ package business.datahandler
 				}
 				else
 				{
-					file = File.userDirectory.resolvePath(imageName);
+					// Android path 
+					
+					//file = File.userDirectory.resolvePath(imageName);
+					file = File.documentsDirectory.resolvePath(imageName);
 					buildElement(index, file.url);
 				}
 			}

@@ -98,7 +98,9 @@ package business.player
 						
 			if(progressive_path.search("mh2go") != -1) 
 			{
-				var _url:String = File.userDirectory.resolvePath(progressive_path).nativePath;   
+				trace(progressive_path)
+				var _url:String = File.documentsDirectory.resolvePath(progressive_path).nativePath;   
+				//var _url:String = File.userDirectory.resolvePath(progressive_path).nativePath;   
 				_url = "file:///" + _url;
 				firstElement = mediaFactory.createMediaElement(new URLResource(_url));
 

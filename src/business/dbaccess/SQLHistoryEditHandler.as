@@ -39,6 +39,8 @@ package business.dbaccess
 			insertStatement.text = "insert into mh2goHistory (mpid, title, author, date, series, desc, presenter, presentation, presenterDownload, presentationDownload, thumbnail, seektime, download, adopter) " +
 				"values (:mpid, :title, :author, :date, :series, :desc, :presenter, :presentation, :presenterDownload, :presentationDownload, :thumbnail, :seektime, :download, :adopter)";
 			
+			trace(" ff " + th )
+			
 			insertStatement.parameters[":mpid"] = m;
 			insertStatement.parameters[":title"] = t;
 			insertStatement.parameters[":author"] = a;
@@ -58,7 +60,6 @@ package business.dbaccess
 		
 		public function updateVideoTime(id:String, time:String):void
 		{
-			trace(time)
 			con = SQLConnectionHandler.getInstance();
 			
 			updateStatement = new SQLStatement();	

@@ -195,7 +195,7 @@ USA
 						
 						<s:VGroup verticalAlign="bottom">
 							<s:Group >
-								<s:Label text="Version: 1.1.7"
+								<s:Label text="Version: 1.2.0"
 										 fontFamily="_sans"  
 										 y="5"/>
 								<s:Label text="Markus Ketterl (mketterl@uos.de)"

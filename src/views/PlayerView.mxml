@@ -140,9 +140,6 @@ USA
 				
 				seekTimeFromDB = selectTime.returnSeekTime();
 				
-				
-				trace("SEEKTIME "+ seekTimeFromDB)
-				
 				if(seekTimeFromDB == "0")
 					seekTimeFromDB == "0.00001";
 				
