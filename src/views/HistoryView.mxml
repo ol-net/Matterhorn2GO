@@ -739,7 +739,7 @@ USA
 				width="100%" 
 				height="{navigator.height - 50}"
 				dataProvider="{videos}"
-				itemRenderer="business.datahandler.renderers.SeriesItemRenderer"
+				itemRenderer="business.datahandler.renderers.HistoryItemRenderer"
 				change="loadNewView()"/>
 		
 		<s:View id="sort_menu" visible="false"

@@ -156,13 +156,9 @@ USA
 				series.text = xmlList.getItemAt(0).series;
 				startvideo.visible = true;
 				
-				thumbnail = xmlList.getItemAt(0).thumbnail;
+				thumbnail = String(xmlList.getItemAt(0).thumbnail);
 				
-				//detailImage.source = File.userDirectory.resolvePath(xmlList.getItemAt(0).thumbnail).url;
-
-				trace(xmlList.getItemAt(0))
-				
-				detailImage.source = File.documentsDirectory.resolvePath(xmlList.getItemAt(0).thumbnail);
+				detailImage.source = String(xmlList.getItemAt(0).thumbnail);//File.documentsDirectory.resolvePath(thumbnail).url;
 				
 				seektime = xmlList.getItemAt(0).seektime;
 				
@@ -229,9 +225,12 @@ USA
 				if(!File.documentsDirectory.resolvePath(imageName).exists) 
 				//if(!File.userDirectory.resolvePath(imageName).exists) 
 				{
+
 					//file = File.userDirectory.resolvePath(imageName);
 					file = File.documentsDirectory.resolvePath(imageName);
 
+					thumbnail = file.url;
+					
 					downLoader = new DownloadThumbnails();
 					
 					downLoader.addEventListener(DownloadEvent.DOWNLOAD_COMPLETE, createImagePath);
@@ -242,6 +241,8 @@ USA
 				{
 					//file = File.userDirectory.resolvePath(imageName);
 					file = File.documentsDirectory.resolvePath(imageName);
+
+					thumbnail = file.url;
 
 					buildImagePath(file.url);
 				}
@@ -315,7 +316,7 @@ USA
 				videoPath.path2 = video2;
 				
 				buildView();
-				
+
 				checkVideoInside = SQLHistoryViewHandler.getInstance();
 				checkVideoInside.addEventListener(SQLVideoInsideEvent.SELECTVIDEOCOMPLETE, insertNewVideo);
 				

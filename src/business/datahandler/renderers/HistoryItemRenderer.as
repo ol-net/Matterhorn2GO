@@ -202,9 +202,7 @@ package business.datahandler.renderers
 		{			
 			titleField.text = String(data.title);
 			nameField.text = String(data.author);
-			
-			//avatar.source = File.userDirectory.resolvePath(String(data.thumbnail));
-			avatar.source = File.documentsDirectory.resolvePath(String(data.thumbnail));
+			avatar.source = String(data.thumbnail);
 		}
 		
 		override protected function updateSkin():void

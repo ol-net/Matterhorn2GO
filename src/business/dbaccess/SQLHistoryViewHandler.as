@@ -109,6 +109,8 @@ package business.dbaccess
 		{
 			con = SQLConnectionHandler.getInstance();
 			
+			adopterURL = URLClass.getInstance().getURLNoSearch();
+			
 			selectStatement = new SQLStatement();	
 			selectStatement.sqlConnection = con.getSQLConncection();
 			
@@ -156,7 +158,6 @@ package business.dbaccess
 					var presentationDownload:String = row.presentationDownload;
 					var desc:String = row.disc;
 					var seektime:String = row.seektime;
-					trace(row.thumbnail)
 					var download:String = row.download;
 					var thumbnail:String = row.thumbnail;
 					ad = "<mediapackage id='"+mpid+"'>" +
