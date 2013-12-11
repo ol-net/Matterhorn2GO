@@ -510,16 +510,214 @@ package business.core
 			return [vPath, vPathTwo];
 		}
 		
+		public function getPathiOSToDownload(data:Object):Array
+		{
+			var xpathValue:XMLHandler = new XMLHandler();
+			
+			var object:Array = getVideoPathiOSToDownload("presenter/delivery", "presentation/delivery", data);
+			
+			var videoPath:String = object[0];
+			var videoPathTwo:String = object[1];
+			
+			if(xpathValue.getResult(videoPath, data) == "")
+			{
+				object = getVideoPathiOSToDownload("presentation/delivery", "presenter/delivery", data);
+				
+				videoPath = object[0];
+				videoPathTwo = object[1];
+			}
+			
+			import flash.filesystem.File;
+			
+			var vPath:String;
+			
+			if(!video1Offline)
+			{
+				vPath = xpathValue.getResult(videoPath, data);
+			}
+			else
+			{
+				var _url1:String = "";
+				
+				if(path1 != "")
+				{
+					_url1 = File.userDirectory.resolvePath(path1).nativePath;  
+					
+					_url1 = "file:///" + _url1;
+				}
+				else
+				{
+					_url1 = "";
+				}
+				
+				vPath = _url1;
+			}
+			
+			var vPathTwo:String;
+			
+			if(!video2Offline)
+			{
+				vPathTwo = xpathValue.getResult(videoPathTwo, data);
+			}
+			else
+			{
+				var _url2:String = "";
+				
+				if(path2 != "")
+				{
+					_url2 = File.userDirectory.resolvePath(path2).nativePath;  
+					
+					_url2 = "file:///" + _url2;
+				}
+				else
+				{
+					_url2 = "";
+				}
+				
+				vPathTwo = _url2;
+			}
+			
+			return [vPath, vPathTwo];
+		}
+		
 		public function getVideoIOSPath(deliveryFirst:String, deliverySecond:String, data:Object):Array
 		{
 			var xpathValue:XMLHandler = new XMLHandler();
 			
-			var videoPath:String = "mediapackage/media/track[@type='"+deliveryFirst+"'][tags/tag[2]='medium-quality'][1]/url"
-			var videoPathTwo:String = "mediapackage/media/track[@type='"+deliverySecond+"'][tags/tag[2]='medium-quality'][1]/url";
+			var videoPath:String = "";//"mediapackage/media/track[@type='"+deliveryFirst+"'][tags/tag[2]='medium-quality'][1]/url"
+			var videoPathTwo:String = "";//"mediapackage/media/track[@type='"+deliverySecond+"'][tags/tag[2]='medium-quality'][1]/url";
 			
-			if(xpathValue.getResult(videoPath, data) != "")
+			//if(xpathValue.getResult(videoPath, data) != "")
+			//{
+			//	trace("medium-qualito")
+				//return [videoPath, videoPathTwo];
+		//	}
+			
+			if(xpathValue.getResult("mediapackage/media/track[mimetype='video/x-flv']/url", data) != "")
 			{
-				return [videoPath, videoPathTwo];
+				videoPath = "mediapackage/media/track[@type='"+deliveryFirst+"'][tags/tag[2]='medium-quality'][2]/url"
+				videoPathTwo = "mediapackage/media/track[@type='"+deliverySecond+"'][tags/tag[2]='medium-quality'][2]/url";
+				
+				if(xpathValue.getResult(videoPath, data) != "")
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				videoPath = "mediapackage/media/track[@type='"+deliveryFirst+"'][tags/tag[2]='medium-quality'][1]/url"
+				videoPathTwo = "mediapackage/media/track[@type='"+deliverySecond+"'][tags/tag[2]='medium-quality'][1]/url";
+				
+				if(xpathValue.getResult(videoPath, data) != "")
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][8]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][8]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][7]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][7]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][6]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][6]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][5]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][5]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][4]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][4]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][3]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][3]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][2]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][2]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][1]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][1]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+			}
+			
+			videoPath = "mediapackage/media/track[@type='"+deliveryFirst+"'][tags/tag[2]='medium-quality'][1]/url"
+			videoPathTwo = "mediapackage/media/track[@type='"+deliverySecond+"'][tags/tag[2]='medium-quality'][1]/url";
+			
+			
+			if(xpathValue.getResult("mediapackage/media/track[mimetype='video/mp4']/url", data) != "")
+			{
+				// priority c
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/mp4'][@type='"+deliveryFirst+"'][1]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/mp4'][@type='"+deliverySecond+"'][1]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/mp4'][@type='"+deliveryFirst+"'][2]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/mp4'][@type='"+deliverySecond+"'][2]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
 			}
 			
 			if(xpathValue.getResult("mediapackage/media/track[mimetype='video/x-flv']/url", data) != "")
@@ -547,6 +745,21 @@ package business.core
 				}
 			}
 			
+			return [videoPath, videoPathTwo];
+		}
+		
+		public function getVideoPathiOSToDownload(deliveryFirst:String, deliverySecond:String, data:Object):Array
+		{
+			var xpathValue:XMLHandler = new XMLHandler();
+			
+			var videoPath:String = "mediapackage/media/track[@type='"+deliveryFirst+"'][tags/tag[2]='medium-quality'][1]/url"
+			var videoPathTwo:String = "mediapackage/media/track[@type='"+deliverySecond+"'][tags/tag[2]='medium-quality'][1]/url";
+			
+			if(xpathValue.getResult(videoPath, data) != "")
+			{
+				return [videoPath, videoPathTwo];
+			}
+			
 			if(xpathValue.getResult("mediapackage/media/track[mimetype='video/mp4']/url", data) != "")
 			{
 				// priority c
@@ -564,6 +777,31 @@ package business.core
 				{
 					videoPath = "mediapackage/media/track[mimetype='video/mp4'][@type='"+deliveryFirst+"'][2]/url"; 
 					videoPathTwo = "mediapackage/media/track[mimetype='video/mp4'][@type='"+deliverySecond+"'][2]/url";
+				}
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+			}
+			
+			if(xpathValue.getResult("mediapackage/media/track[mimetype='video/x-flv']/url", data) != "")
+			{
+				
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][1]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][1]/url";
+				}			
+				else
+				{
+					return [videoPath, videoPathTwo];
+				}
+				
+				// priority b
+				if(xpathValue.getResult(videoPath, data) == "")
+				{
+					videoPath = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliveryFirst+"'][2]/url"; 
+					videoPathTwo = "mediapackage/media/track[mimetype='video/x-flv'][@type='"+deliverySecond+"'][2]/url";
 				}
 				else
 				{

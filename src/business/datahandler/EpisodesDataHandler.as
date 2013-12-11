@@ -126,14 +126,14 @@ package business.datahandler
 				{
 					//serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
 					
-					if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
-					{
-						serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
-					}
-					else
-					{
-						serviceObj.url = matterhornURL+'?q='+sId+'&limit='+20+'&offset='+oValue+'&lfunk=1';
-					}
+					//if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
+					//{
+					serviceObj.url = matterhornURL+'?sid='+sId+'&limit='+20+'&offset='+oValue;
+					//}
+					//else
+					//{
+					//	serviceObj.url = matterhornURL+'?q='+sId+'&limit='+20+'&offset='+oValue+'&lfunk=1';
+					//}
 				}
 				
 				serviceObj.send();	
@@ -158,14 +158,14 @@ package business.datahandler
 				
 				//serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
 
-				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
-				{
-					serviceObj.url = matterhornURL+'?id='+sId+'&limit='+20+'&offset='+oValue;
-				}
-				else
-				{
-					serviceObj.url = matterhornURL+'?q='+sId+'&limit='+20+'&offset='+oValue;
-				}
+				//if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
+				//{
+				serviceObj.url = matterhornURL+'?sid='+sId+'&limit='+20+'&offset='+oValue;
+				//}
+				//else
+				//{
+				//	serviceObj.url = matterhornURL+'?q='+sId+'&limit='+20+'&offset='+oValue;
+				//}
 				serviceObj.send();	
 			}
 		}

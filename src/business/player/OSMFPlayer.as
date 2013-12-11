@@ -1,275 +1,488 @@
 package business.player
 {
-	import business.player.OProxyElement;
-	import business.player.StrobeMediaContainer;
-	import business.player.events.PlayerLoadedEvent;
+	import business.player.buttons.PauseButton;
+	import business.player.buttons.PlayButton;
+	import business.player.events.ClosePlayerEvent;
 	
-	import flash.events.EventDispatcher;
+	import com.danielfreeman.madcomponents.UIButton;
+	import com.danielfreeman.madcomponents.UILabel;
+	import com.danielfreeman.madcomponents.UISlider;
+	
+	import flash.desktop.NativeApplication;
+	import flash.desktop.SystemIdleMode;
+	import flash.display.Sprite;
+	import flash.display.Stage;
+	import flash.display.StageAlign;
+	import flash.display.StageScaleMode;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.filesystem.File;
+	import flash.system.Capabilities;
+	import flash.text.TextFormat;
+	import flash.utils.Timer;
 	
-	import mx.core.FlexSprite;
-	import mx.core.UIComponent;
+	import mx.core.mx_internal;
+	import mx.events.ResizeEvent;
 	
 	import org.osmf.containers.MediaContainer;
 	import org.osmf.elements.ParallelElement;
 	import org.osmf.elements.VideoElement;
-	import org.osmf.events.MediaElementEvent;
-	import org.osmf.media.DefaultMediaFactory;
-	import org.osmf.media.MediaElement;
+	import org.osmf.events.LoaderEvent;
+	import org.osmf.events.TimeEvent;
 	import org.osmf.media.MediaPlayer;
-	import org.osmf.net.DynamicStreamingResource;
-	import org.osmf.net.MulticastNetLoader;
+	import org.osmf.media.URLResource;
 	import org.osmf.net.NetLoader;
-	import org.osmf.net.StreamType;
-	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.rtmpstreaming.RTMPDynamicStreamingNetLoader;
-	import org.osmf.traits.LoadTrait;
-	import org.osmf.traits.MediaTraitType;
-	
-	//Sets the size of the SWF
-	public class OSMFPlayer extends EventDispatcher
-	{
-		import org.osmf.media.URLResource;
 		
-		private var component:UIComponent;
-		private var component2:UIComponent;
-		
-		//URI of the media
-		protected var progressive_path:String;
-		protected var progressive_path2:String;
-		//public var play:MediaPlayer;
-		public var player:MediaPlayer;
+	import business.core.GetVideoPathHandler;
 
-		public var container_one:StrobeMediaContainer;
-		public var container_two:StrobeMediaContainer;
-
-		//public var container_one:MediaContainer;
-		//public var container_two:MediaContainer;
+	[SWF(backgroundColor="#000000")]
+	public class OSMFPlayer extends Sprite {
 		
-		public var mediaFactory:DefaultMediaFactory;
+		private var mediaPlayer:MediaPlayer;
 		
-		protected var parallelElement:ParallelElement;
+		private var updateSeekBar:Boolean;
 		
-		protected var height_size:Number = 0;
-		protected var width_size:Number = 0;
+		private var container:Sprite = new Sprite();
 		
-		//private var firstElement:VideoElement;
-		//private var secondElement:VideoElement;
+		private var mediaContainer:MediaContainer;
 		
-		private var firstElement:MediaElement;
-		private var secondElement:MediaElement;
+		private var maxsize:Number;
 		
-		private var track:FlexSprite;
-		private var progress:FlexSprite;
+		protected var myTimer:Timer;
 		
-		private var progressbarContainer:FlexSprite;	
+		private var steps:Number;
 		
-		private var oProxyElementTwo:OProxyElement;
+		private var videoHeight:Number;
+		private var videoWidth:Number;
 		
-		public function OSMFPlayer(video:String, video2:String, h:Number, w:Number)
+		private var resize:Boolean = false;
+		
+		private var parallelElement:ParallelElement;
+		private var oProxyElement:OProxyElement;
+		
+		private var mediaContainer2nd:MediaContainer;
+		
+		private var presenter:Boolean = false;
+		private var presentation:Boolean = false;
+		private var parallel:Boolean = false;
+		
+		private var playerUI:PlayerUI = new PlayerUI();
+		
+		private var videoPath:String;
+		private var videoPath2nd:String;
+		
+		private var singleVideo:Boolean;
+				
+		public function OSMFPlayer()
 		{
-			//stage.scaleMode = StageScaleMode.NO_SCALE;
-			//stage.align = StageAlign.TOP_LEFT;
-			//NativeApplication.nativeApplication.addEventListener(Event.DEACTIVATE, handleDeactivate, false, 0, true);
+			var getVideo:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+			
+			//this.videoPath = "http://video2.virtuos.uni-osnabrueck.de:1935/matterhorn-14/mp4:dozent.mp4/playlist.m3u8";
+			//this.videoPath2nd ="http://video2.virtuos.uni-osnabrueck.de:1935/matterhorn-14/mp4:vga.mp4/playlist.m3u8";
+			
+			//this.videoPath = "http://video2.virtuos.uni-osnabrueck.de:1935/matterhorn-14/mp4:dozent.mp4/playlist.m3u8";
+			//this.videoPath2nd = "";//"http://video2.virtuos.uni-osnabrueck.de:1935/matterhorn-14/mp4:vga.mp4/playlist.m3u8";
+			
+			//videoPath = "http://video2.virtuos.uni-osnabrueck.de:1935/matterhorn-14/mp4:video.m4v/playlist.m3u8"; 
+			
+			this.videoPath = getVideo.path1;
+			this.videoPath2nd = getVideo.path2;
+			
+			//trace(videoPath)
+			//trace(videoPath2nd)
+		}
+			
+		public function startVideo():void 
+		{
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.align = StageAlign.TOP_LEFT;
+			
+			setTimer();
 
-			this.progressive_path = video;
-			this.progressive_path2 = video2;
+			if (videoPath2nd == "") {
+				singleVideo = true;
+				parallel = false;
+				presenter = true;
+				presentation = false;
+				loadSingleView(videoPath);
+				
+				playerUI.getParallelButton().visible = false;
+				playerUI.getPresenterButton().visible = false;
+				playerUI.getPresentationButton().visible = false;
+				
+			} else {
+				singleVideo = false;
+				parallel = true;
+				presenter = false;
+				presentation = false;
+				loadParallelView(videoPath, videoPath2nd);
+			}
 			
-			// Create a mediafactory instance
-			mediaFactory = new DefaultMediaFactory();
+			playerUI.getUISlider().addEventListener(MouseEvent.MOUSE_DOWN, stopUpdate);
+			playerUI.getUISlider().addEventListener(MouseEvent.MOUSE_UP, startUpdate);
+			playerUI.getUISlider().addEventListener(MouseEvent.MOUSE_MOVE, updateTime);
 			
-			// Create the left upper Media Element to play the presenter
-			// and apply the meta-data
-			//firstElement.addEventListener(MediaElementEvent.METADATA_ADD, loadFirstElement);
-
-			//var resource:URLResource = new URLResource(progressive_path);
-			//var mediaElement:VideoElement = mediaFactory.createMediaElement(resource);
-			
-			//var net:NetLoader = new NetLoader();
-			// Set the stream reconnect properties
-			//net.reconnectTimeout = 2;
-			
-			//var net:MulticastNetLoader = new MulticastNetLoader();
-		
-			//var nett:RTMPDynamicStreamingNetLoader = new RTMPDynamicStreamingNetLoader();
-			//var url:DynamicStreamingResource = new DynamicStreamingResource(progressive_path);
-			
-			//firstElement = new VideoElement(new URLResource(progressive_path));
+			playerUI.getPlayButton().addEventListener(MouseEvent.CLICK, play);
+			playerUI.getPauseButton().addEventListener(MouseEvent.CLICK, pause);
+			playerUI.getParallelButton().addEventListener(MouseEvent.CLICK, setParallelView);
+			playerUI.getPresenterButton().addEventListener(MouseEvent.CLICK, setPresenterView);
+			playerUI.getPresentationButton().addEventListener(MouseEvent.CLICK, setPresentationView);
+			playerUI.getBackButton().addEventListener(MouseEvent.CLICK, popView);
+			playerUI.getNextButton().addEventListener(MouseEvent.CLICK, nextPlay);
+			playerUI.getPrevButton().addEventListener(MouseEvent.CLICK, prevPlay);
 						
-			if(progressive_path.search("mh2go") != -1) 
-			{
-				var _url:String = File.documentsDirectory.resolvePath(progressive_path).nativePath;   
-				//var _url:String = File.userDirectory.resolvePath(progressive_path).nativePath;   
-				_url = "file:///" + _url;
-				firstElement = mediaFactory.createMediaElement(new URLResource(_url));
-
-				//firstElement = new VideoElement(new URLResource( _url ), net);
-			}
-			else
-			{ 
-				firstElement = mediaFactory.createMediaElement(new URLResource(progressive_path));
-				//firstElement = new VideoElement(new URLResource( progressive_path ), net);
-			}
+			this.addChild(container);
+			this.addEventListener(MouseEvent.MOUSE_UP, getButtonPanel);
 			
-			//mediaFactory = new DefaultMediaFactory();
-			//firstElement = mediaFactory.createMediaElement( new URLResource( progressive_path ));
-			
-			//firstElement.resource = new StreamingURLResource(progressive_path,StreamType.LIVE,NaN,NaN,null,false);
+			resizeHandler(null);
 		
-			//addSingleElementToContainer();
+			stage.addEventListener(MouseEvent.CLICK, getButtonPanel);
+			stage.addEventListener(Event.RESIZE, resizeHandler);
+		}
+		
+		public function loadSingleView(videoPath:String):void {
 			
-			if(progressive_path2 != "")
-			{
-				if(h > w)
-				{
-					this.height_size = h / 2;
-					this.width_size = w;
-				}
-				else
-				{
-					this.height_size = h;
-					this.width_size = w / 2;
-				}
-				
-				addParallelElementToContainer();
-			}
-			else
-			{
-				this.height_size = h;
-				this.width_size = w;
-				
-				addSingleElementToContainer();
+			var net:NetLoader = new NetLoader();
+			net.addEventListener(LoaderEvent.LOAD_STATE_CHANGE, readyToGo);
+			
+			var resource:URLResource = new URLResource(videoPath);
+			
+			var element:VideoElement = new VideoElement(resource, net);
+			
+			mediaPlayer = new MediaPlayer();
+			mediaPlayer.media = element;
+			mediaPlayer.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
+			
+			mediaContainer= new MediaContainer();
+			mediaContainer.addMediaElement(element);
+			
+			container.addChild(mediaContainer);
+			container.addChild(playerUI);
+		}
+		
+		public function loadParallelView(videoPath:String, videoPath2nd:String):void {
+			
+			var net:NetLoader = new NetLoader();
+			net.addEventListener(LoaderEvent.LOAD_STATE_CHANGE, readyToGo);
+			
+			var net2nd:NetLoader = new NetLoader();
+			net2nd.addEventListener(LoaderEvent.LOAD_STATE_CHANGE, readyToGo2);
+			
+			var resource:URLResource = new URLResource(videoPath);
+			var resource2nd:URLResource = new URLResource(videoPath2nd);
+			
+			var element:VideoElement = new VideoElement(resource, net);
+			var element2nd:VideoElement = new VideoElement(resource2nd, net2nd);
+			oProxyElement = new OProxyElement(element2nd);
+			
+			// Create the ParallelElement and add the left and right elements to it
+			parallelElement = new ParallelElement();
+			parallelElement.addChild(element);	
+			parallelElement.addChild(oProxyElement);
+			
+			mediaPlayer = new MediaPlayer();
+			mediaPlayer.media = parallelElement;
+			mediaPlayer.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
+			
+			mediaContainer= new MediaContainer();
+			mediaContainer.addMediaElement(element);
+			
+			mediaContainer2nd= new MediaContainer();
+			mediaContainer2nd.addMediaElement(oProxyElement);
+			
+			container.addChild(mediaContainer);
+			container.addChild(mediaContainer2nd);
+			container.addChild(playerUI);
+		}
+		
+		public function play(e:MouseEvent):void 
+		{
+			playerUI.getPlayButton().visible = false;
+			playerUI.getPauseButton().x = playerUI.getPlayButton().x;
+			playerUI.getPauseButton().visible = true;
+			
+			if (mediaPlayer != null) {
+				if (mediaPlayer.paused)
+					mediaPlayer.play();
 			}
 		}
 		
-		public function addParallelElementToContainer():void
+		public function pause(e:MouseEvent):void 
+		{
+			playerUI.getPlayButton().visible = true;
+			playerUI.getPlayButton().x = playerUI.getPauseButton().x;
+			playerUI.getPauseButton().visible = false;
+			
+			if (mediaPlayer != null) {
+				if (mediaPlayer.playing)
+					mediaPlayer.pause();
+			}
+		}
+		
+		public function prevPlay(e:MouseEvent):void
+		{
+			mediaPlayer.seek(playerUI.getUISlider().value / steps - 5);
+		}
+		
+		public function nextPlay(e:MouseEvent):void
+		{
+			mediaPlayer.seek(playerUI.getUISlider().value / steps + 5);
+		}
+		
+		public function resizeHandler(e:Event):void {
+
+			if (parallel) {
+				setParallelContainer();
+			} else if (presenter) {
+				setPresenterContainer();
+			} else if (presentation) {
+				setPresentationContainer();
+			}
+			
+			if (playerUI != null)
+				playerUI.setButtonPosition();
+		}
+		
+		public function setParallelContainer():void {
+			
+			if (stage != null) {
+				if (stage.stageWidth < stage.stageHeight) {
+					mediaContainer.height = stage.fullScreenHeight / 2;
+					mediaContainer.width = stage.fullScreenWidth;
+					
+					mediaContainer2nd.height = stage.fullScreenHeight / 2;
+					mediaContainer2nd.width = stage.fullScreenWidth;
+					mediaContainer2nd.x = 0;
+					mediaContainer2nd.y = stage.fullScreenHeight / 2;
+				} else {
+					mediaContainer.height = stage.fullScreenHeight;
+					mediaContainer.width = stage.fullScreenWidth / 2;
+					
+					mediaContainer2nd.height = stage.fullScreenHeight;
+					mediaContainer2nd.width = stage.fullScreenWidth / 2;
+					mediaContainer2nd.x = stage.fullScreenWidth / 2;
+					mediaContainer2nd.y = 0;
+				}
+			}
+		}
+		
+		public function setPresenterContainer():void {
+			
+			if (stage != null) {
+				mediaContainer.height = stage.fullScreenHeight;
+				mediaContainer.width = stage.fullScreenWidth;
+				
+				if (mediaContainer2nd != null) {
+					mediaContainer2nd.height = 0;
+					mediaContainer2nd.width = 0;
+				}
+			}
+		}
+		
+		public function setPresentationContainer():void {
+			
+			if (stage != null) {
+				mediaContainer2nd.height = stage.fullScreenHeight;
+				mediaContainer2nd.width = stage.fullScreenWidth;
+				mediaContainer2nd.x = 0;
+				mediaContainer2nd.y = 0;
+				
+				if (mediaContainer != null) {
+					mediaContainer.height = 0;
+					mediaContainer.width = 0;
+				}
+			}
+		}
+		
+		public function setParallelView(e:MouseEvent):void
+		{
+			parallel = true;
+			presenter = false;
+			presentation = false;
+			setParallelContainer();
+		}
+		
+		public function setPresenterView(e:MouseEvent):void
+		{
+			parallel = false;
+			presenter = true;
+			presentation = false;
+			setPresenterContainer();
+		}
+		
+		public function setPresentationView(e:MouseEvent):void
+		{
+			parallel = false;
+			presenter = false;
+			presentation = true;
+			setPresentationContainer();
+		}
+		
+		public function popView(e:MouseEvent):void
+		{
+			mediaPlayer.stop();
+			
+			playerUI.getUISlider().removeEventListener(MouseEvent.MOUSE_DOWN, stopUpdate);
+			playerUI.getUISlider().removeEventListener(MouseEvent.MOUSE_UP, startUpdate);
+			playerUI.getUISlider().removeEventListener(MouseEvent.MOUSE_MOVE, updateTime);
+			
+			playerUI.getPlayButton().removeEventListener(MouseEvent.CLICK, play);
+			playerUI.getPauseButton().removeEventListener(MouseEvent.CLICK, pause);
+			playerUI.getParallelButton().removeEventListener(MouseEvent.CLICK, setParallelView);
+			playerUI.getPresenterButton().removeEventListener(MouseEvent.CLICK, setPresenterView);
+			playerUI.getPresentationButton().removeEventListener(MouseEvent.CLICK, setPresentationView);
+			playerUI.getBackButton().removeEventListener(MouseEvent.CLICK, popView);
+			playerUI.getNextButton().removeEventListener(MouseEvent.CLICK, nextPlay);
+			playerUI.getPrevButton().removeEventListener(MouseEvent.CLICK, prevPlay);
+			
+			this.removeEventListener(MouseEvent.MOUSE_UP, getButtonPanel);
+			
+			stage.removeEventListener(MouseEvent.CLICK, getButtonPanel);
+			stage.removeEventListener(Event.RESIZE, resizeHandler);
+			
+			var closePlayer:ClosePlayerHandler = ClosePlayerHandler.getInstance();
+			closePlayer.close();
+			
+			this.parent.removeChild(this);
+		}
+		
+		public function readyToGo(event:LoaderEvent):void {
+			
+			if(event.newState == 'ready') {
+				mediaPlayer.play();
+			}
+		}
+		
+		public function readyToGo2(event:LoaderEvent):void {
+			
+			if(event.newState == 'ready') {
+				mediaPlayer.play();
+			}
+		}
+		
+		public function getButtonPanel(event:MouseEvent):void
+		{
+			if(myTimer.running)
+				myTimer.reset();
+			
+			myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
+			
+			playerUI.getUISlider().visible = true;
+			playerUI.getTimeLabel().visible = true;
+			playerUI.getOfLabel().visible = true;
+			playerUI.getDurationLabel().visible = true;
+			
+			if (!playerUI.getPlayButton().visible && !playerUI.getPauseButton().visible) {
+				if (!mediaPlayer.playing) {
+					playerUI.getPlayButton().visible = true;
+				} else {
+					playerUI.getPauseButton().visible = true;
+				}
+			}
+			
+			playerUI.getNextButton().visible = true;
+			playerUI.getPrevButton().visible = true;
+			
+			if (singleVideo) {
+				playerUI.getParallelButton().visible = false;
+				playerUI.getPresenterButton().visible = false;
+				playerUI.getPresentationButton().visible = false;
+			} else {
+				playerUI.getParallelButton().visible = true;
+				playerUI.getPresenterButton().visible = true;
+				playerUI.getPresentationButton().visible = true;
+			}
+			playerUI.getBackButton().visible = true;
+			setTimer();
+		}
+		
+		public function timer(event:TimerEvent):void
+		{
+			if (!updateSeekBar) {		
+				myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
+				
+				playerUI.getUISlider().visible = false;
+				playerUI.getTimeLabel().visible = false;
+				playerUI.getPlayButton().visible = false;
+				playerUI.getPauseButton().visible = false;
+				playerUI.getOfLabel().visible = false;
+				playerUI.getDurationLabel().visible = false;
+				playerUI.getNextButton().visible = false;
+				playerUI.getPrevButton().visible = false;
+				playerUI.getParallelButton().visible = false;
+				playerUI.getPresenterButton().visible = false;
+				playerUI.getPresentationButton().visible = false;
+				playerUI.getBackButton().visible = false;
+			}
+		}
+		
+		public function setTimer():void
+		{
+			myTimer = new Timer(6000, 1); 
+			myTimer.addEventListener(TimerEvent.TIMER_COMPLETE, timer);
+			myTimer.start();
+		}
+		
+		private function updateTime(e:MouseEvent):void
+		{
+			playerUI.getTimeLabel().text = playerUI.timerend(playerUI.getUISlider().value / steps * 1000);
+		}
+		
+		private function onCurrentTimeChangeHandler(e:TimeEvent):void
 		{	
-			createParallelElement();
+			var cT:Number = Math.round(mediaPlayer.currentTime);
+			var dT:Number = Math.round(mediaPlayer.duration);
 			
-			//the container for managing display and layout
-			container_one = new StrobeMediaContainer();
-			container_one.addMediaElement(firstElement);
+			if(cT >= dT)
+			{				
+				playerUI.getTimeLabel().text == "00:00:00";
+				mediaPlayer.seek(0);
+				playerUI.getUISlider().value = 0;
+				return;
+			}
 			
-			component = new UIComponent();
-			component.addChild(container_one);	
-			
-			container_two = new StrobeMediaContainer();
-			container_two.addMediaElement(oProxyElementTwo);
-			
-			component2 = new UIComponent();
-			component2.addChild(container_two);	
-			
-			loadPlayer();
-		}
-		
-		public function addSingleElementToContainer():void
-		{
-			//the container for managing display and layout
-			container_one = new StrobeMediaContainer();
-						
-			container_one.width = width_size;
-		 	container_one.height = height_size;	
-			container_one.addMediaElement(firstElement);
-			
-			component = new UIComponent();
-			component.addChild(container_one);
-			
-			parallelElement = new ParallelElement();
-			parallelElement.addChild(firstElement);
-			
-			loadPlayer();
-		}
-		
-		public function loadPlayer():void
-		{
-			//the simplified api controller for media
-			player = new MediaPlayer();
-			player.media =  parallelElement;
-		}
-		
-		public function createParallelElement():void
-		{
-			// Create the down side Media Element to play the
-			// presentation and apply the meta-data		
-			//var secoundVideoElement:MediaElement = mediaFactory.createMediaElement( new URLResource( progressive_path_two ));
-			
-			//var net2:NetLoader = new NetLoader();
-			
-			var net2:MulticastNetLoader = new MulticastNetLoader();
-			
-			if(progressive_path2.search("mh2go") != -1) 
+			if(playerUI.getTimeLabel().text == "00:00:00" && !updateSeekBar)
 			{
-				var _url:String = File.userDirectory.resolvePath(progressive_path2).nativePath;   
-				_url = "file:///" + _url;
-				//secondElement = new VideoElement(new URLResource(_url), net2);
-				secondElement = mediaFactory.createMediaElement(new URLResource(_url));
-
-			}
-			else
-			{ 
-				secondElement = mediaFactory.createMediaElement(new URLResource( progressive_path2 ));
+				playerUI.getDurationLabel().text = playerUI.timerend(mediaPlayer.duration * 1000);
+				maxsize = mediaPlayer.duration - 1;
+				steps = 1 / maxsize;
 			}
 			
-			oProxyElementTwo = new OProxyElement(secondElement);
-			
-			// Create the ParallelElement and add the left and right
-			// elements to it
-			parallelElement = new ParallelElement();
-			parallelElement.addChild(firstElement);	
-			parallelElement.addChild(oProxyElementTwo);
-		}
-		
-		/*
-		public function setSize(h_size:Number, w_size:Number):void
-		{
-			height_size = h_size;
-			width_size = w_size;
-			
-			addSingleElementToContainer();
-		}
-		*/
-		
-		public function setContainerOneSize(width_size:Number, height_size:Number):void
-		{			
-			container_one.width = width_size;
-			container_one.height = height_size;	
-		}
-		
-		public function setContainerTwoSize(width_size:Number, height_size:Number):void
-		{
-			container_two.width = width_size;
-			container_two.height = height_size;	
-		}
-		
-		public function getContainerOne():UIComponent
-		{
-			return component;
-		}
-		
-		public function getContainerTwo():UIComponent
-		{
-			return component2;
-		}	
-		
-		public function removeAll():void
-		{
-			// Und nun wieder entladen		
-			if(progressive_path2 != "")
-			{
-				var loadTrait2:LoadTrait = parallelElement.getTrait(MediaTraitType.LOAD) as LoadTrait;
-				loadTrait2.unload();
+			if(updateSeekBar) {
+				onSeek(playerUI.getUISlider().value);
+			} else {		
+				playerUI.getUISlider().value = e.time * steps;
+				playerUI.getTimeLabel().text = playerUI.timerend(e.time * 1000);
 			}
-			else
-			{
-				var loadTrait:LoadTrait = firstElement.getTrait(MediaTraitType.LOAD) as LoadTrait;
-				loadTrait.unload();
-			}
-			// Und nun wieder entladen		
-			//var loadTrait:LoadTrait = firstElement.getTrait(MediaTraitType.LOAD) as LoadTrait;
-			//loadTrait.unload();
+		}
+		
+		private function onSeek(loc:Number):void 
+		{  	
+			mediaPlayer.seek(loc / steps);
+		}
+		
+		private function stopUpdate(e:MouseEvent):void
+		{
+			stage.addEventListener(MouseEvent.MOUSE_MOVE, updateTime);
+			stage.addEventListener(MouseEvent.MOUSE_UP, startUpdate);
 			
-			//container_one.removeMediaElement(firstElement);
-			//container_two.removeMediaElement(oProxyElementTwo);
+			if(myTimer.running) {
+				myTimer.stop();
+			}
+			
+			this.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
+			
+			updateSeekBar = true;
+		}
+		
+		private function startUpdate(e:MouseEvent):void
+		{	
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE, updateTime);
+			stage.removeEventListener(MouseEvent.MOUSE_UP, startUpdate);
+			
+			updateSeekBar = false;
+			setTimer();
 		}
 	}
-}
+} 	

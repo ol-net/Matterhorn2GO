@@ -29,7 +29,7 @@ USA
 		xmlns:business="business.core.*">
 	
 	<fx:Declarations>
-		<s:RadioButtonGroup id="downloadType"/>
+		<s:RadioButtonGroup id="playType"/>
 	</fx:Declarations>
 	
 	<fx:Script>
@@ -51,6 +51,7 @@ USA
 			import business.download.events.DownloadEvent;
 			import business.download.events.DownloadedVideoLoadedEvent;
 			import business.download.events.OnProgressEvent;
+			import business.player.buttons.PlayButton;
 			
 			import mx.collections.XMLListCollection;
 			import mx.core.UIComponent;
@@ -88,6 +89,8 @@ USA
 			private var localDBData:Boolean = false;
 			
 			private var downloadState:String;
+			
+			private var play_button:PlayButton;
 			
 			//private var interfaces:Vector.<com.adobe.nativeExtensions.Networkinfo.NetworkInterface> = com.adobe.nativeExtensions.Networkinfo.NetworkInfo.networkInfo.findInterfaces();
 			
@@ -132,16 +135,19 @@ USA
 
 				xmlList = sqlHistoryView.getVideoXML();
 				
-				if(xmlList.length > 0)
+				if (xmlList != null) 
 				{
-					setDescFromDB();
-				}
-				else
-				{
-					dataHandler = SegmentDataHandler.getInstance();
-					dataHandler.init(mediapackageID);
-					dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollectionFromWeb);
-					dataHandler.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+					if(xmlList.length > 0)
+					{
+						setDescFromDB();
+					}
+					else
+					{
+						dataHandler = SegmentDataHandler.getInstance();
+						dataHandler.init(mediapackageID);
+						dataHandler.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollectionFromWeb);
+						dataHandler.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
+					}
 				}
 			}
 			
@@ -162,7 +168,7 @@ USA
 				
 				seektime = xmlList.getItemAt(0).seektime;
 				
-				textAreaLabel.visible = true;
+				textAreaLabel.visible = false;
 				if(xmlList.getItemAt(0).desc != "null")
 				{
 					description.text = xmlList.getItemAt(0).desc;
@@ -250,7 +256,7 @@ USA
 				description.text = dataHandler.getDescriptionListCollection();
 				
 				if(description.text != "")
-					textAreaLabel.visible = true;
+					textAreaLabel.visible = false;
 				
 				this.localDBData = false;
 				
@@ -273,6 +279,14 @@ USA
 			
 			public function createView():void
 			{
+				play_button = new PlayButton();
+				play_button.visible = false;
+				play_button.x = this.navigator.width / 2 - 45;
+				play_button.y = 60;
+				play_button.addEventListener(MouseEvent.CLICK, loadVideoView);
+				
+				play_view.addChild(play_button);
+				
 				var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
 				
 				videoPath.video1Offline = false;
@@ -283,11 +297,18 @@ USA
 				
 				if(!localDBData)
 				{
+					// Android video selection
+					/*
 					video1 = videoPath.getPath(xmlList.getItemAt(0))[0];
 					video2 = videoPath.getPath(xmlList.getItemAt(0))[1];
-					
 					video1Download = videoPath.getPathToDownload(xmlList.getItemAt(0))[0];
 					video2Download = videoPath.getPathToDownload(xmlList.getItemAt(0))[1];
+					*/
+					// iOS video selection
+					video1 = videoPath.getiOSPath(xmlList.getItemAt(0))[0];
+					video2 = videoPath.getiOSPath(xmlList.getItemAt(0))[1];
+					video1Download = videoPath.getPathiOSToDownload(xmlList.getItemAt(0))[0];
+					video2Download = videoPath.getPathiOSToDownload(xmlList.getItemAt(0))[1];
 					
 					downloadState = "false";
 				}
@@ -315,6 +336,23 @@ USA
 				videoPath.path1 = video1;
 				videoPath.path2 = video2;
 				
+				//trace(videoPath.path1)
+				//trace(videoPath.path2)
+				
+				videoPath
+				
+				// ios
+				if (videoPath.path2 == "" || (videoPath.path1.indexOf("rtmp") >= 0)) {
+					playType.enabled = false;
+					playPresenter.visible = false;
+					playPresentation.visible = false;
+				} else {
+				
+					playType.enabled = true;
+					playPresenter.visible = true;
+					playPresentation.visible = true;
+				}
+				
 				buildView();
 
 				checkVideoInside = SQLHistoryViewHandler.getInstance();
@@ -323,6 +361,7 @@ USA
 				checkVideoInside.checkVideo(mediapackageID);
 			}
 			
+			/*
 			public function downloadView():void
 			{
 				if(video1 != "" && video2 != "")
@@ -362,28 +401,62 @@ USA
 					offlineLabel.visible = false;
 				}
 			}
+			*/
 			
 			public function buildView():void
 			{
 				if(xmlList.getItemAt(0).download == "true")
 				{
-					presenter.visible = false;
-					presentation.visible = false;
+					//presenter.visible = false;
+					//presentation.visible = false;
 					download_button.visible = false;
 					delete_button.visible = true;
 					offlineLabel.visible = true;
 				}
 				else
 				{
-					downloadView();
+					download_button.visible = false;
+
+					//downloadView();
 				}
 			}
 			
-			protected function loadVideoView():void
+			protected function loadVideoView(e:MouseEvent):void
 			{
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+
+				if (playPresenter.visible) {
+					
+					//trace(playPresenter.visible);
+					var videoPath:GetVideoPathHandler = GetVideoPathHandler.getInstance();
+					
+					videoPath.video1Offline = true;
+					videoPath.video2Offline = false;
+					
+					if (playType.selectedValue == "presenter") {
+						videoPath.path2 = "";
+					} else if (playType.selectedValue == "presentation") {
+						videoPath.path1 = videoPath.path2;
+						videoPath.path2 = "";
+					}
+					
+					//trace(videoPath.path1);
+					//trace(videoPath.path2);
+				}
 				
-				this.navigator.pushView(PlayerView, xmlList.getItemAt(0));
+				this.navigator.pushView(Player);
+				
+				//player = new OSMFPlayer();
+				//player.graphics.beginFill(0xFF0000, 0.5);
+				//player.graphics.drawRect(10, 10, 100, 80);
+				//player.graphics.endFill();
+				
+				//video_player.addChild(player);
+				//var sprite:Sprite = new Sprite();
+				//video.addChild(player);
+				//sprite.addChild(player);
+				
+				//player.startVideo();
 				
 				connection.visible = false;
 			}
@@ -417,9 +490,15 @@ USA
 				
 				videoPath.path1 = "";
 				videoPath.path2 = "";
-	
+				
+				// Android video selection
+				/*
 				video1 = videoPath.getPath(xmlCList.getItemAt(0))[0];
 				video2 = videoPath.getPath(xmlCList.getItemAt(0))[1];
+				*/
+				// iOS video selection
+				video1 = videoPath.getiOSPath(xmlCList.getItemAt(0))[0];
+				video2 = videoPath.getiOSPath(xmlCList.getItemAt(0))[1];
 				
 				// insert new path in db
 				insertVideo = SQLHistoryEditHandler.getInstance();
@@ -456,14 +535,14 @@ USA
 				
 				if(video1 != "")
 				{
-					presenter.visible = true;
+					//presenter.visible = true;
 					videoPath.video1Offline = true;
 					videoPath.path1 = video1;
 				}
 				
 				if(video2 != "")
 				{
-					presentation.visible = true;
+					//presentation.visible = true;
 					videoPath.video2Offline = true;
 					videoPath.path2 = video2;
 				}
@@ -484,6 +563,7 @@ USA
 			private var index:uint;
 			private var type:String;
 				
+			/*
 			public function downloadVideo():void
 			{
 				busycontainer.visible = true;
@@ -493,6 +573,7 @@ USA
 				var r:RegExp = /\//g;
 				var r2:RegExp = /\:/g;
 				var konst:String = "mh2go/";
+				
 				
 				if(presenter.selected && !presentation.selected)
 				{
@@ -574,6 +655,7 @@ USA
 					downloadFunction(videoTwoName, video2Download, "presentation");
 				}
 			}
+			*/
 			
 			private var downLoaderVideo:DownloadVideo;
 			
@@ -696,7 +778,7 @@ USA
 		</s:Button>
 		
 	</s:actionContent>
-	
+		
 	<s:Group>	
 		<s:View id = "connection" visible="false"
 				backgroundColor="black" 
@@ -788,12 +870,16 @@ USA
 						<s:Image id="detailImage"
 								 x="{navigator.width / 2 - 120}" y="10" 
 								 height="150" width="200"
-								 click="loadVideoView();"/>
+								 click="loadVideoView(null);"/>
 						
+						<s:SpriteVisualElement id="play_view"/>
+
+						<!--
 						<business:ImageButton id="play_button" x="{navigator.width / 2 - 45}" y="60"
 											  click="loadVideoView();"
 											  buttonMode="true" 
 											  skinClass="views.skins.PlayButtonSkin"/>
+						-->
 					</s:Group>
 					
 					<s:Group id="busycontainer" visible="false" width="{navigator.width - 40}" height="{detailImage.height + 20}">
@@ -809,6 +895,22 @@ USA
 					</s:Group>
 				</s:View>        
 				
+				<s:RadioButton groupName="playType" selected="true" 
+							   id="playPresenter" 
+							   value="presenter" 
+							   label="author" 
+							   visible="false"
+							   x="{navigator.width / 2 - 120}" 
+							   y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 130}"
+							   width="150"/>
+				<s:RadioButton groupName="playType" 
+							   id="playPresentation" 
+							   visible="false"
+							   value="presentation" 
+							   label="slides" 
+							   x="{navigator.width / 2}" 
+							   y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 130}"
+							   width="150"/>
 				
 				<s:CheckBox visible="false" selected="true" 
 							id="presenter" 
@@ -823,8 +925,8 @@ USA
 							x="{navigator.width / 2}" 
 							y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 130}"
 						    width="150"/>
-				
-				<s:Button id="download_button" click="downloadVideo()" visible="false"
+			   <!-- click="" downloadVideo() -->
+				<s:Button id="download_button"  visible="false"
 						  label="download video" height="35" 
 						  x="{navigator.width / 2 - 80}" 
 						  y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 180}"/>
@@ -833,7 +935,7 @@ USA
 						  label="use streaming" height="35" 
 						  x="{navigator.width / 2 - 75}" 
 						  y = "{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + 180}"/>
-				
+			
 				<s:Label id="offlineLabel" 
 						 visible="false"
 						 text ="offline mode"
@@ -847,7 +949,7 @@ USA
 						 x="12" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height+ download_button.height + 190}"
 						 fontFamily="_sans"/>
 				
-				<s:Label id="description"
+				<s:Label id="description" visible="false"
 						 width="{this.navigator.width - 30}" 
 						 x="12" y="{title_label.height + author.height + detailDate.height + series_text.height + series.height + startvideo.height + textAreaLabel.height + download_button.height + 200}"
 						 fontFamily="_sans"/>

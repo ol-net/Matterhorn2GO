@@ -37,7 +37,6 @@ USA
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
-			import business.datahandler.did.DeviceInfoReader;
 			
 			import business.datahandler.events.BusyIndicatorEventSeries;
 			import business.core.events.ChangeTabViewEvent;
@@ -70,8 +69,6 @@ USA
 			private var adoptersInit:AdoptersDataHandler = AdoptersDataHandler.getInstance();
 			
 			private var tTip:ToolTipReader = ToolTipReader.getInstance();
-			
-			private var dInfo:DeviceInfoReader = DeviceInfoReader.getInstance();
 
 			[Bindable]
 			private var xTooltip:int;
@@ -98,12 +95,10 @@ USA
 				textinput_search.addEventListener(FocusEvent.FOCUS_OUT, handleFocusOut);	
 
 				tTip.setDisplay(String(this.navigator.width), String(this.navigator.height));
-				dInfo.setDisplay(String(this.navigator.width), String(this.navigator.height));
 				
 				setPosition();
 				
 				tTip.readFile();
-				dInfo.readFile();
 				
 				if(connection.visible)
 					xmlData.setXMLListCollection(new XMLListCollection());
@@ -117,11 +112,6 @@ USA
 				{
 					btn_sort.visible = true;
 					tooltip.visible = true;	
-				}
-				
-				if(dInfo.getStatus() != true)
-				{
-					dInfo.setFile();
 				}
 				
 				this.addEventListener(KeyboardEvent.KEY_DOWN, handleButtons, false, 1, true);
@@ -362,7 +352,7 @@ USA
 				{
 					btn_sort.visible = false;
 					textinput_search.visible = true;
-					btn_clear.visible = true;
+					//btn_clear.visible = true;
 					textinput_search.setFocus();
 				}
 			}
@@ -695,7 +685,7 @@ USA
 					 skinClass="spark.skins.mobile.TextInputSkin"
 					 softKeyboardType="default"
 					 needsSoftKeyboard="true" 
-					 width="{navigator.width - 175}" 
+					 width="{navigator.width - 148}" 
 					 height="35"
 					 enabled="true" 
 					 text="" 

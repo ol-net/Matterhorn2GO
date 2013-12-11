@@ -138,7 +138,7 @@ package business.download
 			
 			if(xmlList.length > 0)
 			{
-					downloading();
+				downloading();
 			}
 			else
 			{

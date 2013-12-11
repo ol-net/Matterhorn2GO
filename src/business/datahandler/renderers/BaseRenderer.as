@@ -70,8 +70,10 @@ package business.datahandler.renderers
 						
 						videos = xmlEpisodeData.getXMLListCollection();
 												
+						if (videos.length > 0) {
+							videos.removeItemAt(videos.length - 1);
+						}
 						
-						videos.removeItemAt(videos.length - 1);
 						xmlEpisodeData.setXMLListCollection(videos);
 					}
 					else if(value.@type == "series")
@@ -85,7 +87,10 @@ package business.datahandler.renderers
 						
 						videos = xmlSeriesData.getXMLListCollection();
 						
-						videos.removeItemAt(videos.length - 1);
+						if (videos.length > 0) {
+							videos.removeItemAt(videos.length - 1);
+						}
+						
 						xmlSeriesData.setXMLListCollection(videos);
 					}
 					

@@ -21,6 +21,7 @@ USA
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		xmlns:views="views.*"	
+		backgroundAlpha="0.0" contentBackgroundAlpha="0.0" 
 		creationComplete="init()"
 		tabBarVisible="false"
 		backKeyPressed="popThisViewBackKey()" 
@@ -41,14 +42,13 @@ USA
 			import business.datahandler.SegmentDataHandler;
 			import business.datahandler.URLClass;
 			import business.datahandler.XMLHandler;
-			import business.dbaccess.SQLHistoryEditHandler;
-			import business.dbaccess.SQLHistoryViewHandler;
-			import business.player.OSMFPlayer;
-			import business.player.SeekPosition;
-			
 			import business.datahandler.events.NotConnectedEvent;
 			import business.datahandler.events.SegmentLoadedEvent;
 			import business.datahandler.events.VideosLoadedEvent;
+			import business.dbaccess.SQLHistoryEditHandler;
+			import business.dbaccess.SQLHistoryViewHandler;
+			import business.player.OSMFPlayer2;
+			import business.player.SeekPosition;
 			
 			import flash.events.TimerEvent;
 			import flash.utils.Timer;
@@ -68,7 +68,7 @@ USA
 			import spark.events.ViewNavigatorEvent;
 			
 			[Bindable]
-			private var osmfplayer:OSMFPlayer;
+			private var osmfplayer:OSMFPlayer2;
 			
 			[Bindable]
 			protected var height_num:Number = 0;
@@ -110,9 +110,6 @@ USA
 			[Bindable]
 			private var duration_text:String = "00:00:00";
 			
-			//private var videos:XML;
-			//private var segment_xml:SegmentDataHandler;
-			
 			private var minSegmentIndex:int = 0;
 			private var maxSegmentIndex:int;
 			private var segmentCounter:int = 0;
@@ -140,22 +137,23 @@ USA
 				
 				seekTimeFromDB = selectTime.returnSeekTime();
 				
-				if(seekTimeFromDB == "0")
-					seekTimeFromDB == "0.00001";
+				//if(seekTimeFromDB == "0")
+				//	seekTimeFromDB == "0.00001";
+				
+				seekTimeFromDB = "0";
 				
 				if(seekTimeFromDB != "")
 				{
 					var tmp2:Number = Number(seekTimeFromDB);
-					seekPosition = tmp2 * 1000;
+					//seekPosition = tmp2 * 1000;
 				}
 				else
 				{
-					seekPosition = SeekPosition.getInstance().getPosition() * 60000;
+					//seekPosition = SeekPosition.getInstance().getPosition() * 60000;
 				}
 				
 				mediapackageID = data.@id;
 			
-				
 				//editTime.updateVideoTime(mediapackageID, "144");
 				/*
 				// only for iOS loop					
@@ -203,7 +201,6 @@ USA
 				
 				seekBar.width = navigator.width - 50;
 				
-				
 				/*
 				var segmentArray:Array = String(data).split(" ");;		
 				
@@ -230,52 +227,7 @@ USA
 				
 				this.addEventListener("keyDown", handleButtons, false, 1);
 				this.addEventListener("keyUp", handleButtons, false, 1);
-								
-				//var	xpathValue:XMLHandler = new XMLHandler();
-				
-				/*
-				segment_xml = SegmentDataHandler.getInstance();
-				segment_xml.addEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
-				segment_xml.addEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
-				segment_xml.init(xpathValue.getResult("mediapackage/@id", data));
-				*/
 			}
-			
-			/*
-			public function getXMLListCollection(event:SegmentLoadedEvent):void
-			{
-				videos = segment_xml.getSegmentAsXML();
-				
-				var xmlHandler:XMLHandler = new XMLHandler();
-				
-				var x:String = xmlHandler.getResult("count(//segments/segment)", videos); 
-				maxSegmentIndex =  new int(x);
-				
-				if(maxSegmentIndex == 0)
-				{
-					segment_forw_button.visible=false;
-					segment_backw_button.visible=false;
-					
-					forw_button.visible=true;
-					backw_button.visible=true;
-				}	
-			}
-			
-			
-			public function setData(e:SegmentLoadedEvent):void
-			{
-				mediapackage.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, setData);
-				
-				data = new Object();
-				
-				this.data = mediapackage.getMediapackageListCollection() as Object;
-				
-				this.data = xpathValue.getResult("mediapackage", data);
-				
-				initPlayer();
-			}
-			
-			*/
 			
 			private function updateTime(e:MouseEvent):void
 			{
@@ -349,8 +301,8 @@ USA
 							seekBar.value = e.time / 60;
 						}
 						
-						if(seekT != "0")
-							editTime.updateVideoTime(mediapackageID, seekT);
+						//if(seekT != "0")
+							//editTime.updateVideoTime(mediapackageID, seekT);
 
 						time_text = timerend(e.time * 1000);
 					}
@@ -421,8 +373,8 @@ USA
 			
 			public function setSize(event:ResizeEvent):void
 			{			
-				height_num = navigator.height - 120;
-				width_num = navigator.width - 80;
+				//height_num = navigator.height - 120;
+				//width_num = navigator.width - 80;
 				
 				videoSize();
 				
@@ -452,7 +404,7 @@ USA
 				{
 					if(osmfplayer == null)
 					{						
-						osmfplayer = new OSMFPlayer(videoPath, videoPathTwo, this.navigator.height, this.navigator.width);  
+						osmfplayer = new OSMFPlayer2(videoPath, videoPathTwo);  
 						videoSize();
 						osmfplayer.player.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 					}
@@ -604,135 +556,6 @@ USA
 				}
 			}
 			
-			/*
-			
-			public function segmentPlayFW():void
-			{
-				if(osmfplayer != null)
-				{
-					if(osmfplayer.player != null)
-					{
-						if(maxSegmentIndex >= segmentCounter && osmfplayer.player.playing || osmfplayer.player.paused)
-						{
-							var xmlHandler:XMLHandler = new XMLHandler();
-							
-							var i:String = xmlHandler.getResult("//segments/segment[@time>'"+seekBar.value * 60000+"'][1]/@index", videos);
-							
-							var cIndex:int = new int(i);
-							
-							segmentCounter = cIndex;
-							
-							var x:String = xmlHandler.getResult("//segments/segment[@index='"+segmentCounter+"']/@time", videos); 
-							
-							var value:Number = new Number(x) / 1000;
-							
-							if(osmfplayer.player.playing || osmfplayer.player.paused)
-								osmfplayer.player.seek(value);
-							
-							if(maxSegmentIndex > segmentCounter)
-								segmentCounter++;
-						}
-					}
-				}
-			}
-			
-			public function segmentPlayBW():void
-			{
-				if(osmfplayer != null)
-				{
-					if(osmfplayer.player != null)
-					{
-						if(minSegmentIndex <= segmentCounter && osmfplayer.player.playing || osmfplayer.player.paused)
-						{
-							var xmlHandler:XMLHandler = new XMLHandler();
-							
-							var ci:String =  xmlHandler.getResult("count(//segments/segment[@time<'"+seekBar.value * 60000+"']/@index)", videos);
-							
-							var num:int = new int(ci);
-							
-							if(num == 1)
-								num = maxSegmentIndex;
-							
-							num = num -1;
-							
-							var i:String = xmlHandler.getResult("//segments/segment[@time<'"+seekBar.value * 60000+"']["+num+"]/@index", videos);
-							
-							var cIndex:int = new int(i);
-							
-							segmentCounter = cIndex;
-							
-							var x:String = xmlHandler.getResult("//segments/segment[@index='"+segmentCounter+"']/@time", videos); 
-							
-							var value:Number = new Number(x) / 1000;
-							
-							if(osmfplayer.player.playing || osmfplayer.player.paused)
-								osmfplayer.player.seek(value);
-							
-							if(segmentCounter > 0)
-							{
-								segmentCounter--;
-							}
-							else
-							{
-								segmentCounter = maxSegmentIndex - 1;
-								
-								x = xmlHandler.getResult("//segments/segment[@index='"+segmentCounter+"']/@time", videos); 
-								
-								value = new Number(x) / 1000;
-								
-								if(osmfplayer.player.playing || osmfplayer.player.paused)
-									osmfplayer.player.seek(value);
-							}
-						}
-					}
-				}
-			}
-			
-			public function showSegment():void
-			{
-				if(osmfplayer != null)
-				{
-					seekPosition = seekBar.value;
-					
-					osmfplayer.player.pause();
-					
-					SeekPosition.getInstance().setPosition(seekBar.value);
-					
-					navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
-					navigator.popView();
-					
-					var value:Number = seekBar.value;
-					
-					navigator.pushView(SegmentView, data);
-				}
-			}
-			
-			public function showAnnotation():void
-			{				
-				if(osmfplayer != null)
-				{
-					var inTimePlayer:Number = seekBar.value;
-					
-					osmfplayer.player.pause();
-					
-					var xml_data:XML = XML(data);	
-					var zeit:XML = new XML(<inTimePlayer> </inTimePlayer>);
-					var wert:XML = new XML(inTimePlayer);
-					
-					zeit.appendChild(wert);
-					xml_data.appendChild(zeit);
-					data = Object(xml_data);
-					
-					SeekPosition.getInstance().setPosition(seekBar.value);
-					
-					navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
-					navigator.popView();
-					navigator.pushView(AnnotationView, data);
-				}
-			}
-			
-			*/
-			
 			private function stopUpdate(e:MouseEvent):void
 			{
 				updateSeekBar = false;
@@ -787,7 +610,7 @@ USA
 				if(myTimer.running)
 					myTimer.reset();
 				
-				//myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
+				myTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, timer);
 				
 				if(showButtons)
 				{
@@ -850,10 +673,8 @@ USA
 						if(osmfplayer.player.playing || osmfplayer.player.paused)
 						{
 							osmfplayer.player.pause();
-							osmfplayer.removeAll();
-							//osmfplayer.player.stop();
-							//osmfplayer.player.stop();
-							//osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
+							osmfplayer.player.stop();
+							osmfplayer.player.removeEventListener(TimeEvent.CURRENT_TIME_CHANGE, onCurrentTimeChangeHandler);
 						}
 					}
 				}
@@ -863,17 +684,16 @@ USA
 				seekBar.removeEventListener(MouseEvent.MOUSE_UP, startUpdate);
 				seekBar.removeEventListener(MouseEvent.MOUSE_MOVE, updateTime);
 				
-				//segment_xml.removeEventListener(SegmentLoadedEvent.SEGMENTLOADED, getXMLListCollection);
-				//segment_xml.removeEventListener(NotConnectedEvent.NOTCONNECTED, notConnected);
-				
 				this.navigator.removeEventListener(ResizeEvent.RESIZE, setSize);
 				this.navigator.removeEventListener(MouseEvent.CLICK, getButtonPanel);
 				
 				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 
-				System.gc();
-
 				this.navigator.popView();
+				
+				System.gc();
+				
+				osmfplayer = null;
 			}
 			
 			public function notConnected(event:NotConnectedEvent):void 
@@ -895,9 +715,11 @@ USA
 		]]>
 	</fx:Script>
 	
-	<s:View id="video_one" backgroundColor="black"/>
+	<s:View id="video_one" backgroundColor="black"
+			backgroundAlpha="0.0" contentBackgroundAlpha="0.0"/>
 	
-	<s:View id="video_two" backgroundColor="black"/>
+	<s:View id="video_two" backgroundColor="black"
+			backgroundAlpha="0.0" contentBackgroundAlpha="0.0"/>
 	
 	<s:SpriteVisualElement id="progress_bar"/>
 	

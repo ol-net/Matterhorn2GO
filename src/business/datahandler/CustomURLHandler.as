@@ -17,32 +17,36 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 
 USA 
 */
-package business.datahandler.did 
-{
-	import flash.net.NetworkInfo;
-	import flash.net.NetworkInterface;
-
-	public class AndroidNetworkInfo
+package business.datahandler
+{	
+	import mx.rpc.http.HTTPService;
+	
+	public class CustomURLHandler
 	{
-		public function getNetworkInfo():String
+		static private var instance:CustomURLHandler;
+		
+		private var serviceObj:HTTPService; 
+		
+		private var url:String;
+		
+		static public function getInstance():CustomURLHandler
 		{
-			var uid:String = "";
-
-			try
-			{
-				var networkInterface : Object = flash.net.NetworkInfo.networkInfo.findInterfaces() ;
-				var networkInfo : Object = networkInterface[1];
-				uid = networkInfo.hardwareAddress.toString();
-				
-				if(uid == "")
-				{
-					networkInterface = flash.net.NetworkInfo.networkInfo.findInterfaces() ;
-					networkInfo = networkInterface[0];
-					uid = networkInfo.hardwareAddress.toString();
-				}
-			} catch(e:Error) { } 
+			if (instance == null) 
+				instance = new CustomURLHandler();
 			
-			return uid;
+			return instance;
+		}
+		
+		public function setCustomURL(u:String):void
+		{
+			/*
+			this.url = u;
+			serviceObj = new HTTPService();
+			serviceObj.resultFormat = 'e4x';
+			serviceObj.method = 'GET';
+			serviceObj.useProxy = false;
+			serviceObj.send();
+			*/
 		}
 	}
 }

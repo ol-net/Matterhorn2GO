@@ -22,7 +22,7 @@ USA
 								  xmlns:s="library://ns.adobe.com/flex/spark" 
 								  applicationComplete="onApplicationComplete(event)"
 								  applicationDPI="160" 
-								  backgroundColor="#861B1D" 
+								  backgroundColor="#000000" 
 								  splashScreenImage="views.DynamicSplashScreen"
 								  persistNavigatorState="true">
 	

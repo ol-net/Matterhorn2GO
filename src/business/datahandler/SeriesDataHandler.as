@@ -208,7 +208,7 @@ package business.datahandler
 			XMLResults = NamespaceRemover.remove(XMLResults);
 			XMLResults = NamespaceRemover.removeDefaultNamespaceFromXML(XMLResults);
 			
-			this.urlThumbnail = XMLResults.result.mediapackage.attachments.attachment.url[0];
+			this.urlThumbnail = XMLResults.result.mediapackage.attachments.attachment.url[1];
 			
 			if(urlThumbnail == null)
 			{
@@ -342,14 +342,14 @@ package business.datahandler
 			{
 				initThumbnail = false;
 				
-				if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
-				{
-					serviceObj2.url =URLClass.getInstance().getURL()+'episode.xml?id='+id+'&limit=1&offset=1';
-				}
-				else
-				{
-					serviceObj2.url =URLClass.getInstance().getURL()+'episode.xml?q='+id+'&limit=1&offset=1&lfunk=1';
-				}
+				//if(URLClass.getInstance().getURL() != 'http://lernfunk.de/plug-ins/lernfunk-matterhorn-search-proxy/proxy.py/search/')
+				//{
+				serviceObj2.url = URLClass.getInstance().getURL()+'episode.xml?sid='+id+'&limit=1&offset=1';
+				//}
+				//else
+				//{
+				//	serviceObj2.url =URLClass.getInstance().getURL()+'episode.xml?q='+id+'&limit=1&offset=1&lfunk=1';
+				//}
 
 				serviceObj2.send();	
 			}

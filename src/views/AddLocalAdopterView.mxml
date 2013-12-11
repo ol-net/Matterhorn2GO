@@ -38,7 +38,7 @@ USA
 			import business.datahandler.EpisodesDataHandler;
 			import business.datahandler.SeriesDataHandler;
 			import business.datahandler.URLClass;
-			import business.datahandler.did.CustomURLHandler;
+			import business.datahandler.CustomURLHandler;
 			import business.dbaccess.SQLEditHandler;
 			import business.dbaccess.SQLViewHandler;
 			
